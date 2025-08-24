@@ -34,7 +34,8 @@ export async function GET() {
       averageRating,
       pendingReviews,
       customerOrderCounts,
-      ordersToShip
+      ordersToShip,
+      dailyRevenueData
     ] = await Promise.all([
       // Total revenue (only from confirmed orders with payment)
       ordersCollection.aggregate([
@@ -146,7 +147,32 @@ export async function GET() {
           { paymentStatus: 'CASH_ON_DELIVERY' }
         ],
         deliveryStatus: 'PENDING'
-      })
+      }),
+
+      // Daily revenue data for all time (for 30-day moving average)
+      ordersCollection.aggregate([
+        {
+          $match: {
+            $or: [
+              { paymentStatus: 'PAID' },
+              { paymentStatus: 'CASH_ON_DELIVERY' }
+            ]
+          }
+        },
+        {
+          $group: {
+            _id: {
+              $dateToString: {
+                format: "%Y-%m-%d",
+                date: "$createdAt",
+                timezone: "Asia/Kolkata"
+              }
+            },
+            revenue: { $sum: "$amount" }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ]).toArray()
     ])
 
     // Calculate MRR (last 30 days revenue)
@@ -170,6 +196,46 @@ export async function GET() {
       name: `${item._id} order${item._id === 1 ? '' : 's'}`,
       value: item.customerCount
     }))
+
+    // Process daily revenue data with 30-day moving average
+    const revenueByDate = new Map()
+    dailyRevenueData.forEach(item => {
+      revenueByDate.set(item._id, item.revenue)
+    })
+
+    // Get all unique dates and sort them
+    const allDates = Array.from(revenueByDate.keys()).sort()
+    const dailyRevenueChart = []
+
+    // Calculate 30-day moving average for each date
+    allDates.forEach((dateStr, index) => {
+      // Calculate 30-day moving average (looking back 29 days + current day)
+      let movingAvgSum = 0
+      let movingAvgCount = 0
+      
+      for (let j = Math.max(0, index - 29); j <= index; j++) {
+        const avgDateStr = allDates[j]
+        const avgRevenue = revenueByDate.get(avgDateStr) || 0
+        movingAvgSum += avgRevenue
+        movingAvgCount++
+      }
+      
+      const movingAverage = movingAvgCount > 0 ? movingAvgSum / movingAvgCount : 0
+      
+      // Format date for display
+      const displayDate = new Date(dateStr)
+      const name = displayDate.toLocaleDateString('en-IN', { 
+        day: '2-digit',
+        month: 'short',
+        year: allDates.length > 365 ? '2-digit' : undefined // Show year if more than a year of data
+      })
+      
+      dailyRevenueChart.push({
+        date: dateStr,
+        name: name,
+        mrr: movingAverage
+      })
+    })
 
     const dashboardData = {
       // Revenue data (all-time total with growth based on last 30 days)
@@ -197,7 +263,10 @@ export async function GET() {
       avgOrderValue: last30DaysOrders.length > 0 ? mrr / last30DaysOrders.length : 0,
       
       // Quick Actions data
-      ordersToShip
+      ordersToShip,
+      
+      // Chart data
+      dailyRevenueChart
     }
 
     // Cache for 5 minutes (dashboard updates frequently)

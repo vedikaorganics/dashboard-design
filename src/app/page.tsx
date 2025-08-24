@@ -8,15 +8,9 @@ import { TrendingUp, TrendingDown, Users, ShoppingCart, Package, DollarSign, Sta
 import { AreaChart, LineChart, BarChart, PieChart } from "@/components/charts"
 import { useDashboard, useOrders, useReviews, usePrefetch } from "@/hooks/use-data"
 import Link from "next/link"
+import { Area, AreaChart as RechartsAreaChart, XAxis, YAxis } from "recharts"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
-const revenueData = [
-  { name: 'Jan', value: 89000 },
-  { name: 'Feb', value: 95000 },
-  { name: 'Mar', value: 112000 },
-  { name: 'Apr', value: 128000 },
-  { name: 'May', value: 134000 },
-  { name: 'Jun', value: 156000 },
-]
 
 const productSalesData = [
   { name: 'Mustard Oil', value: 45 },
@@ -132,6 +126,10 @@ export default function DashboardPage() {
   const pendingReviews = data?.pendingReviews || 0
   const customerOrderDistributionData = data?.customerOrderDistributionData || []
   const ordersToShip = data?.ordersToShip || 0
+  const dailyRevenueChart = data?.dailyRevenueChart || [
+    // Fallback data if API data is not available
+    { name: 'Loading...', mrr: 0 }
+  ]
   
   return (
     <DashboardLayout title="Overview">
@@ -307,12 +305,45 @@ export default function DashboardPage() {
         </div>
         
         <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
-          <AreaChart
-            title="Revenue Trend"
-            description="Monthly revenue from oil sales (₹)"
-            data={revenueData}
-            height={350}
-          />
+          <Card>
+            <CardHeader>
+              <CardTitle>MRR</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer
+                config={{
+                  mrr: {
+                    label: "30-day Average",
+                    color: "hsl(var(--chart-1))",
+                  },
+                }}
+                className="h-[350px]"
+              >
+                <RechartsAreaChart data={dailyRevenueChart}>
+                  <XAxis 
+                    dataKey="name"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    tickFormatter={(value) => value.slice(0, 3)}
+                  />
+                  <ChartTooltip 
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="line" hideLabel />}
+                    formatter={(value: any) => `₹${(Number(value) * 30 / 100000).toFixed(2)}L`}
+                  />
+                  <Area 
+                    dataKey="mrr"
+                    type="natural"
+                    fill="var(--color-mrr)"
+                    fillOpacity={0.4}
+                    stroke="var(--color-mrr)"
+                    stackId="a"
+                  />
+                </RechartsAreaChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
           
           <BarChart
             title="Customer Order Distribution"
