@@ -1,7 +1,8 @@
 export const typography = {
   fontFamily: {
     sans: [
-      'Inter',
+      'var(--font-geist-sans)',
+      'Geist',
       '-apple-system',
       'BlinkMacSystemFont',
       '"Segoe UI"',
@@ -11,7 +12,8 @@ export const typography = {
       'sans-serif',
     ],
     mono: [
-      '"JetBrains Mono"',
+      'var(--font-geist-mono)',
+      '"Geist Mono"',
       'Consolas',
       '"Liberation Mono"',
       'Menlo',

@@ -36,6 +36,7 @@ A modern, fully-featured e-commerce dashboard built with Next.js 15, TypeScript,
 - **UI Components**: shadcn/ui component library
 - **Charts**: Recharts for data visualization
 - **Icons**: Lucide React for consistent iconography
+- **Fonts**: Geist Sans and Geist Mono
 - **Theme**: next-themes for dark/light mode
 
 ## Getting Started
