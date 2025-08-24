@@ -26,14 +26,42 @@ export async function GET(request: NextRequest) {
     }
 
     // Execute queries in parallel
-    const [orders, totalCount] = await Promise.all([
+    const [orders, totalCount, summaryData] = await Promise.all([
       ordersCollection
         .find(filter)
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .toArray(),
-      ordersCollection.countDocuments(filter)
+      ordersCollection.countDocuments(filter),
+      // Get summary counts for KPI cards (always from full dataset, not filtered)
+      ordersCollection.aggregate([
+        {
+          $group: {
+            _id: null,
+            paymentPending: {
+              $sum: { $cond: [{ $eq: ["$paymentStatus", "PENDING"] }, 1, 0] }
+            },
+            shippingPending: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      { $or: [{ $eq: ["$paymentStatus", "PAID"] }, { $eq: ["$paymentStatus", "CASH_ON_DELIVERY"] }] },
+                      { $eq: ["$deliveryStatus", "PENDING"] }
+                    ]
+                  },
+                  1,
+                  0
+                ]
+              }
+            },
+            inTransit: {
+              $sum: { $cond: [{ $eq: ["$deliveryStatus", "SHIPPED"] }, 1, 0] }
+            }
+          }
+        }
+      ]).toArray()
     ])
 
     // Get user data for orders (batch fetch for performance)
@@ -53,6 +81,13 @@ export async function GET(request: NextRequest) {
       user: userMap[order.userId.toString()]
     }))
 
+    // Extract summary data (default to 0 if no data)
+    const summary = summaryData[0] || {
+      paymentPending: 0,
+      shippingPending: 0,
+      inTransit: 0
+    }
+
     const result = {
       orders: enrichedOrders,
       pagination: {
@@ -62,6 +97,11 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(totalCount / limit),
         hasNext: page < Math.ceil(totalCount / limit),
         hasPrev: page > 1
+      },
+      summary: {
+        paymentPending: summary.paymentPending,
+        shippingPending: summary.shippingPending,
+        inTransit: summary.inTransit
       }
     }
 

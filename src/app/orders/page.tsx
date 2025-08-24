@@ -14,20 +14,6 @@ import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 import type { Order } from "@/types"
 
 
-const getOrderStatusBadge = (orderStatus: string) => {
-  switch (orderStatus) {
-    case 'CONFIRMED':
-      return <Badge className="bg-success/20 text-success"><CheckCircle className="w-3 h-3 mr-1" />Confirmed</Badge>
-    case 'PENDING':
-      return <Badge className="bg-warning/20 text-warning"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
-    case 'DELIVERED':
-      return <Badge className="bg-info/20 text-info"><CheckCircle className="w-3 h-3 mr-1" />Delivered</Badge>
-    case 'CANCELLED':
-      return <Badge className="bg-destructive/20 text-destructive">Cancelled</Badge>
-    default:
-      return <Badge variant="outline">{orderStatus}</Badge>
-  }
-}
 
 const getDeliveryStatusBadge = (deliveryStatus: string) => {
   switch (deliveryStatus) {
@@ -62,14 +48,14 @@ const getCustomerName = (order: Order) => {
 }
 
 export default function OrdersPage() {
-  const [statusFilter, setStatusFilter] = useState<string>("all")
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
   
-  const { data: ordersData, isLoading } = useOrders(currentPage, pageSize, statusFilter === "all" ? undefined : statusFilter)
+  const { data: ordersData } = useOrders(currentPage, pageSize)
   
   const orders = (ordersData as any)?.orders || []
   const pagination = (ordersData as any)?.pagination || {}
+  const summary = (ordersData as any)?.summary || {}
   
   const handlePaginationChange = ({ pageIndex, pageSize: newPageSize }: { pageIndex: number; pageSize: number }) => {
     setCurrentPage(pageIndex + 1) // Convert 0-based to 1-based
@@ -117,16 +103,6 @@ export default function OrdersPage() {
       },
     },
     {
-      accessorKey: "orderStatus",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Status" />
-      ),
-      cell: ({ row }) => getOrderStatusBadge(row.getValue("orderStatus")),
-      filterFn: (row, id, value) => {
-        return value.includes(row.getValue(id))
-      },
-    },
-    {
       accessorKey: "paymentStatus",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Payment" />
@@ -159,48 +135,37 @@ export default function OrdersPage() {
     <DashboardLayout title="Orders">
       <div className="flex-1 space-y-6">
         
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pagination?.total || 0}</div>
-              <p className="text-xs text-muted-foreground">All time orders</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
+              <CardTitle className="text-sm font-medium">Payment Pending</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{orders.filter((o: any) => o.orderStatus === 'PENDING').length}</div>
-              <p className="text-xs text-muted-foreground">Needs attention</p>
+              <div className="text-2xl font-bold">{summary.paymentPending || 0}</div>
+              <p className="text-xs text-muted-foreground">Awaiting payment</p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Confirmed Orders</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Shipping Pending</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{orders.filter((o: any) => o.paymentStatus === 'PAID' || o.paymentStatus === 'CASH_ON_DELIVERY').length}</div>
+              <div className="text-2xl font-bold">{summary.shippingPending || 0}</div>
               <p className="text-xs text-muted-foreground">Ready to ship</p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Delivered</CardTitle>
+              <CardTitle className="text-sm font-medium">In Transit</CardTitle>
               <Truck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{orders.filter((o: any) => o.orderStatus === 'DELIVERED').length}</div>
-              <p className="text-xs text-muted-foreground">Successfully completed</p>
+              <div className="text-2xl font-bold">{summary.inTransit || 0}</div>
+              <p className="text-xs text-muted-foreground">On the way</p>
             </CardContent>
           </Card>
         </div>
