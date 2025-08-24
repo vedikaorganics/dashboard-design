@@ -24,6 +24,11 @@ export async function GET() {
       totalUsers,
       totalReviews,
       last30DaysOrders,
+      previous30DaysOrders,
+      last30DaysUsers,
+      previous30DaysUsers,
+      last30DaysReviews,
+      previous30DaysReviews,
       orderStatusCounts,
       confirmedOrdersCount,
       averageRating,
@@ -63,6 +68,48 @@ export async function GET() {
         ]
       }).toArray(),
 
+      // Previous 30 days orders (days 31-60 ago, only confirmed orders)
+      ordersCollection.find({
+        createdAt: { 
+          $gte: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+          $lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        },
+        $or: [
+          { paymentStatus: 'PAID' },
+          { paymentStatus: 'CASH_ON_DELIVERY' }
+        ]
+      }).toArray(),
+
+      // Last 30 days users
+      usersCollection.find({
+        createdAt: { 
+          $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) 
+        }
+      }).toArray(),
+
+      // Previous 30 days users (days 31-60 ago)
+      usersCollection.find({
+        createdAt: { 
+          $gte: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+          $lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        }
+      }).toArray(),
+
+      // Last 30 days reviews
+      reviewsCollection.find({
+        createdAt: { 
+          $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) 
+        }
+      }).toArray(),
+
+      // Previous 30 days reviews (days 31-60 ago)
+      reviewsCollection.find({
+        createdAt: { 
+          $gte: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+          $lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        }
+      }).toArray(),
+
       // Order status counts
       ordersCollection.aggregate([
         { $group: { _id: '$orderStatus', count: { $sum: 1 } } }
@@ -94,6 +141,13 @@ export async function GET() {
 
     // Calculate MRR (last 30 days revenue)
     const mrr = last30DaysOrders.reduce((sum, order) => sum + order.amount, 0)
+    const previousMrr = previous30DaysOrders.reduce((sum, order) => sum + order.amount, 0)
+
+    // Calculate growth rates
+    const revenueGrowth = previousMrr > 0 ? ((mrr - previousMrr) / previousMrr) * 100 : 0
+    const ordersGrowth = previous30DaysOrders.length > 0 ? ((last30DaysOrders.length - previous30DaysOrders.length) / previous30DaysOrders.length) * 100 : 0
+    const usersGrowth = previous30DaysUsers.length > 0 ? ((last30DaysUsers.length - previous30DaysUsers.length) / previous30DaysUsers.length) * 100 : 0
+    const reviewsGrowth = previous30DaysReviews.length > 0 ? ((last30DaysReviews.length - previous30DaysReviews.length) / previous30DaysReviews.length) * 100 : 0
 
     // Process order status counts
     const statusMap = orderStatusCounts.reduce((acc, status) => {
@@ -108,16 +162,27 @@ export async function GET() {
     }))
 
     const dashboardData = {
-      totalRevenue: totalRevenue[0]?.total || 0,
-      totalOrders,
-      totalUsers,
-      totalReviews,
-      mrr,
-      last30DaysOrderCount: last30DaysOrders.length,
-      confirmedOrders: confirmedOrdersCount, // Now based on payment status
+      // Revenue data (all-time total with growth based on last 30 days)
+      totalRevenue: totalRevenue[0]?.total || 0, // Back to all-time total
+      revenueGrowth,
+      
+      // Orders data (all-time total with growth based on last 30 days)
+      totalOrders, // Back to all-time total
+      ordersGrowth,
+      confirmedOrders: confirmedOrdersCount,
       pendingOrders: statusMap.PENDING || 0,
+      
+      // Users data (all-time total with growth based on last 30 days)
+      totalUsers, // Back to all-time total
+      usersGrowth,
+      
+      // Reviews data (all-time total with growth based on last 30 days)
+      totalReviews, // Back to all-time total
+      reviewsGrowth,
       averageRating: averageRating[0]?.avgRating || 0,
       pendingReviews,
+      
+      // Additional data
       customerOrderDistributionData,
       avgOrderValue: last30DaysOrders.length > 0 ? mrr / last30DaysOrders.length : 0
     }

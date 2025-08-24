@@ -4,7 +4,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { TrendingUp, Users, ShoppingCart, Package, DollarSign, Star, AlertCircle, Clock, CheckCircle } from "lucide-react"
+import { TrendingUp, TrendingDown, Users, ShoppingCart, Package, DollarSign, Star, AlertCircle, Clock, CheckCircle } from "lucide-react"
 import { AreaChart, LineChart, BarChart, PieChart } from "@/components/charts"
 import { useDashboard, useOrders, useReviews, usePrefetch } from "@/hooks/use-data"
 import Link from "next/link"
@@ -46,6 +46,20 @@ const getStatusBadge = (status: string) => {
     default:
       return <Badge variant="outline">{status}</Badge>
   }
+}
+
+// Helper function to render growth indicator
+const getGrowthIndicator = (growth: number) => {
+  const isPositive = growth >= 0
+  const Icon = isPositive ? TrendingUp : TrendingDown
+  const colorClass = isPositive ? "text-green-500" : "text-red-500"
+  
+  return (
+    <div className={`flex items-center space-x-1 text-xs ${colorClass}`}>
+      <Icon className="h-3 w-3" />
+      <span>{Math.abs(growth).toFixed(1)}%</span>
+    </div>
+  )
 }
 
 export default function DashboardPage() {
@@ -90,16 +104,18 @@ export default function DashboardPage() {
   // Use cached data or fallback values
   const data = dashboardData as any
   const totalRevenue = data?.totalRevenue || 0
+  const revenueGrowth = data?.revenueGrowth || 0
   const totalOrders = data?.totalOrders || 0
+  const ordersGrowth = data?.ordersGrowth || 0
   const totalUsers = data?.totalUsers || 0
+  const usersGrowth = data?.usersGrowth || 0
   const totalReviews = data?.totalReviews || 0
-  const mrr = data?.mrr || 0
+  const reviewsGrowth = data?.reviewsGrowth || 0
   const confirmedOrders = data?.confirmedOrders || 0
   const pendingOrders = data?.pendingOrders || 0
   const averageRating = data?.averageRating || 0
   const pendingReviews = data?.pendingReviews || 0
   const customerOrderDistributionData = data?.customerOrderDistributionData || []
-  const last30DaysOrderCount = data?.last30DaysOrderCount || 0
   
   return (
     <DashboardLayout title="Vedika Organics - Dashboard">
@@ -112,8 +128,10 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium">Revenue</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">₹{(totalRevenue / 100000).toFixed(2)}L</div>
-              <p className="text-xs text-muted-foreground">All time revenue</p>
+              <div className="flex items-center justify-between">
+                <div className="text-2xl font-bold">₹{(totalRevenue / 100000).toFixed(2)}L</div>
+                {getGrowthIndicator(revenueGrowth)}
+              </div>
             </CardContent>
           </Card>
           
@@ -123,11 +141,9 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium">Orders</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{(totalOrders / 1000).toFixed(2)}K</div>
-              <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                <span className="text-green-600">{(confirmedOrders / 1000).toFixed(2)}K confirmed</span>
-                <span>·</span>
-                <span className="text-yellow-600">{(pendingOrders / 1000).toFixed(2)}K pending</span>
+              <div className="flex items-center justify-between">
+                <div className="text-2xl font-bold">{(totalOrders / 1000).toFixed(2)}K</div>
+                {getGrowthIndicator(ordersGrowth)}
               </div>
             </CardContent>
           </Card>
@@ -138,8 +154,10 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium">Users</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{(totalUsers / 1000).toFixed(2)}K</div>
-              <p className="text-xs text-muted-foreground">Registered customers</p>
+              <div className="flex items-center justify-between">
+                <div className="text-2xl font-bold">{(totalUsers / 1000).toFixed(2)}K</div>
+                {getGrowthIndicator(usersGrowth)}
+              </div>
             </CardContent>
           </Card>
           
@@ -149,15 +167,9 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium">Reviews</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalReviews}</div>
-              <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                <span>Avg: {averageRating.toFixed(1)} stars</span>
-                {pendingReviews > 0 && (
-                  <>
-                    <span>·</span>
-                    <span className="text-yellow-600">{(pendingReviews / 1000).toFixed(2)}K pending</span>
-                  </>
-                )}
+              <div className="flex items-center justify-between">
+                <div className="text-2xl font-bold">{totalReviews}</div>
+                {getGrowthIndicator(reviewsGrowth)}
               </div>
             </CardContent>
           </Card>
