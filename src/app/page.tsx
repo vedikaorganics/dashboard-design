@@ -295,62 +295,63 @@ export default function DashboardPage() {
           </Card>
         </div>
         
+        <Card>
+          <CardHeader>
+            <CardTitle>Monthly Recurring Revenue</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              config={{
+                mrr: {
+                  label: "MRR",
+                  color: "hsl(var(--chart-1))",
+                },
+              }}
+              className="h-[350px] aspect-auto"
+            >
+              <RechartsAreaChart data={dailyRevenueChart}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" vertical={false} />
+                <XAxis 
+                  dataKey="name"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tickFormatter={(value) => value.slice(0, 3)}
+                />
+                <YAxis 
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tickFormatter={(value) => `₹${((Number(value) * 30) / 100000).toFixed(1)}L`}
+                />
+                <ChartTooltip 
+                  cursor={false}
+                  content={<ChartTooltipContent 
+                    indicator="dot" 
+                    formatter={(value) => [`₹${((Number(value) * 30) / 100000).toFixed(2)}L`]}
+                  />}
+                />
+                <Area 
+                  dataKey="mrr"
+                  type="monotone"
+                  fill="var(--color-mrr)"
+                  fillOpacity={0.3}
+                  stroke="var(--color-mrr)"
+                  strokeWidth={3}
+                />
+              </RechartsAreaChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+        
         <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Monthly Recurring Revenue</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                config={{
-                  mrr: {
-                    label: "MRR",
-                    color: "hsl(var(--chart-1))",
-                  },
-                }}
-                className="h-[350px] aspect-auto"
-              >
-                <RechartsAreaChart data={dailyRevenueChart}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" vertical={false} />
-                  <XAxis 
-                    dataKey="name"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    tickFormatter={(value) => value.slice(0, 3)}
-                  />
-                  <YAxis 
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    tickFormatter={(value) => `₹${(Number(value) / 1000).toFixed(0)}K`}
-                  />
-                  <ChartTooltip 
-                    cursor={false}
-                    content={<ChartTooltipContent indicator="dot" />}
-                  />
-                  <Area 
-                    dataKey="mrr"
-                    type="monotone"
-                    fill="var(--color-mrr)"
-                    fillOpacity={0.1}
-                    stroke="var(--color-mrr)"
-                    strokeWidth={2}
-                  />
-                </RechartsAreaChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-          
           <BarChart
             title="Customer Order Distribution"
             description="Number of customers by order count"
             data={customerOrderDistributionData}
             height={350}
           />
-        </div>
-        
-        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
+          
           <BarChart
             title="Orders by Amount Range"
             description="Distribution of orders by price range (₹500 intervals)"
