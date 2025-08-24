@@ -105,11 +105,11 @@ export default function DashboardPage() {
     <DashboardLayout title="Vedika Organics - Dashboard">
       <div className="flex-1 space-y-6">
         
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CardHeader className="flex flex-row items-center space-x-2 space-y-0 pb-2">
               <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Revenue</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">₹{totalRevenue.toLocaleString()}</div>
@@ -118,9 +118,9 @@ export default function DashboardPage() {
           </Card>
           
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+            <CardHeader className="flex flex-row items-center space-x-2 space-y-0 pb-2">
               <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Orders</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalOrders}</div>
@@ -133,9 +133,9 @@ export default function DashboardPage() {
           </Card>
           
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <CardHeader className="flex flex-row items-center space-x-2 space-y-0 pb-2">
               <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Users</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalUsers}</div>
@@ -144,9 +144,9 @@ export default function DashboardPage() {
           </Card>
           
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Reviews</CardTitle>
+            <CardHeader className="flex flex-row items-center space-x-2 space-y-0 pb-2">
               <Star className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Reviews</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalReviews}</div>
@@ -162,20 +162,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">MRR (Last 30 Days)</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">₹{mrr.toLocaleString()}</div>
-              <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                <span>{last30DaysOrderCount} orders</span>
-                <span>·</span>
-                <span>Avg: ₹{last30DaysOrderCount > 0 ? Math.round(mrr / last30DaysOrderCount).toLocaleString() : 0}</span>
-              </div>
-            </CardContent>
-          </Card>
         </div>
         
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">

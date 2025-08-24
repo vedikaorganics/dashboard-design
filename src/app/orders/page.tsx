@@ -72,6 +72,8 @@ const getPaymentStatusBadge = (paymentStatus: string) => {
   switch (paymentStatus) {
     case 'PAID':
       return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" />Paid</Badge>
+    case 'CASH_ON_DELIVERY':
+      return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" />COD</Badge>
     case 'PENDING':
       return <Badge className="bg-yellow-100 text-yellow-800"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
     case 'FAILED':
@@ -137,7 +139,7 @@ export default function OrdersPage() {
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{orders.filter((o: any) => o.orderStatus === 'CONFIRMED').length}</div>
+              <div className="text-2xl font-bold">{orders.filter((o: any) => o.paymentStatus === 'PAID' || o.paymentStatus === 'CASH_ON_DELIVERY').length}</div>
               <p className="text-xs text-muted-foreground">Ready to ship</p>
             </CardContent>
           </Card>

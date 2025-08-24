@@ -25,12 +25,21 @@ export async function GET() {
       totalReviews,
       last30DaysOrders,
       orderStatusCounts,
+      confirmedOrdersCount,
       averageRating,
       pendingReviews,
       customerOrderCounts
     ] = await Promise.all([
-      // Total revenue
+      // Total revenue (only from confirmed orders with payment)
       ordersCollection.aggregate([
+        { 
+          $match: { 
+            $or: [
+              { paymentStatus: 'PAID' },
+              { paymentStatus: 'CASH_ON_DELIVERY' }
+            ]
+          }
+        },
         { $group: { _id: null, total: { $sum: '$amount' } } }
       ]).toArray(),
 
@@ -43,17 +52,29 @@ export async function GET() {
       // Total reviews
       reviewsCollection.countDocuments(),
 
-      // Last 30 days orders
+      // Last 30 days orders (only confirmed orders for revenue calculation)
       ordersCollection.find({
         createdAt: { 
           $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) 
-        }
+        },
+        $or: [
+          { paymentStatus: 'PAID' },
+          { paymentStatus: 'CASH_ON_DELIVERY' }
+        ]
       }).toArray(),
 
       // Order status counts
       ordersCollection.aggregate([
         { $group: { _id: '$orderStatus', count: { $sum: 1 } } }
       ]).toArray(),
+
+      // Confirmed orders count (based on payment status)
+      ordersCollection.countDocuments({
+        $or: [
+          { paymentStatus: 'PAID' },
+          { paymentStatus: 'CASH_ON_DELIVERY' }
+        ]
+      }),
 
       // Average rating
       reviewsCollection.aggregate([
@@ -93,7 +114,7 @@ export async function GET() {
       totalReviews,
       mrr,
       last30DaysOrderCount: last30DaysOrders.length,
-      confirmedOrders: statusMap.CONFIRMED || 0,
+      confirmedOrders: confirmedOrdersCount, // Now based on payment status
       pendingOrders: statusMap.PENDING || 0,
       averageRating: averageRating[0]?.avgRating || 0,
       pendingReviews,
