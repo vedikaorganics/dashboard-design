@@ -3,9 +3,9 @@
 import * as React from "react"
 import { Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Button, ButtonProps } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 
-interface FloatingActionButtonProps extends Omit<ButtonProps, 'size' | 'variant'> {
+interface FloatingActionButtonProps extends Omit<React.ComponentProps<"button">, 'size' | 'variant'> {
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
 }
 

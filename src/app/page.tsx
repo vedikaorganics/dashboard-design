@@ -1,97 +1,178 @@
+"use client"
+
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { TrendingUp, TrendingDown, Users, ShoppingCart, Package, DollarSign } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { TrendingUp, Users, ShoppingCart, Package, DollarSign, Star, AlertCircle, Clock, CheckCircle } from "lucide-react"
 import { AreaChart, LineChart, BarChart, PieChart } from "@/components/charts"
+import { useDashboard, useOrders, useReviews, usePrefetch } from "@/hooks/use-data"
+import Link from "next/link"
 
 const revenueData = [
-  { name: 'Jan', value: 32000 },
-  { name: 'Feb', value: 35000 },
-  { name: 'Mar', value: 38000 },
-  { name: 'Apr', value: 42000 },
-  { name: 'May', value: 39000 },
-  { name: 'Jun', value: 45000 },
+  { name: 'Jan', value: 89000 },
+  { name: 'Feb', value: 95000 },
+  { name: 'Mar', value: 112000 },
+  { name: 'Apr', value: 128000 },
+  { name: 'May', value: 134000 },
+  { name: 'Jun', value: 156000 },
 ]
 
-const salesData = [
-  { name: 'Electronics', value: 45 },
-  { name: 'Clothing', value: 30 },
-  { name: 'Books', value: 15 },
-  { name: 'Home & Garden', value: 10 },
+const productSalesData = [
+  { name: 'Mustard Oil', value: 45 },
+  { name: 'Sesame Oil', value: 30 },
+  { name: 'Groundnut Oil', value: 20 },
+  { name: 'Coconut Oil', value: 5 },
 ]
 
-const ordersData = [
-  { name: 'Mon', value: 120 },
-  { name: 'Tue', value: 140 },
-  { name: 'Wed', value: 160 },
-  { name: 'Thu', value: 135 },
-  { name: 'Fri', value: 180 },
-  { name: 'Sat', value: 210 },
-  { name: 'Sun', value: 95 },
+
+const utmData = [
+  { name: 'WhatsApp Calls', value: 8500 },
+  { name: 'Google Ads', value: 6200 },
+  { name: 'Facebook', value: 4100 },
+  { name: 'Direct', value: 3200 },
+  { name: 'Instagram', value: 2800 },
+  { name: 'Referral', value: 1900 },
 ]
+
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case 'CONFIRMED':
+      return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" />Confirmed</Badge>
+    case 'PENDING':
+      return <Badge className="bg-yellow-100 text-yellow-800"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
+    case 'DELIVERED':
+      return <Badge className="bg-blue-100 text-blue-800"><CheckCircle className="w-3 h-3 mr-1" />Delivered</Badge>
+    default:
+      return <Badge variant="outline">{status}</Badge>
+  }
+}
 
 export default function DashboardPage() {
+  const { data: dashboardData, isLoading } = useDashboard()
+  const { data: recentOrdersData } = useOrders(1, 10)
+  const { data: reviewsData } = useReviews(1, 3)
+  const { prefetchOrders, prefetchProducts, prefetchUsers } = usePrefetch()
+  
+  // Prefetch data for better UX
+  const handlePrefetch = (type: string) => {
+    switch (type) {
+      case 'orders': prefetchOrders(); break;
+      case 'products': prefetchProducts(); break;
+      case 'users': prefetchUsers(); break;
+    }
+  }
+  
+  // Show loading skeleton if no cached data
+  if (isLoading && !dashboardData) {
+    return (
+      <DashboardLayout title="Vedika Organics - Dashboard">
+        <div className="flex-1 space-y-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            {[...Array(5)].map((_, i) => (
+              <Card key={i}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <div className="h-4 bg-muted animate-pulse rounded w-24"></div>
+                  <div className="h-4 w-4 bg-muted animate-pulse rounded"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-8 bg-muted animate-pulse rounded w-16 mb-2"></div>
+                  <div className="h-3 bg-muted animate-pulse rounded w-20"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+  
+  // Use cached data or fallback values
+  const data = dashboardData as any
+  const totalRevenue = data?.totalRevenue || 0
+  const totalOrders = data?.totalOrders || 0
+  const totalUsers = data?.totalUsers || 0
+  const totalReviews = data?.totalReviews || 0
+  const mrr = data?.mrr || 0
+  const confirmedOrders = data?.confirmedOrders || 0
+  const pendingOrders = data?.pendingOrders || 0
+  const averageRating = data?.averageRating || 0
+  const pendingReviews = data?.pendingReviews || 0
+  const customerOrderDistributionData = data?.customerOrderDistributionData || []
+  const last30DaysOrderCount = data?.last30DaysOrderCount || 0
+  
   return (
-    <DashboardLayout title="Dashboard">
-      <div className="flex-1 space-y-4">
+    <DashboardLayout title="Vedika Organics - Dashboard">
+      <div className="flex-1 space-y-6">
         
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">$45,231.89</div>
-              <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                <TrendingUp className="h-3 w-3 text-green-500" />
-                <span className="text-green-500">+20.1%</span>
-                <span>from last month</span>
-              </div>
+              <div className="text-2xl font-bold">₹{totalRevenue.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">All time revenue</p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Orders</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
               <ShoppingCart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">1,234</div>
-              <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                <TrendingUp className="h-3 w-3 text-green-500" />
-                <span className="text-green-500">+15.2%</span>
-                <span>from last month</span>
+              <div className="text-2xl font-bold">{totalOrders}</div>
+              <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                <span className="text-green-600">{confirmedOrders} confirmed</span>
+                <span>·</span>
+                <span className="text-yellow-600">{pendingOrders} pending</span>
               </div>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">8,429</div>
+              <div className="text-2xl font-bold">{totalUsers}</div>
+              <p className="text-xs text-muted-foreground">Registered customers</p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Reviews</CardTitle>
+              <Star className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalReviews}</div>
               <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                <TrendingDown className="h-3 w-3 text-red-500" />
-                <span className="text-red-500">-2.1%</span>
-                <span>from last month</span>
+                <span>Avg: {averageRating.toFixed(1)} stars</span>
+                {pendingReviews > 0 && (
+                  <>
+                    <span>·</span>
+                    <span className="text-yellow-600">{pendingReviews} pending</span>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Products</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">MRR (Last 30 Days)</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">573</div>
+              <div className="text-2xl font-bold">₹{mrr.toLocaleString()}</div>
               <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                <TrendingUp className="h-3 w-3 text-green-500" />
-                <span className="text-green-500">+5.4%</span>
-                <span>from last month</span>
+                <span>{last30DaysOrderCount} orders</span>
+                <span>·</span>
+                <span>Avg: ₹{last30DaysOrderCount > 0 ? Math.round(mrr / last30DaysOrderCount).toLocaleString() : 0}</span>
               </div>
             </CardContent>
           </Card>
@@ -100,41 +181,60 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
           <Card className="col-span-4">
             <CardHeader>
-              <CardTitle>Recent Orders</CardTitle>
-              <CardDescription>Latest orders from your store</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Recent Orders</CardTitle>
+                  <CardDescription>Latest orders from your customers</CardDescription>
+                </div>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/orders">View All</Link>
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center space-x-4">
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">Order #1234</p>
-                    <p className="text-sm text-muted-foreground">John Doe - john@example.com</p>
+                {(recentOrdersData as any)?.orders?.slice(0, 5).map((order: any) => {
+                  const customerName = order.address.firstName + (order.address.lastName ? ` ${order.address.lastName}` : '')
+                  
+                  return (
+                    <div key={order._id} className="flex items-center space-x-4">
+                      <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium leading-none">Order #{order.orderId}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {customerName} - {order.address.city}, {order.address.state}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {order.items[0]?.title} {order.items.length > 1 ? `+${order.items.length - 1} more` : ''}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {getStatusBadge(order.orderStatus)}
+                        <div className="font-medium text-right">
+                          <div>₹{order.amount.toLocaleString()}</div>
+                          {order.cashOnDelivery && (
+                            <div className="text-xs text-muted-foreground">COD</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                }) || (
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="flex items-center space-x-4">
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-muted animate-pulse rounded w-32"></div>
+                          <div className="h-3 bg-muted animate-pulse rounded w-48"></div>
+                          <div className="h-3 bg-muted animate-pulse rounded w-24"></div>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="h-6 bg-muted animate-pulse rounded w-16"></div>
+                          <div className="h-4 bg-muted animate-pulse rounded w-12"></div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="outline">Pending</Badge>
-                    <div className="font-medium">$125.99</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">Order #1235</p>
-                    <p className="text-sm text-muted-foreground">Jane Smith - jane@example.com</p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="default">Completed</Badge>
-                    <div className="font-medium">$89.99</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">Order #1236</p>
-                    <p className="text-sm text-muted-foreground">Bob Johnson - bob@example.com</p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="secondary">Processing</Badge>
-                    <div className="font-medium">$256.50</div>
-                  </div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -142,26 +242,61 @@ export default function DashboardPage() {
           <Card className="col-span-3">
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Common tasks and shortcuts</CardDescription>
+              <CardDescription>Manage your store</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-2">
-                <div className="rounded-lg border p-3 text-center hover:bg-accent cursor-pointer">
-                  <ShoppingCart className="h-6 w-6 mx-auto mb-2" />
-                  <p className="text-sm">New Order</p>
-                </div>
-                <div className="rounded-lg border p-3 text-center hover:bg-accent cursor-pointer">
-                  <Package className="h-6 w-6 mx-auto mb-2" />
-                  <p className="text-sm">Add Product</p>
-                </div>
-                <div className="rounded-lg border p-3 text-center hover:bg-accent cursor-pointer">
-                  <Users className="h-6 w-6 mx-auto mb-2" />
-                  <p className="text-sm">View Users</p>
-                </div>
-                <div className="rounded-lg border p-3 text-center hover:bg-accent cursor-pointer">
-                  <DollarSign className="h-6 w-6 mx-auto mb-2" />
-                  <p className="text-sm">Reports</p>
-                </div>
+              <div className="grid grid-cols-1 gap-3">
+                <Button 
+                  asChild 
+                  variant="outline" 
+                  className="justify-start h-auto p-4"
+                  onMouseEnter={() => handlePrefetch('orders')}
+                >
+                  <Link href="/orders">
+                    <ShoppingCart className="h-5 w-5 mr-3" />
+                    <div className="text-left">
+                      <div className="font-medium">Manage Orders</div>
+                      <div className="text-sm text-muted-foreground">{pendingOrders} pending orders</div>
+                    </div>
+                  </Link>
+                </Button>
+                <Button 
+                  asChild 
+                  variant="outline" 
+                  className="justify-start h-auto p-4"
+                  onMouseEnter={() => handlePrefetch('products')}
+                >
+                  <Link href="/products">
+                    <Package className="h-5 w-5 mr-3" />
+                    <div className="text-left">
+                      <div className="font-medium">Products</div>
+                      <div className="text-sm text-muted-foreground">Oil product catalog</div>
+                    </div>
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="justify-start h-auto p-4">
+                  <Link href="/reviews">
+                    <Star className="h-5 w-5 mr-3" />
+                    <div className="text-left">
+                      <div className="font-medium">Reviews</div>
+                      <div className="text-sm text-muted-foreground">{pendingReviews > 0 ? `${pendingReviews} to moderate` : 'All up to date'}</div>
+                    </div>
+                  </Link>
+                </Button>
+                <Button 
+                  asChild 
+                  variant="outline" 
+                  className="justify-start h-auto p-4"
+                  onMouseEnter={() => handlePrefetch('users')}
+                >
+                  <Link href="/users">
+                    <Users className="h-5 w-5 mr-3" />
+                    <div className="text-left">
+                      <div className="font-medium">Customers</div>
+                      <div className="text-sm text-muted-foreground">{totalUsers} registered</div>
+                    </div>
+                  </Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -170,34 +305,94 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
           <AreaChart
             title="Revenue Trend"
-            description="Monthly revenue over the past 6 months"
+            description="Monthly revenue from oil sales (₹)"
             data={revenueData}
             height={350}
           />
           
           <BarChart
-            title="Daily Orders"
-            description="Orders per day this week"
-            data={ordersData}
+            title="Customer Order Distribution"
+            description="Number of customers by order count"
+            data={customerOrderDistributionData}
             height={350}
           />
         </div>
         
         <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
           <PieChart
-            title="Sales by Category"
-            description="Breakdown of sales by product category"
-            data={salesData}
+            title="Sales by Product Type"
+            description="Breakdown by oil varieties"
+            data={productSalesData}
             height={350}
           />
           
           <LineChart
-            title="Revenue Growth"
-            description="Revenue trend line over time"
-            data={revenueData}
+            title="Marketing Campaign Performance"
+            description="Revenue by UTM source (₹)"
+            data={utmData}
             height={350}
           />
         </div>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Customer Reviews</CardTitle>
+            <CardDescription>Latest feedback from your customers</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {(reviewsData as any)?.reviews?.slice(0, 3).map((review: any) => (
+                <div key={review._id} className="flex items-start space-x-4 pb-4 border-b last:border-0">
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <p className="text-sm font-medium">{review.author}</p>
+                      <div className="flex">
+                        {Array.from({ length: review.rating }).map((_, i) => (
+                          <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                        ))}
+                      </div>
+                      {!review.isApproved && (
+                        <Badge variant="outline" className="text-xs">
+                          <AlertCircle className="w-3 h-3 mr-1" />
+                          Pending
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{review.product?.title}</p>
+                    <p className="text-sm">{review.text}</p>
+                    {review.photos?.length > 0 && (
+                      <p className="text-xs text-muted-foreground">📸 {review.photos.length} photo{review.photos.length > 1 ? 's' : ''} attached</p>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {new Date(review.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+              )) || (
+                <div className="space-y-4">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="flex items-start space-x-4 pb-4 border-b last:border-0">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <div className="h-4 bg-muted animate-pulse rounded w-24"></div>
+                          <div className="h-4 bg-muted animate-pulse rounded w-16"></div>
+                        </div>
+                        <div className="h-3 bg-muted animate-pulse rounded w-32"></div>
+                        <div className="h-3 bg-muted animate-pulse rounded w-full"></div>
+                      </div>
+                      <div className="h-3 bg-muted animate-pulse rounded w-16"></div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="pt-2">
+                <Button asChild variant="outline" size="sm" className="w-full">
+                  <Link href="/reviews">View All Reviews</Link>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   )

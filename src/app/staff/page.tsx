@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -23,8 +24,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Search, Filter, Users, Shield, Clock, TrendingUp } from "lucide-react"
 import { FloatingActionButton } from "@/components/ui/floating-action-button"
+import { useStaff } from "@/hooks/use-data"
 
-const staff = [
+const mockStaff = [
   {
     id: "STF-001",
     name: "Sarah Johnson",
@@ -108,6 +110,21 @@ const getRoleBadge = (role: string) => {
 }
 
 export default function StaffPage() {
+  const [searchTerm, setSearchTerm] = useState<string>("")
+  
+  const { data: staffData, isLoading } = useStaff()
+  
+  const staff = (staffData as any)?.staff || []
+  const totalStaff = (staffData as any)?.totalStaff || 0
+  const activeStaff = (staffData as any)?.activeStaff || 0
+  const adminCount = (staffData as any)?.adminCount || 0
+  
+  const filteredStaff = staff.filter((member: any) =>
+    (member.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (member.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (member.role || '').toLowerCase().includes(searchTerm.toLowerCase())
+  )
+  
   return (
     <DashboardLayout title="Staff Management">
       <div className="flex-1 space-y-4 p-8 pt-6">
@@ -119,7 +136,7 @@ export default function StaffPage() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">47</div>
+              <div className="text-2xl font-bold">{totalStaff}</div>
               <div className="flex items-center space-x-1 text-xs text-muted-foreground">
                 <TrendingUp className="h-3 w-3 text-green-500" />
                 <span className="text-green-500">+3</span>
@@ -134,7 +151,7 @@ export default function StaffPage() {
               <Shield className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">43</div>
+              <div className="text-2xl font-bold">{activeStaff}</div>
               <p className="text-xs text-muted-foreground">91.5% of total staff</p>
             </CardContent>
           </Card>
@@ -145,7 +162,7 @@ export default function StaffPage() {
               <Shield className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">5</div>
+              <div className="text-2xl font-bold">{adminCount}</div>
               <p className="text-xs text-muted-foreground">with full system access</p>
             </CardContent>
           </Card>
@@ -198,43 +215,43 @@ export default function StaffPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {staff.map((member) => (
-                    <TableRow key={member.id}>
+                  {filteredStaff.map((member: any) => (
+                    <TableRow key={member._id}>
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           <Avatar className="h-10 w-10">
-                            <AvatarImage src={member.avatar} alt={member.name} />
+                            <AvatarImage src={member.avatar} alt={member.name || 'Staff'} />
                             <AvatarFallback>
-                              {member.name.split(' ').map(n => n[0]).join('')}
+                              {(member.name || 'UN').split(' ').map((n: string) => n[0]).join('')}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <div className="font-medium">{member.name}</div>
+                            <div className="font-medium">{member.name || 'Unknown'}</div>
                             <div className="text-sm text-muted-foreground">
-                              {member.email}
+                              {member.email || 'No email'}
                             </div>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{getRoleBadge(member.role)}</TableCell>
-                      <TableCell>{member.department}</TableCell>
-                      <TableCell>{getStatusBadge(member.status)}</TableCell>
-                      <TableCell>{member.joinDate}</TableCell>
+                      <TableCell>{getRoleBadge(member.role || 'staff')}</TableCell>
+                      <TableCell>{member.department || 'Unknown'}</TableCell>
+                      <TableCell>{getStatusBadge(member.isActive ? 'active' : 'inactive')}</TableCell>
+                      <TableCell>{member.joinDate ? new Date(member.joinDate).toLocaleDateString() : 'Unknown'}</TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          {member.lastLogin}
+                          {member.lastLogin ? new Date(member.lastLogin).toLocaleString() : 'Never'}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1 max-w-40">
-                          {member.permissions.slice(0, 2).map((permission) => (
+                          {(member.permissions || []).slice(0, 2).map((permission: string) => (
                             <Badge key={permission} variant="outline" className="text-xs">
                               {permission.replace('_', ' ')}
                             </Badge>
                           ))}
-                          {member.permissions.length > 2 && (
+                          {(member.permissions || []).length > 2 && (
                             <Badge variant="outline" className="text-xs">
-                              +{member.permissions.length - 2}
+                              +{(member.permissions || []).length - 2}
                             </Badge>
                           )}
                         </div>

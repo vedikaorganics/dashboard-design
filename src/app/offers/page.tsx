@@ -1,10 +1,25 @@
 "use client"
 
+import { useState } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -20,137 +35,77 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Search, Filter, Gift, Percent, TrendingUp, Calendar, Users } from "lucide-react"
-import { FloatingActionButton } from "@/components/ui/floating-action-button"
+import { MoreHorizontal, Search, Filter, Gift, Percent, TrendingUp, Calendar, Users, Eye, Tag, Clock, CheckCircle } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import { useOffers } from "@/hooks/use-data"
+import type { Offer } from "@/types"
 
-const offers = [
-  {
-    id: "OFF-001",
-    name: "Summer Sale 2024",
-    code: "SUMMER20",
-    type: "percentage",
-    discount: "20%",
-    status: "active",
-    startDate: "2024-06-01",
-    endDate: "2024-08-31",
-    usageLimit: 1000,
-    usageCount: 342,
-    minOrder: "$50",
-    applicableProducts: "All Products",
-    revenue: "$15,420",
-  },
-  {
-    id: "OFF-002",
-    name: "First Time Buyer",
-    code: "WELCOME15",
-    type: "percentage",
-    discount: "15%",
-    status: "active",
-    startDate: "2024-01-01",
-    endDate: "2024-12-31",
-    usageLimit: 5000,
-    usageCount: 1250,
-    minOrder: "$25",
-    applicableProducts: "Selected Categories",
-    revenue: "$8,750",
-  },
-  {
-    id: "OFF-003",
-    name: "Flash Sale",
-    code: "FLASH50",
-    type: "fixed",
-    discount: "$50",
-    status: "expired",
-    startDate: "2024-05-15",
-    endDate: "2024-05-17",
-    usageLimit: 100,
-    usageCount: 100,
-    minOrder: "$200",
-    applicableProducts: "Electronics",
-    revenue: "$12,500",
-  },
-  {
-    id: "OFF-004",
-    name: "Student Discount",
-    code: "STUDENT10",
-    type: "percentage",
-    discount: "10%",
-    status: "scheduled",
-    startDate: "2024-09-01",
-    endDate: "2024-12-15",
-    usageLimit: 2000,
-    usageCount: 0,
-    minOrder: "$30",
-    applicableProducts: "Books & Supplies",
-    revenue: "$0",
-  },
-  {
-    id: "OFF-005",
-    name: "Free Shipping",
-    code: "FREESHIP",
-    type: "shipping",
-    discount: "Free Shipping",
-    status: "active",
-    startDate: "2024-06-01",
-    endDate: "2024-12-31",
-    usageLimit: 10000,
-    usageCount: 2100,
-    minOrder: "$75",
-    applicableProducts: "All Products",
-    revenue: "$5,250",
-  },
-]
 
-const getStatusBadge = (status: string) => {
-  const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-    active: "default",
-    scheduled: "secondary",
-    expired: "outline",
-    paused: "destructive",
-  }
+const getOfferStatus = (offer: Offer) => {
+  const now = new Date()
+  const startDate = new Date(offer.createdAt)
+  const endDate = new Date(offer.updatedAt)
   
-  return <Badge variant={variants[status] || "outline"}>{status}</Badge>
+  return 'active' // Simplified for now
 }
 
-const getTypeBadge = (type: string) => {
-  const variants: Record<string, "default" | "secondary" | "outline"> = {
-    percentage: "default",
-    fixed: "secondary",
-    shipping: "outline",
+const getOfferStatusBadge = (status: string) => {
+  switch (status) {
+    case 'active':
+      return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" />Active</Badge>
+    case 'expired':
+      return <Badge variant="outline"><Clock className="w-3 h-3 mr-1" />Expired</Badge>
+    case 'scheduled':
+      return <Badge className="bg-blue-100 text-blue-800"><Calendar className="w-3 h-3 mr-1" />Scheduled</Badge>
+    default:
+      return <Badge variant="outline">{status}</Badge>
   }
-  
-  const labels: Record<string, string> = {
-    percentage: "Percentage",
-    fixed: "Fixed Amount",
-    shipping: "Free Shipping",
-  }
-  
-  return <Badge variant={variants[type] || "outline"}>{labels[type] || type}</Badge>
 }
 
-const getUsageProgress = (used: number, limit: number) => {
-  return (used / limit) * 100
+const getOfferType = (isUserOffer: boolean, triggerPrice: number | null) => {
+  if (isUserOffer) return 'User-specific'
+  if (triggerPrice) return 'Conditional'
+  return 'General'
 }
+
 
 export default function OffersPage() {
+  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null)
+  const [searchTerm, setSearchTerm] = useState<string>("")
+  const [typeFilter, setTypeFilter] = useState<string>("all")
+  
+  const { data: offersData, isLoading } = useOffers()
+  
+  const offers = (offersData as any)?.offers || []
+  const totalOffers = (offersData as any)?.totalOffers || 0
+  const totalUsage = (offersData as any)?.totalUsage || 0
+  const totalSavings = (offersData as any)?.totalSavings || 0
+  
+  const filteredOffers = offers.filter((offer: any) => {
+    const matchesSearch = offer.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         offer.id.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesType = typeFilter === "all" || 
+                       (typeFilter === "user" && offer.isUserOffer) ||
+                       (typeFilter === "general" && !offer.isUserOffer)
+    return matchesSearch && matchesType
+  })
+  
+  const userOffers = offers.filter((o: any) => o.isUserOffer).length
+  const conditionalOffers = offers.filter((o: any) => o.triggerPrice !== null).length
+  
   return (
-    <DashboardLayout title="Offers & Discounts">
-      <div className="flex-1 space-y-4 p-8 pt-6">
+    <DashboardLayout title="Offers & Promotions">
+      <div className="flex-1 space-y-6">
         
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Offers</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Offers</CardTitle>
               <Gift className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">12</div>
-              <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                <TrendingUp className="h-3 w-3 text-green-500" />
-                <span className="text-green-500">+3</span>
-                <span>from last month</span>
-              </div>
+              <div className="text-2xl font-bold">{totalOffers}</div>
+              <p className="text-xs text-muted-foreground">Active discount codes</p>
             </CardContent>
           </Card>
           
@@ -160,47 +115,39 @@ export default function OffersPage() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">3,692</div>
-              <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                <TrendingUp className="h-3 w-3 text-green-500" />
-                <span className="text-green-500">+24.5%</span>
-                <span>from last month</span>
-              </div>
+              <div className="text-2xl font-bold">{totalUsage}</div>
+              <p className="text-xs text-muted-foreground">Offers applied to orders</p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Revenue from Offers</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Savings</CardTitle>
               <Percent className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">$41,920</div>
-              <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                <TrendingUp className="h-3 w-3 text-green-500" />
-                <span className="text-green-500">+18.2%</span>
-                <span>from last month</span>
-              </div>
+              <div className="text-2xl font-bold">₹{totalSavings.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">Customer savings via offers</p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">User Offers</CardTitle>
+              <Tag className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">3</div>
-              <p className="text-xs text-muted-foreground">offers expire this week</p>
+              <div className="text-2xl font-bold">{userOffers}</div>
+              <p className="text-xs text-muted-foreground">Personalized offers</p>
             </CardContent>
           </Card>
         </div>
         
         <Card>
           <CardHeader>
-            <CardTitle>Offer Management</CardTitle>
+            <CardTitle>All Offers & Discount Codes</CardTitle>
             <CardDescription>
-              Create and manage discount codes, promotional offers, and special deals.
+              Manage promotional offers, welcome discounts, and conditional deals for your oil store.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -208,90 +155,218 @@ export default function OffersPage() {
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search offers..." className="pl-8" />
+                  <Input 
+                    placeholder="Search offers by title or code..." 
+                    className="pl-8" 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
               </div>
-              <Button variant="outline" size="sm">
-                <Filter className="mr-2 h-4 w-4" />
-                Filter
-              </Button>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Offers</SelectItem>
+                  <SelectItem value="general">General Offers</SelectItem>
+                  <SelectItem value="user">User-specific</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Offer Details</TableHead>
-                    <TableHead>Code</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Discount</TableHead>
-                    <TableHead>Usage</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Revenue</TableHead>
-                    <TableHead className="w-[70px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {offers.map((offer) => (
-                    <TableRow key={offer.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{offer.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {offer.startDate} - {offer.endDate}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <code className="bg-muted px-2 py-1 rounded text-sm font-mono">
-                          {offer.code}
-                        </code>
-                      </TableCell>
-                      <TableCell>{getTypeBadge(offer.type)}</TableCell>
-                      <TableCell className="font-medium">{offer.discount}</TableCell>
-                      <TableCell>
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>{offer.usageCount}</span>
-                            <span>{offer.usageLimit}</span>
-                          </div>
-                          <Progress 
-                            value={getUsageProgress(offer.usageCount, offer.usageLimit)} 
-                            className="w-full"
-                          />
-                        </div>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(offer.status)}</TableCell>
-                      <TableCell className="font-medium">{offer.revenue}</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Open menu</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>View analytics</DropdownMenuItem>
-                            <DropdownMenuItem>Edit offer</DropdownMenuItem>
-                            <DropdownMenuItem>Duplicate</DropdownMenuItem>
-                            <DropdownMenuItem>Pause offer</DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">
-                              Delete offer
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Offer Details</TableHead>
+                      <TableHead>Code</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Discount</TableHead>
+                      <TableHead>Trigger Price</TableHead>
+                      <TableHead>Usage Count</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="w-[70px]">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredOffers.map((offer) => {
+                      const usageCount = getOfferUsage(offer.id)
+                      const status = getOfferStatus(offer)
+                      
+                      return (
+                        <TableRow key={offer._id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{offer.title}</div>
+                              <div className="text-sm text-muted-foreground line-clamp-2">
+                                {offer.description}
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Created: {new Date(offer.createdAt).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <code className="bg-muted px-2 py-1 rounded text-sm font-mono">
+                              {offer.id}
+                            </code>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={offer.isUserOffer ? "default" : "secondary"}>
+                              {getOfferType(offer.isUserOffer, offer.triggerPrice)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium text-green-600">
+                              ₹{offer.discount.toLocaleString()} off
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {offer.triggerPrice ? (
+                              <div className="text-sm">
+                                <span className="font-medium">₹{offer.triggerPrice.toLocaleString()}</span>
+                                <div className="text-xs text-muted-foreground">minimum order</div>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">No minimum</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">{usageCount}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {usageCount === 0 ? 'Not used yet' : 'times used'}
+                            </div>
+                          </TableCell>
+                          <TableCell>{getOfferStatusBadge(status)}</TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                  <span className="sr-only">Open menu</span>
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => setSelectedOffer(offer)}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>Edit offer</DropdownMenuItem>
+                                <DropdownMenuItem>View usage analytics</DropdownMenuItem>
+                                <DropdownMenuItem>Duplicate offer</DropdownMenuItem>
+                                <DropdownMenuItem className="text-red-600">
+                                  Deactivate offer
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           </CardContent>
         </Card>
+        
+        <Dialog open={selectedOffer !== null} onOpenChange={() => setSelectedOffer(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Offer Details - {selectedOffer?.title}</DialogTitle>
+              <DialogDescription>
+                Complete information about this promotional offer
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedOffer && (
+              <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Offer Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div><strong>Code:</strong> <code className="bg-muted px-2 py-1 rounded">{selectedOffer.id}</code></div>
+                      <div><strong>Title:</strong> {selectedOffer.title}</div>
+                      <div><strong>Description:</strong> {selectedOffer.description}</div>
+                      <div><strong>Discount:</strong> ₹{selectedOffer.discount.toLocaleString()}</div>
+                      <div><strong>Type:</strong> {getOfferType(selectedOffer.isUserOffer, selectedOffer.triggerPrice)}</div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Usage & Conditions</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div><strong>Times Used:</strong> {getOfferUsage(selectedOffer.id)}</div>
+                      <div><strong>User-specific:</strong> {selectedOffer.isUserOffer ? 'Yes' : 'No'}</div>
+                      {selectedOffer.triggerPrice && (
+                        <div><strong>Minimum Order:</strong> ₹{selectedOffer.triggerPrice.toLocaleString()}</div>
+                      )}
+                      <div><strong>Status:</strong> {getOfferStatusBadge(getOfferStatus(selectedOffer))}</div>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Timeline</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div><strong>Created:</strong> {new Date(selectedOffer.createdAt).toLocaleString()}</div>
+                    <div><strong>Last Updated:</strong> {new Date(selectedOffer.updatedAt).toLocaleString()}</div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Recent Usage</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {mockOrders
+                        .filter(order => order.offers.some(offer => offer.offerId === selectedOffer.id))
+                        .slice(0, 3)
+                        .map((order) => {
+                          const offerUsed = order.offers.find(offer => offer.offerId === selectedOffer.id)
+                          return (
+                            <div key={order._id} className="flex justify-between items-center p-2 border rounded">
+                              <div>
+                                <div className="font-medium">Order #{order.orderId}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  {order.address.firstName} | {new Date(order.createdAt).toLocaleDateString()}
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="font-medium text-green-600">₹{offerUsed?.discount} saved</div>
+                                <div className="text-sm text-muted-foreground">on ₹{order.amount.toLocaleString()}</div>
+                              </div>
+                            </div>
+                          )
+                        })
+                      }
+                      {getOfferUsage(selectedOffer.id) === 0 && (
+                        <p className="text-muted-foreground">This offer hasn't been used yet.</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <div className="flex gap-2">
+                  <Button className="flex-1">Edit Offer</Button>
+                  <Button variant="outline" className="flex-1">View Analytics</Button>
+                  <Button variant="outline">Duplicate</Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
-      <FloatingActionButton onClick={() => console.log('Create Offer')} />
     </DashboardLayout>
   )
 }

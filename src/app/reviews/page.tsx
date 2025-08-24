@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -22,8 +23,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Search, Filter, Star, TrendingUp, TrendingDown } from "lucide-react"
+import { useReviews } from "@/hooks/use-data"
 
-const reviews = [
+const mockReviews = [
   {
     id: "REV-001",
     customer: "John Doe",
@@ -111,6 +113,22 @@ const renderStars = (rating: number) => {
 }
 
 export default function ReviewsPage() {
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [approvedFilter, setApprovedFilter] = useState<boolean | undefined>(undefined)
+  
+  const { data: reviewsData, isLoading } = useReviews(currentPage, 50, approvedFilter)
+  
+  const reviews = (reviewsData as any)?.reviews || []
+  const pagination = (reviewsData as any)?.pagination || {}
+  
+  // Calculate statistics from API data
+  const totalReviews = pagination.total || 0
+  const approvedReviews = reviews.filter((r: any) => r.isApproved).length
+  const pendingReviews = reviews.filter((r: any) => !r.isApproved).length
+  const avgRating = reviews.length > 0 
+    ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length 
+    : 0
+  
   return (
     <DashboardLayout title="Reviews">
       <div className="flex-1 space-y-4 p-8 pt-6">
@@ -122,7 +140,7 @@ export default function ReviewsPage() {
               <Star className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">1,847</div>
+              <div className="text-2xl font-bold">{totalReviews}</div>
               <div className="flex items-center space-x-1 text-xs text-muted-foreground">
                 <TrendingUp className="h-3 w-3 text-green-500" />
                 <span className="text-green-500">+8.2%</span>
@@ -137,7 +155,7 @@ export default function ReviewsPage() {
               <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">4.3</div>
+              <div className="text-2xl font-bold">{avgRating.toFixed(1)}</div>
               <div className="flex items-center space-x-1 text-xs text-muted-foreground">
                 <TrendingUp className="h-3 w-3 text-green-500" />
                 <span className="text-green-500">+0.2</span>
@@ -151,7 +169,7 @@ export default function ReviewsPage() {
               <CardTitle className="text-sm font-medium">Pending Reviews</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">23</div>
+              <div className="text-2xl font-bold">{pendingReviews}</div>
               <div className="flex items-center space-x-1 text-xs text-muted-foreground">
                 <TrendingDown className="h-3 w-3 text-red-500" />
                 <span className="text-red-500">-12%</span>
@@ -207,19 +225,19 @@ export default function ReviewsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {reviews.map((review) => (
-                    <TableRow key={review.id}>
+                  {reviews.map((review: any) => (
+                    <TableRow key={review._id}>
                       <TableCell>
                         <div className="flex items-center space-x-2">
                           <Avatar className="h-8 w-8">
                             <AvatarFallback>
-                              {review.customer.split(' ').map(n => n[0]).join('')}
+                              {review.customerName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
                             </AvatarFallback>
                           </Avatar>
-                          <div className="font-medium">{review.customer}</div>
+                          <div className="font-medium">{review.customerName || 'Anonymous'}</div>
                         </div>
                       </TableCell>
-                      <TableCell className="font-medium">{review.product}</TableCell>
+                      <TableCell className="font-medium">{review.product?.title || 'Unknown Product'}</TableCell>
                       <TableCell>{renderStars(review.rating)}</TableCell>
                       <TableCell className="max-w-xs">
                         <div>
@@ -229,9 +247,9 @@ export default function ReviewsPage() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{review.date}</TableCell>
-                      <TableCell>{getStatusBadge(review.status)}</TableCell>
-                      <TableCell>{review.helpful}</TableCell>
+                      <TableCell>{new Date(review.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell>{getStatusBadge(review.isApproved ? 'published' : 'pending')}</TableCell>
+                      <TableCell>{review.likes || 0}</TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

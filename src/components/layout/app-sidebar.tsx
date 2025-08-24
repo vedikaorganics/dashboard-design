@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Settings, ShoppingCart, Users, Star, Megaphone, Package, Gift, UserCheck } from "lucide-react"
+import { Home, Settings, ShoppingCart, Users, Star, Target, Package, Gift, UserCheck } from "lucide-react"
 
 import {
   Sidebar,
@@ -16,7 +16,7 @@ import Link from "next/link"
 
 const navigationItems = [
   {
-    title: "Dashboard",
+    title: "Overview",
     url: "/",
     icon: Home,
   },
@@ -31,7 +31,7 @@ const navigationItems = [
     icon: Package,
   },
   {
-    title: "Users",
+    title: "Customers",
     url: "/users",
     icon: Users,
   },
@@ -44,14 +44,14 @@ const managementItems = [
     icon: Star,
   },
   {
-    title: "Campaigns",
-    url: "/campaigns",
-    icon: Megaphone,
-  },
-  {
     title: "Offers",
     url: "/offers",
     icon: Gift,
+  },
+  {
+    title: "Campaigns",
+    url: "/campaigns",
+    icon: Target,
   },
   {
     title: "Staff",
@@ -73,7 +73,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>E-Commerce Dashboard</SidebarGroupLabel>
+          <SidebarGroupLabel>Vedika Organics</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => (

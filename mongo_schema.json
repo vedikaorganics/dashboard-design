@@ -1,0 +1,393 @@
+{
+  "addresses": {
+    "_id": {
+      "$oid": "68a837dc6f1ecf554d23b051"
+    },
+    "userId": "6801d0b8ab6c505b362429e4",
+    "firstName": "Vivek Kumar Tripathi ",
+    "lastName": "",
+    "mobileNumber": "+918840991457",
+    "alternateMobileNumber": "+918840991457",
+    "email": "",
+    "addressLine1": "448/4 MES Colony, Jalipa Cantt, near 17 Guard Gate Barmer Rajasthan ",
+    "addressLine2": "",
+    "landmark": "",
+    "pincode": "344001",
+    "city": "Barmer ",
+    "state": "Rajasthan ",
+    "country": "India",
+    "createdAt": {
+      "$date": "2025-08-22T09:26:52.932Z"
+    },
+    "updatedAt": {
+      "$date": "2025-08-22T09:26:52.932Z"
+    },
+    "__v": 0
+  },
+
+  "offers": {
+    "_id": {
+      "$oid": "671a205321b310fe7052263e"
+    },
+    "id": "WELCOME_50",
+    "title": "WELCOME_50",
+    "description": "₹50 off on your first order.",
+    "discount": 50,
+    "isUserOffer": false,
+    "createdAt": {
+      "$date": "2024-10-24T10:24:19.923Z"
+    },
+    "updatedAt": {
+      "$date": "2025-03-22T07:08:36.950Z"
+    },
+    "__v": 0,
+    "triggerPrice": null
+  },
+
+  "orders": {
+    "_id": {
+      "$oid": "68a9c705ba495843abd772c3"
+    },
+    "orderId": "508674616",
+    "userId": "678dc499a8ed87be3a6968bf",
+    "amount": 1965,
+    "currency": "INR",
+    "orderStatus": "CONFIRMED",
+    "paymentStatus": "PAID",
+    "deliveryStatus": "PENDING",
+    "time": "Sat Aug 23 2025 13:49:57 GMT+0000 (Coordinated Universal Time)",
+    "items": [
+      {
+        "variant": "YMS-5",
+        "title": "Vedika Organics Extra Virgin Yellow Mustard Oil (5_litre)",
+        "price": 2090,
+        "quantity": 1,
+        "_id": {
+          "$oid": "68a9c705ba495843abd772c4"
+        }
+      }
+    ],
+
+    "address": {
+      "userId": "678dc499a8ed87be3a6968bf",
+      "firstName": "Harish Kumar Shukla",
+      "lastName": "",
+      "mobileNumber": "+919560033174",
+      "alternateMobileNumber": "+919560033174",
+      "email": "",
+      "addressLine1": "G76, Third Floor, Pushkar Enclave , Paschim Vihar",
+      "addressLine2": "",
+      "landmark": "",
+      "pincode": "110063",
+      "city": "New Delhi",
+      "state": "Delhi",
+      "country": "India",
+      "_id": {
+        "$oid": "68a9c705ba495843abd772c5"
+      }
+    },
+    "cashOnDelivery": false,
+    "offers": [
+      {
+        "offerId": "SHOP_2000",
+        "title": "SHOP_1999",
+        "discount": 125,
+        "type": "PERCENTAGE",
+        "_id": {
+          "$oid": "68a9c705ba495843abd772c6"
+        }
+      }
+    ],
+    "rewards": 0,
+    "utmParams": {
+      "utm_source": "Priyanka Ma'am",
+      "utm_medium": "Call",
+      "utm_campaign": "WhatsApp Old Cus Call",
+      "utm_term": "",
+      "utm_content": "",
+      "_id": {
+        "$oid": "68a9c705ba495843abd772c7"
+      }
+    },
+    "razorpayOrder": {
+      "id": "order_R8nYsXqiM1FL4Z",
+      "payments": [],
+      "receipt": "none",
+      "status": "created",
+      "_id": {
+        "$oid": "68a9c705ba495843abd772c8"
+      }
+    },
+    "createdAt": {
+      "$date": "2025-08-23T13:49:57.937Z"
+    },
+    "updatedAt": {
+      "$date": "2025-08-23T13:51:57.282Z"
+    },
+    "__v": 1
+  },
+
+
+  "products": {
+    "_id": {
+      "$oid": "6718e11acc6e509af4f5624f"
+    },
+    "id": "sesame-wood-press-oil",
+    "title": "Extra Virgin Black Sesame Oil",
+    "description": "Wood Pressed · Best for Cooking, Ayurvedic Rituals, Oil Pulling, Skin & Hair · Rich in Antioxidants ",
+    "colorHex": "#000000",
+    "bulletPoints": [],
+    "createdAt": {
+      "$date": "2024-10-23T11:42:18.382Z"
+    },
+    "updatedAt": {
+      "$date": "2025-08-21T08:45:10.125Z"
+    },
+    "__v": 0,
+    "mainVariant": "SSM-1",
+    "sections": [
+      {
+        "id": "a5d7ba1d-c920-42f2-a852-6ea1e7a9dc74",
+        "type": "image",
+        "order": 0,
+        "desktopUrl": "https://res.cloudinary.com/dxzzseffz/image/upload/v1755683880/Untitled_design_1_vzlzha.webp",
+        "mobileUrl": "https://res.cloudinary.com/dxzzseffz/image/upload/v1755683880/Untitled_design_1_vzlzha.webp",
+        "alt": "Coconut oil comparsion extra virgin vs cold pressed"
+      },
+      {
+        "id": "d9594b76-4fc9-4fe9-a960-2f18357a1efa",
+        "type": "text",
+        "order": 1,
+        "heading": "Why Vedika's  Wood-Pressed Oil is Unmatched?",
+        "body": ".",
+        "images": [],
+        "items": []
+      },
+      {
+        "id": "9e80d752-2983-43bf-a3c0-1453c72cc982",
+        "type": "text",
+        "order": 2,
+        "heading": "How To Choose The Right Cooking Oil?",
+        "body": ".",
+        "images": [],
+        "items": []
+      },
+      {
+        "id": "5e2fa5cc-d532-4ce4-b93c-f0f212602a82",
+        "type": "image",
+        "order": 3,
+        "desktopUrl": "https://res.cloudinary.com/dxzzseffz/image/upload/v1748347648/ChatGPT_Image_May_27_2025_05_31_52_PM_jbmtja.webp",
+        "mobileUrl": "https://res.cloudinary.com/dxzzseffz/image/upload/v1748347648/ChatGPT_Image_May_27_2025_05_31_52_PM_jbmtja.webp",
+        "alt": "How to Choose the right cooking Oil?",
+        "images": [],
+        "items": []
+      },
+      {
+        "id": "b6edea40-81f6-4930-a32d-3ec02a05519e",
+        "type": "text",
+        "order": 4,
+        "heading": "Know Your Oil’s Smoke Point !",
+        "body": "\nSmoke point is the temperature at which the oil starts burning. Cooking above it degrades the oil. ",
+        "images": [],
+        "items": []
+      },
+      {
+        "id": "a24f8b11-c96b-4b02-b000-6a84bcd62652",
+        "type": "image",
+        "order": 5,
+        "desktopUrl": "https://imagedelivery.net/Y_UG4JAq7C8qpE0TjWsbfA/c3156dac-8c1b-4516-b19a-7bee2f5e0f00/public",
+        "mobileUrl": "https://imagedelivery.net/Y_UG4JAq7C8qpE0TjWsbfA/71a0d03d-21ac-4e7e-27e0-b7e201f9ba00/public",
+        "caption": "Use this chart to pick the right oil !",
+        "alt": "Smoking points of 7 cooking oils.",
+        "images": [],
+        "items": []
+      },
+      {
+        "id": "e79c8677-1077-4f58-926d-45dbb30008cf",
+        "type": "text",
+        "order": 6,
+        "heading": "The Right Oil for Every Indian Dish!",
+        "body": "Use high smoke-point oils like Mustard or Ghee for frying, and gentler oils such as Groundnut or Sesame for low-heat cooking and dressings.",
+        "images": [],
+        "items": []
+      },
+      {
+        "id": "22bae208-3248-4c7c-bef8-21a6910835d8",
+        "type": "image",
+        "order": 7,
+        "desktopUrl": "https://imagedelivery.net/Y_UG4JAq7C8qpE0TjWsbfA/9210e0e8-eae9-46e7-17e9-7991bce43900/public",
+        "mobileUrl": "https://imagedelivery.net/Y_UG4JAq7C8qpE0TjWsbfA/49e3aa4b-18a5-48f3-3b11-2c8475836700/public",
+        "caption": "Simply choose the oil based on meals you cook.",
+        "alt": "The Right Oil for Every Indian Dish!",
+        "images": [],
+        "items": []
+      },
+      {
+        "id": "ee28bfe1-0eb9-47e5-8f32-090af55c9654",
+        "type": "image",
+        "order": 8,
+        "desktopUrl": "https://res.cloudinary.com/dxzzseffz/image/upload/v1755589454/1_t0nexw.jpg",
+        "mobileUrl": "https://res.cloudinary.com/dxzzseffz/image/upload/v1755589454/1_t0nexw.jpg",
+        "alt": "A note for customers sesame oil"
+      },
+      {
+        "id": "23a44a57-2373-4464-939d-d53e51643a14",
+        "type": "image",
+        "order": 9,
+        "desktopUrl": "https://res.cloudinary.com/dxzzseffz/image/upload/v1755589455/We_stand_by_the_exceptional_quality_and_purity_of_our_products_which_is_why_we_offer_a_one-week_money-back_guarantee._If_for_any_reason_you_don_t_absolutely_love_our_products_you_can_return_the_acxqbm.jpg",
+        "mobileUrl": "https://res.cloudinary.com/dxzzseffz/image/upload/v1755589455/We_stand_by_the_exceptional_quality_and_purity_of_our_products_which_is_why_we_offer_a_one-week_money-back_guarantee._If_for_any_reason_you_don_t_absolutely_love_our_products_you_can_return_the_acxqbm.jpg",
+        "alt": "Money Back Guarantee Vedika Organics"
+      }
+    ],
+    "badges": [
+      "Lab Test"
+    ],
+    "tags": [
+      "Most Repeat"
+    ]
+  },
+
+
+  "productvariants": {
+    "_id": {
+      "$oid": "6717ba1bbbe103a1a5672d8b"
+    },
+    "id": "GRN-1",
+    "title": "Vedika Organics Extra Virgin Groundnut Oil (1_litre)",
+    "unit": "litre",
+    "size": 1,
+    "price": 490,
+    "coverImage": "https://res.cloudinary.com/dxzzseffz/image/upload/v1753172266/GW_PDP_01_Optimised_bqdyqc.png",
+    "cartImage": "https://res.cloudinary.com/dxzzseffz/image/upload/v1746450863/Wood_Pressed_xe62sr.webp",
+    "productId": "groundnut-wood-pressed-oil",
+    "otherImages": [
+      "https://res.cloudinary.com/dxzzseffz/image/upload/v1754980962/Gw_Back_tt8tbu.webp",
+      "https://res.cloudinary.com/dxzzseffz/image/upload/v1748424470/GW_PDP_2_PORTRAIT_1_luwa4i.webp",
+      "https://res.cloudinary.com/dxzzseffz/image/upload/v1746482867/GW_PDP_2_f2qo4j.webp",
+      "https://res.cloudinary.com/dxzzseffz/image/upload/v1746626049/GW_Parantha_Portrait_usiomx.webp"
+    ],
+    "createdAt": {
+      "$date": "2024-10-22T14:43:39.021Z"
+    },
+    "updatedAt": {
+      "$date": "2025-08-17T09:26:27.137Z"
+    },
+    "__v": 0,
+    "mrp": 550,
+    "variantOrder": 1,
+    "label": null,
+    "type": "Bottle"
+  },
+
+  "reviews": {
+    "_id": {
+      "$oid": "68a3372d416a99828b8dae5f"
+    },
+    "author": "Neelesh Marskole",
+    "userId": "68975bd061d41589702deec7",
+    "product": "Extra Virgin Black Mustard Oil",
+    "productId": "mustard-wood-pressed-oil",
+    "rating": 5,
+    "text": "I really liked this product And I hope that you will give me a completely pure product. If you adulterate it out of greed, you will soon lose your customers. Thank you.",
+    "photos": [
+      "http://res.cloudinary.com/dxzzseffz/image/upload/v1755526955/userReviewImages/hdpnm0ymrsuhdw1w0gcp.jpg"
+    ],
+    "isApproved": true,
+    "replies": [],
+    "sortOrder": 50,
+    "createdAt": {
+      "$date": "2025-08-18T14:22:37.676Z"
+    },
+    "updatedAt": {
+      "$date": "2025-08-24T00:35:40.685Z"
+    },
+    "__v": 0
+  },
+
+
+  "rewards": {
+    "_id": {
+      "$oid": "68a3372d416a99828b8dae61"
+    },
+    "userId": "68975bd061d41589702deec7",
+    "rewardUnit": "AMOUNT",
+    "rewardValue": 50,
+    "sourceType": "REVIEW",
+    "sourceId": "68a3372d416a99828b8dae5f",
+    "claimType": null,
+    "claimId": null,
+    "isClaimed": false,
+    "createdAt": {
+      "$date": "2025-08-18T14:22:37.688Z"
+    },
+    "updatedAt": {
+      "$date": "2025-08-18T14:22:37.688Z"
+    },
+    "__v": 0
+  },
+
+
+  "session": {
+    "_id": {
+      "$oid": "68a69f9964b62c7207060ffc"
+    },
+    "expiresAt": {
+      "$date": "2025-08-29T04:45:19.011Z"
+    },
+    "token": "WlTZpky9UIAKj5tnX6QugVondha6KXJh",
+    "createdAt": {
+      "$date": "2025-08-21T04:24:57.194Z"
+    },
+    "updatedAt": {
+      "$date": "2025-08-22T04:45:19.011Z"
+    },
+    "ipAddress": "106.222.202.201",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "userId": {
+      "$oid": "6631d16c1e18707ed698107f"
+    }
+  }
+
+
+  "staffs": {
+    "_id": {
+      "$oid": "678b4f515fb6477ed38d9f96"
+    },
+    "email": "kabir@shudhkart.com",
+    "isActive": true,
+    "updatedAt": {
+      "$date": "2025-08-19T13:59:13.613Z"
+    },
+    "role": "admin",
+    "lastLogin": {
+      "$date": "2025-08-19T13:59:13.613Z"
+    },
+    "fullName": "Kabir Sihag",
+    "createdAt": "2025-01-18T19:45:48.124+00:00"
+  },
+
+
+  "users": {
+    "_id": {
+      "$oid": "68a81a243d3d87b750402643"
+    },
+    "phoneNumber": "+919733023999",
+    "phoneNumberVerified": true,
+    "email": "+919733023999@temp.local",
+    "name": "",
+    "avatar": "",
+    "offers": [
+      "WELCOME_50"
+    ],
+    "noOfOrders": 0,
+    "notes": "something",
+    "createdAt": {
+      "$date": "2025-08-22T07:20:04.879Z"
+    },
+    "updatedAt": {
+      "$date": "2025-08-24T00:35:53.161Z"
+    },
+    "__v": 0,
+    "userId": "68a81a243d3d87b750402643"
+  }
+}
