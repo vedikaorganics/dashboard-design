@@ -76,149 +76,149 @@ const getOfferType = (isUserOffer: boolean, triggerPrice: number | null) => {
   return 'General'
 }
 
-const columns: ColumnDef<any>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "title",
-    header: "Offer",
-    cell: ({ row }) => {
-      const offer = row.original
-      return (
-        <div>
-          <div className="font-medium">{offer.title}</div>
-          <div className="text-sm text-muted-foreground">#{offer.id}</div>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "discount",
-    header: "Discount",
-    cell: ({ row }) => {
-      const offer = row.original
-      return (
-        <div className="flex items-center space-x-2">
-          <Badge variant="outline" className="bg-orange-50">
-            <Percent className="w-3 h-3 mr-1" />
-            ₹{offer.discount}
-          </Badge>
-        </div>
-      )
-    },
-  },
-  {
-    id: "type",
-    header: "Type",
-    cell: ({ row }) => {
-      const offer = row.original
-      const type = getOfferType(offer.isUserOffer, offer.triggerPrice)
-      return (
-        <Badge variant={type === 'User-specific' ? 'default' : type === 'Conditional' ? 'secondary' : 'outline'}>
-          {type}
-        </Badge>
-      )
-    },
-  },
-  {
-    id: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const offer = row.original
-      const status = getOfferStatus(offer)
-      return getOfferStatusBadge(status)
-    },
-  },
-  {
-    accessorKey: "triggerPrice",
-    header: "Min Order",
-    cell: ({ row }) => {
-      const triggerPrice = row.getValue("triggerPrice") as number | null
-      return triggerPrice ? `₹${triggerPrice.toLocaleString()}` : 'No minimum'
-    },
-  },
-  {
-    id: "usage",
-    header: "Usage",
-    cell: ({ row }) => {
-      const offer = row.original
-      const usage = getOfferUsage(offer.id)
-      return (
-        <div className="w-24">
-          <div className="flex justify-between text-sm mb-1">
-            <span>{usage}%</span>
-          </div>
-          <Progress value={usage} className="h-2" />
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "createdAt",
-    header: "Created",
-    cell: ({ row }) => {
-      const createdAt = row.getValue("createdAt") as string
-      return new Date(createdAt).toLocaleDateString()
-    },
-  },
-  {
-    id: "actions",
-    cell: ({ row }) => {
-      const offer = row.original
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => setSelectedOffer(offer)}>
-              <Eye className="mr-2 h-4 w-4" />
-              View details
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit offer
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Copy className="mr-2 h-4 w-4" />
-              Duplicate
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
-  },
-]
-
 export default function OffersPage() {
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null)
   const [searchTerm, setSearchTerm] = useState<string>("")
   const [typeFilter, setTypeFilter] = useState<string>("all")
+  
+  const columns: ColumnDef<any>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected()}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "title",
+      header: "Offer",
+      cell: ({ row }) => {
+        const offer = row.original
+        return (
+          <div>
+            <div className="font-medium">{offer.title}</div>
+            <div className="text-sm text-muted-foreground">#{offer.id}</div>
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "discount",
+      header: "Discount",
+      cell: ({ row }) => {
+        const offer = row.original
+        return (
+          <div className="flex items-center space-x-2">
+            <Badge variant="outline" className="bg-orange-50">
+              <Percent className="w-3 h-3 mr-1" />
+              ₹{offer.discount}
+            </Badge>
+          </div>
+        )
+      },
+    },
+    {
+      id: "type",
+      header: "Type",
+      cell: ({ row }) => {
+        const offer = row.original
+        const type = getOfferType(offer.isUserOffer, offer.triggerPrice)
+        return (
+          <Badge variant={type === 'User-specific' ? 'default' : type === 'Conditional' ? 'secondary' : 'outline'}>
+            {type}
+          </Badge>
+        )
+      },
+    },
+    {
+      id: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const offer = row.original
+        const status = getOfferStatus(offer)
+        return getOfferStatusBadge(status)
+      },
+    },
+    {
+      accessorKey: "triggerPrice",
+      header: "Min Order",
+      cell: ({ row }) => {
+        const triggerPrice = row.getValue("triggerPrice") as number | null
+        return triggerPrice ? `₹${triggerPrice.toLocaleString()}` : 'No minimum'
+      },
+    },
+    {
+      id: "usage",
+      header: "Usage",
+      cell: ({ row }) => {
+        const offer = row.original
+        const usage = getOfferUsage(offer.id)
+        return (
+          <div className="w-24">
+            <div className="flex justify-between text-sm mb-1">
+              <span>{usage}%</span>
+            </div>
+            <Progress value={usage} className="h-2" />
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "createdAt",
+      header: "Created",
+      cell: ({ row }) => {
+        const createdAt = row.getValue("createdAt") as string
+        return new Date(createdAt).toLocaleDateString()
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const offer = row.original
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => setSelectedOffer(offer)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View details
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit offer
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Copy className="mr-2 h-4 w-4" />
+                Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-red-600">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )
+      },
+    },
+  ]
   
   const { data: offersData, isLoading } = useOffers()
   

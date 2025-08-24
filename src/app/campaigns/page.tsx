@@ -79,161 +79,161 @@ const getChannelBadge = (source: string, medium: string) => {
   return <Badge variant="outline">Other</Badge>
 }
 
-const columns: ColumnDef<any>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "campaign",
-    header: "Campaign",
-    cell: ({ row }) => {
-      const campaign = row.original
-      return (
-        <div>
-          <div className="font-medium">{campaign.campaign}</div>
-          <div className="text-sm text-muted-foreground">
-            {campaign.source} • {campaign.medium}
-          </div>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "source",
-    header: "Channel",
-    cell: ({ row }) => {
-      const campaign = row.original
-      return (
-        <div className="flex items-center space-x-2">
-          {getChannelIcon(campaign.source, campaign.medium)}
-          {getChannelBadge(campaign.source, campaign.medium)}
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "orders",
-    header: "Orders",
-    cell: ({ row }) => {
-      const orders = row.getValue("orders") as number
-      return (
-        <div>
-          <div className="font-medium">{orders}</div>
-          <div className="text-xs text-muted-foreground">total orders</div>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "revenue",
-    header: "Revenue",
-    cell: ({ row }) => {
-      const revenue = row.getValue("revenue") as number
-      return (
-        <div>
-          <div className="font-medium">₹{revenue.toLocaleString()}</div>
-          <div className="text-xs text-muted-foreground">total revenue</div>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "customers",
-    header: "Customers",
-    cell: ({ row }) => {
-      const customers = row.getValue("customers") as number
-      return (
-        <div>
-          <div className="font-medium">{customers}</div>
-          <div className="text-xs text-muted-foreground">unique customers</div>
-        </div>
-      )
-    },
-  },
-  {
-    id: "avgOrderValue",
-    header: "AOV",
-    cell: ({ row }) => {
-      const campaign = row.original
-      const aov = campaign.orders > 0 ? campaign.revenue / campaign.orders : 0
-      return (
-        <div>
-          <div className="font-medium">₹{Math.round(aov).toLocaleString()}</div>
-          <div className="text-xs text-muted-foreground">avg order value</div>
-        </div>
-      )
-    },
-  },
-  {
-    id: "conversionRate",
-    header: "Performance",
-    cell: ({ row }) => {
-      const campaign = row.original
-      const conversionRate = campaign.customers > 0 ? (campaign.orders / campaign.customers) * 100 : 0
-      return (
-        <div>
-          <div className="font-medium">{conversionRate.toFixed(1)}%</div>
-          <div className="text-xs text-muted-foreground">conversion rate</div>
-        </div>
-      )
-    },
-  },
-  {
-    id: "actions",
-    cell: ({ row }) => {
-      const campaign = row.original
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => setSelectedCampaign(campaign)}>
-              <Eye className="mr-2 h-4 w-4" />
-              View details
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <BarChart3 className="mr-2 h-4 w-4" />
-              View analytics
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit campaign
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Copy className="mr-2 h-4 w-4" />
-              Duplicate
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
-  },
-]
-
 export default function CampaignsPage() {
   const [searchTerm, setSearchTerm] = useState<string>("")
   const [selectedCampaign, setSelectedCampaign] = useState<any>(null)
+  
+  const columns: ColumnDef<any>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected()}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "campaign",
+      header: "Campaign",
+      cell: ({ row }) => {
+        const campaign = row.original
+        return (
+          <div>
+            <div className="font-medium">{campaign.campaign}</div>
+            <div className="text-sm text-muted-foreground">
+              {campaign.source} • {campaign.medium}
+            </div>
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "source",
+      header: "Channel",
+      cell: ({ row }) => {
+        const campaign = row.original
+        return (
+          <div className="flex items-center space-x-2">
+            {getChannelIcon(campaign.source, campaign.medium)}
+            {getChannelBadge(campaign.source, campaign.medium)}
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "orders",
+      header: "Orders",
+      cell: ({ row }) => {
+        const orders = row.getValue("orders") as number
+        return (
+          <div>
+            <div className="font-medium">{orders}</div>
+            <div className="text-xs text-muted-foreground">total orders</div>
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "revenue",
+      header: "Revenue",
+      cell: ({ row }) => {
+        const revenue = row.getValue("revenue") as number
+        return (
+          <div>
+            <div className="font-medium">₹{revenue.toLocaleString()}</div>
+            <div className="text-xs text-muted-foreground">total revenue</div>
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "customers",
+      header: "Customers",
+      cell: ({ row }) => {
+        const customers = row.getValue("customers") as number
+        return (
+          <div>
+            <div className="font-medium">{customers}</div>
+            <div className="text-xs text-muted-foreground">unique customers</div>
+          </div>
+        )
+      },
+    },
+    {
+      id: "avgOrderValue",
+      header: "AOV",
+      cell: ({ row }) => {
+        const campaign = row.original
+        const aov = campaign.orders > 0 ? campaign.revenue / campaign.orders : 0
+        return (
+          <div>
+            <div className="font-medium">₹{Math.round(aov).toLocaleString()}</div>
+            <div className="text-xs text-muted-foreground">avg order value</div>
+          </div>
+        )
+      },
+    },
+    {
+      id: "conversionRate",
+      header: "Performance",
+      cell: ({ row }) => {
+        const campaign = row.original
+        const conversionRate = campaign.customers > 0 ? (campaign.orders / campaign.customers) * 100 : 0
+        return (
+          <div>
+            <div className="font-medium">{conversionRate.toFixed(1)}%</div>
+            <div className="text-xs text-muted-foreground">conversion rate</div>
+          </div>
+        )
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const campaign = row.original
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => setSelectedCampaign(campaign)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View details
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <BarChart3 className="mr-2 h-4 w-4" />
+                View analytics
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit campaign
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Copy className="mr-2 h-4 w-4" />
+                Duplicate
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )
+      },
+    },
+  ]
   
   const { data: campaignsData, isLoading } = useCampaigns()
   

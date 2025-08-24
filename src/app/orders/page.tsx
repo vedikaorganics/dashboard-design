@@ -75,148 +75,6 @@ const getCustomerName = (order: Order) => {
   return order.address.firstName + (order.address.lastName ? ` ${order.address.lastName}` : '')
 }
 
-const columns: ColumnDef<Order>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "orderId",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Order ID" />
-    ),
-    cell: ({ row }) => <div className="font-medium">#{row.getValue("orderId")}</div>,
-  },
-  {
-    id: "customer",
-    accessorFn: (row) => getCustomerName(row),
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Customer" />
-    ),
-    cell: ({ row }) => {
-      const order = row.original
-      return (
-        <div>
-          <div className="font-medium">{getCustomerName(order)}</div>
-          <div className="text-sm text-muted-foreground flex items-center">
-            <Phone className="w-3 h-3 mr-1" />
-            {order.address.mobileNumber}
-          </div>
-          <div className="text-sm text-muted-foreground flex items-center">
-            <MapPin className="w-3 h-3 mr-1" />
-            {order.address.city}, {order.address.state}
-          </div>
-        </div>
-      )
-    },
-  },
-  {
-    id: "items",
-    header: "Items",
-    cell: ({ row }) => {
-      const order = row.original
-      return (
-        <div>
-          <div className="text-sm font-medium">
-            {order.items[0]?.title.split('(')[0].trim()}
-          </div>
-          {order.items.length > 1 && (
-            <div className="text-sm text-muted-foreground">
-              +{order.items.length - 1} more
-            </div>
-          )}
-          <div className="text-xs text-muted-foreground">
-            Qty: {order.items.reduce((sum: number, item: any) => sum + item.quantity, 0)}
-          </div>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "orderStatus",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
-    ),
-    cell: ({ row }) => getOrderStatusBadge(row.getValue("orderStatus")),
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
-    },
-  },
-  {
-    accessorKey: "paymentStatus",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Payment" />
-    ),
-    cell: ({ row }) => getPaymentStatusBadge(row.getValue("paymentStatus")),
-  },
-  {
-    accessorKey: "deliveryStatus",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Delivery" />
-    ),
-    cell: ({ row }) => getDeliveryStatusBadge(row.getValue("deliveryStatus")),
-  },
-  {
-    accessorKey: "totalAmount",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Amount" />
-    ),
-    cell: ({ row }) => {
-      const order = row.original
-      const amount = (row.getValue("totalAmount") as number) || order.amount || 0
-      return (
-        <div>
-          <div className="font-medium">₹{amount.toLocaleString()}</div>
-          {order.offers?.length > 0 && (
-            <div className="text-xs text-green-600">
-              ₹{order.offers.reduce((sum: number, offer: any) => sum + (offer.discount || 0), 0)} saved
-            </div>
-          )}
-        </div>
-      )
-    },
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const order = row.original
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => setSelectedOrder(order)}>
-              <Eye className="mr-2 h-4 w-4" />
-              View details
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
-  },
-]
-
 export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -226,6 +84,148 @@ export default function OrdersPage() {
   
   const orders = (ordersData as any)?.orders || []
   const pagination = (ordersData as any)?.pagination || {}
+
+  const columns: ColumnDef<Order>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected()}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "orderId",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Order ID" />
+      ),
+      cell: ({ row }) => <div className="font-medium">#{row.getValue("orderId")}</div>,
+    },
+    {
+      id: "customer",
+      accessorFn: (row) => getCustomerName(row),
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Customer" />
+      ),
+      cell: ({ row }) => {
+        const order = row.original
+        return (
+          <div>
+            <div className="font-medium">{getCustomerName(order)}</div>
+            <div className="text-sm text-muted-foreground flex items-center">
+              <Phone className="w-3 h-3 mr-1" />
+              {order.address.mobileNumber}
+            </div>
+            <div className="text-sm text-muted-foreground flex items-center">
+              <MapPin className="w-3 h-3 mr-1" />
+              {order.address.city}, {order.address.state}
+            </div>
+          </div>
+        )
+      },
+    },
+    {
+      id: "items",
+      header: "Items",
+      cell: ({ row }) => {
+        const order = row.original
+        return (
+          <div>
+            <div className="text-sm font-medium">
+              {order.items[0]?.title.split('(')[0].trim()}
+            </div>
+            {order.items.length > 1 && (
+              <div className="text-sm text-muted-foreground">
+                +{order.items.length - 1} more
+              </div>
+            )}
+            <div className="text-xs text-muted-foreground">
+              Qty: {order.items.reduce((sum: number, item: any) => sum + item.quantity, 0)}
+            </div>
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "orderStatus",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Status" />
+      ),
+      cell: ({ row }) => getOrderStatusBadge(row.getValue("orderStatus")),
+      filterFn: (row, id, value) => {
+        return value.includes(row.getValue(id))
+      },
+    },
+    {
+      accessorKey: "paymentStatus",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Payment" />
+      ),
+      cell: ({ row }) => getPaymentStatusBadge(row.getValue("paymentStatus")),
+    },
+    {
+      accessorKey: "deliveryStatus",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Delivery" />
+      ),
+      cell: ({ row }) => getDeliveryStatusBadge(row.getValue("deliveryStatus")),
+    },
+    {
+      accessorKey: "totalAmount",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Amount" />
+      ),
+      cell: ({ row }) => {
+        const order = row.original
+        const amount = (row.getValue("totalAmount") as number) || order.amount || 0
+        return (
+          <div>
+            <div className="font-medium">₹{amount.toLocaleString()}</div>
+            {order.offers?.length > 0 && (
+              <div className="text-xs text-green-600">
+                ₹{order.offers.reduce((sum: number, offer: any) => sum + (offer.discount || 0), 0)} saved
+              </div>
+            )}
+          </div>
+        )
+      },
+    },
+    {
+      id: "actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const order = row.original
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => setSelectedOrder(order)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View details
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )
+      },
+    },
+  ]
   
   return (
     <DashboardLayout title="Orders Management">

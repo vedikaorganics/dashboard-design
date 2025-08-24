@@ -4,7 +4,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { TrendingUp, TrendingDown, Users, ShoppingCart, DollarSign, Star, AlertCircle, Clock, CheckCircle, Truck } from "lucide-react"
+import { TrendingUp, TrendingDown, AlertCircle, Clock, CheckCircle, Truck, Star } from "lucide-react"
 import { BarChart } from "@/components/charts"
 import { useDashboard, useOrders, useReviews, usePrefetch } from "@/hooks/use-data"
 import Link from "next/link"
@@ -122,52 +122,48 @@ export default function DashboardPage() {
         
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
-            <CardHeader className="flex flex-row items-center space-x-2 space-y-0 pb-2">
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Revenue</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold">₹{(totalRevenue / 100000).toFixed(2)}L</div>
+                <div className="text-4xl font-bold">₹{(totalRevenue / 100000).toFixed(2)}L</div>
                 {getGrowthIndicator(revenueGrowth)}
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardHeader className="flex flex-row items-center space-x-2 space-y-0 pb-2">
-              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Orders</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold">{(totalOrders / 1000).toFixed(2)}K</div>
+                <div className="text-4xl font-bold">{(totalOrders / 1000).toFixed(2)}K</div>
                 {getGrowthIndicator(ordersGrowth)}
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardHeader className="flex flex-row items-center space-x-2 space-y-0 pb-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Users</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold">{(totalUsers / 1000).toFixed(2)}K</div>
+                <div className="text-4xl font-bold">{(totalUsers / 1000).toFixed(2)}K</div>
                 {getGrowthIndicator(usersGrowth)}
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardHeader className="flex flex-row items-center space-x-2 space-y-0 pb-2">
-              <Star className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Reviews</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold">{totalReviews}</div>
+                <div className="text-4xl font-bold">{totalReviews}</div>
                 {getGrowthIndicator(reviewsGrowth)}
               </div>
             </CardContent>

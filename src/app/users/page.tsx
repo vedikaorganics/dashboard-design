@@ -65,153 +65,6 @@ const getCustomerTypeBadge = (customerType: string) => {
   }
 }
 
-const columns: ColumnDef<any>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "name",
-    header: "Customer",
-    cell: ({ row }) => {
-      const customer = row.original
-      return (
-        <div className="flex items-center space-x-3">
-          <Avatar className="h-10 w-10">
-            <AvatarFallback className="bg-orange-100 text-orange-800">
-              {customer.name ? customer.name.split(' ').map((n: string) => n[0]).join('') : 
-               customer.phoneNumber.slice(-2)}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <div className="font-medium">
-              {customer.name || 'Unnamed Customer'}
-            </div>
-            <div className="text-sm text-muted-foreground flex items-center">
-              <Phone className="w-3 h-3 mr-1" />
-              {customer.phoneNumber}
-            </div>
-            {customer.email && !customer.email.includes('@temp.local') && (
-              <div className="text-sm text-muted-foreground flex items-center">
-                <Mail className="w-3 h-3 mr-1" />
-                {customer.email}
-              </div>
-            )}
-          </div>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "phoneNumberVerified",
-    header: "Phone Verification",
-    cell: ({ row }) => getVerificationBadge(row.getValue("phoneNumberVerified")),
-  },
-  {
-    accessorKey: "customerType",
-    header: "Customer Type",
-    cell: ({ row }) => getCustomerTypeBadge(row.getValue("customerType")),
-  },
-  {
-    accessorKey: "orderCount",
-    header: "Orders",
-    cell: ({ row }) => {
-      const orderCount = row.getValue("orderCount") as number || 0
-      return (
-        <div>
-          <div className="font-medium">{orderCount}</div>
-          <div className="text-xs text-muted-foreground">Total orders placed</div>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "totalSpent",
-    header: "Total Spent",
-    cell: ({ row }) => {
-      const totalSpent = row.getValue("totalSpent") as number || 0
-      const orderCount = row.original.orderCount || 1
-      return (
-        <div>
-          <div className="font-medium">₹{totalSpent.toLocaleString()}</div>
-          {totalSpent > 0 && (
-            <div className="text-xs text-muted-foreground">
-              Avg: ₹{Math.round(totalSpent / Math.max(orderCount, 1)).toLocaleString()}
-            </div>
-          )}
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "unclaimedRewards",
-    header: "Offers Used",
-    cell: ({ row }) => {
-      const unclaimedRewards = row.getValue("unclaimedRewards") as number || 0
-      return (
-        <div>
-          <div className="text-sm">₹{unclaimedRewards.toLocaleString()}</div>
-          <div className="text-xs text-muted-foreground">Unclaimed rewards</div>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "notes",
-    header: "Notes",
-    cell: ({ row }) => {
-      const notes = row.getValue("notes") as string
-      return (
-        <div className="max-w-32 truncate text-sm text-muted-foreground">
-          {notes || 'No notes'}
-          {notes && <MessageCircle className="w-3 h-3 inline ml-1 text-blue-500" />}
-        </div>
-      )
-    },
-  },
-  {
-    id: "actions",
-    cell: ({ row }) => {
-      const customer = row.original
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => setSelectedCustomer(customer)}>
-              <Eye className="mr-2 h-4 w-4" />
-              View details
-            </DropdownMenuItem>
-            <DropdownMenuItem>Add note</DropdownMenuItem>
-            <DropdownMenuItem>Update info</DropdownMenuItem>
-            <DropdownMenuItem>Send offer</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
-  },
-]
-
 export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null)
   const [searchTerm, setSearchTerm] = useState<string>("")
@@ -222,6 +75,153 @@ export default function CustomersPage() {
   
   const users = (usersData as any)?.users || []
   const pagination = (usersData as any)?.pagination || {}
+
+  const columns: ColumnDef<any>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected()}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "name",
+      header: "Customer",
+      cell: ({ row }) => {
+        const customer = row.original
+        return (
+          <div className="flex items-center space-x-3">
+            <Avatar className="h-10 w-10">
+              <AvatarFallback className="bg-orange-100 text-orange-800">
+                {customer.name ? customer.name.split(' ').map((n: string) => n[0]).join('') : 
+                 customer.phoneNumber.slice(-2)}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="font-medium">
+                {customer.name || 'Unnamed Customer'}
+              </div>
+              <div className="text-sm text-muted-foreground flex items-center">
+                <Phone className="w-3 h-3 mr-1" />
+                {customer.phoneNumber}
+              </div>
+              {customer.email && !customer.email.includes('@temp.local') && (
+                <div className="text-sm text-muted-foreground flex items-center">
+                  <Mail className="w-3 h-3 mr-1" />
+                  {customer.email}
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "phoneNumberVerified",
+      header: "Phone Verification",
+      cell: ({ row }) => getVerificationBadge(row.getValue("phoneNumberVerified")),
+    },
+    {
+      accessorKey: "customerType",
+      header: "Customer Type",
+      cell: ({ row }) => getCustomerTypeBadge(row.getValue("customerType")),
+    },
+    {
+      accessorKey: "orderCount",
+      header: "Orders",
+      cell: ({ row }) => {
+        const orderCount = row.getValue("orderCount") as number || 0
+        return (
+          <div>
+            <div className="font-medium">{orderCount}</div>
+            <div className="text-xs text-muted-foreground">Total orders placed</div>
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "totalSpent",
+      header: "Total Spent",
+      cell: ({ row }) => {
+        const totalSpent = row.getValue("totalSpent") as number || 0
+        const orderCount = row.original.orderCount || 1
+        return (
+          <div>
+            <div className="font-medium">₹{totalSpent.toLocaleString()}</div>
+            {totalSpent > 0 && (
+              <div className="text-xs text-muted-foreground">
+                Avg: ₹{Math.round(totalSpent / Math.max(orderCount, 1)).toLocaleString()}
+              </div>
+            )}
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "unclaimedRewards",
+      header: "Offers Used",
+      cell: ({ row }) => {
+        const unclaimedRewards = row.getValue("unclaimedRewards") as number || 0
+        return (
+          <div>
+            <div className="text-sm">₹{unclaimedRewards.toLocaleString()}</div>
+            <div className="text-xs text-muted-foreground">Unclaimed rewards</div>
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "notes",
+      header: "Notes",
+      cell: ({ row }) => {
+        const notes = row.getValue("notes") as string
+        return (
+          <div className="max-w-32 truncate text-sm text-muted-foreground">
+            {notes || 'No notes'}
+            {notes && <MessageCircle className="w-3 h-3 inline ml-1 text-blue-500" />}
+          </div>
+        )
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const customer = row.original
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => setSelectedCustomer(customer)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View details
+              </DropdownMenuItem>
+              <DropdownMenuItem>Add note</DropdownMenuItem>
+              <DropdownMenuItem>Update info</DropdownMenuItem>
+              <DropdownMenuItem>Send offer</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )
+      },
+    },
+  ]
   
   const filteredCustomers = users.filter((user: any) => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
