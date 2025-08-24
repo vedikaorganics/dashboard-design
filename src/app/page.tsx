@@ -48,6 +48,21 @@ const getStatusBadge = (status: string) => {
   }
 }
 
+const getPaymentStatusBadge = (paymentStatus: string) => {
+  switch (paymentStatus) {
+    case 'PAID':
+      return <Badge className="bg-green-100 text-green-800">Paid</Badge>
+    case 'CASH_ON_DELIVERY':
+      return <Badge className="bg-green-100 text-green-800">COD</Badge>
+    case 'PENDING':
+      return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
+    case 'FAILED':
+      return <Badge className="bg-red-100 text-red-800">Failed</Badge>
+    default:
+      return <Badge variant="outline">{paymentStatus}</Badge>
+  }
+}
+
 // Helper function to render growth indicator
 const getGrowthIndicator = (growth: number) => {
   const isPositive = growth >= 0
@@ -80,7 +95,7 @@ export default function DashboardPage() {
   // Show loading skeleton if no cached data
   if (isLoading && !dashboardData) {
     return (
-      <DashboardLayout title="Vedika Organics - Dashboard">
+      <DashboardLayout title="Overview">
         <div className="flex-1 space-y-6">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             {[...Array(5)].map((_, i) => (
@@ -118,7 +133,7 @@ export default function DashboardPage() {
   const customerOrderDistributionData = data?.customerOrderDistributionData || []
   
   return (
-    <DashboardLayout title="Vedika Organics - Dashboard">
+    <DashboardLayout title="Overview">
       <div className="flex-1 space-y-6">
         
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -182,7 +197,6 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Recent Orders</CardTitle>
-                  <CardDescription>Latest orders from your customers</CardDescription>
                 </div>
                 <Button asChild variant="outline" size="sm">
                   <Link href="/orders">View All</Link>
@@ -196,22 +210,43 @@ export default function DashboardPage() {
                   
                   return (
                     <div key={order._id} className="flex items-center space-x-4">
-                      <div className="flex-1 space-y-1">
-                        <p className="text-sm font-medium leading-none">Order #{order.orderId}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {customerName} - {order.address.city}, {order.address.state}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {order.items[0]?.title} {order.items.length > 1 ? `+${order.items.length - 1} more` : ''}
-                        </p>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-muted-foreground font-mono">#{order.orderId}</span>
+                          <p className="text-sm font-medium leading-none">
+                            {customerName}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {(() => {
+                              const orderDate = new Date(order.createdAt)
+                              const today = new Date()
+                              const isToday = orderDate.toDateString() === today.toDateString()
+                              
+                              if (isToday) {
+                                return orderDate.toLocaleString('en-IN', { 
+                                  timeZone: 'Asia/Kolkata',
+                                  hour12: true,
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })
+                              } else {
+                                return orderDate.toLocaleString('en-IN', { 
+                                  timeZone: 'Asia/Kolkata',
+                                  hour12: true,
+                                  day: '2-digit',
+                                  month: 'short',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })
+                              }
+                            })()}
+                          </p>
+                        </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        {getStatusBadge(order.orderStatus)}
+                        {getPaymentStatusBadge(order.paymentStatus)}
                         <div className="font-medium text-right">
                           <div>₹{order.amount.toLocaleString()}</div>
-                          {order.cashOnDelivery && (
-                            <div className="text-xs text-muted-foreground">COD</div>
-                          )}
                         </div>
                       </div>
                     </div>
