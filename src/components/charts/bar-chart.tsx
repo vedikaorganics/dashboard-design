@@ -69,7 +69,7 @@ export function BarChart({
         {showTooltip && (
           <ChartTooltip
             cursor={false}
-            content={<ChartTooltipContent hideLabel />}
+            content={<ChartTooltipContent />}
           />
         )}
         <Bar dataKey={dataKey} fill={`var(--color-${dataKey})`} radius={4} />
