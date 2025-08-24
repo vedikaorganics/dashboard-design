@@ -30,7 +30,7 @@ export function BarChart({
   data,
   dataKey = "value",
   xAxisKey = "name",
-  color = "hsl(var(--chart-1))",
+  color = "var(--primary)",
   height = 300,
   showXAxis = true,
   showYAxis = true,

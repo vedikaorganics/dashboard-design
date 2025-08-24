@@ -30,7 +30,7 @@ export function LineChart({
   data,
   dataKey = "value",
   xAxisKey = "name",
-  color = "hsl(var(--primary))",
+  color = "var(--primary)",
   height = 300,
   showXAxis = true,
   showYAxis = true,

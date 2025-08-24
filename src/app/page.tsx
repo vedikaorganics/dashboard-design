@@ -17,11 +17,11 @@ import { Skeleton } from "@/components/ui/skeleton"
 const getStatusBadge = (status: string) => {
   switch (status) {
     case 'CONFIRMED':
-      return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" />Confirmed</Badge>
+      return <Badge className="bg-success/20 text-success"><CheckCircle className="w-3 h-3 mr-1" />Confirmed</Badge>
     case 'PENDING':
-      return <Badge className="bg-yellow-100 text-yellow-800"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
+      return <Badge className="bg-warning/20 text-warning"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
     case 'DELIVERED':
-      return <Badge className="bg-blue-100 text-blue-800"><CheckCircle className="w-3 h-3 mr-1" />Delivered</Badge>
+      return <Badge className="bg-info/20 text-info"><CheckCircle className="w-3 h-3 mr-1" />Delivered</Badge>
     default:
       return <Badge variant="outline">{status}</Badge>
   }
@@ -30,13 +30,13 @@ const getStatusBadge = (status: string) => {
 const getPaymentStatusBadge = (paymentStatus: string) => {
   switch (paymentStatus) {
     case 'PAID':
-      return <Badge className="bg-green-100 text-green-800">Paid</Badge>
+      return <Badge className="bg-success/20 text-success">Paid</Badge>
     case 'CASH_ON_DELIVERY':
-      return <Badge className="bg-green-100 text-green-800">COD</Badge>
+      return <Badge className="bg-success/20 text-success">COD</Badge>
     case 'PENDING':
-      return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
+      return <Badge className="bg-warning/20 text-warning">Pending</Badge>
     case 'FAILED':
-      return <Badge className="bg-red-100 text-red-800">Failed</Badge>
+      return <Badge className="bg-destructive/20 text-destructive">Failed</Badge>
     default:
       return <Badge variant="outline">{paymentStatus}</Badge>
   }
@@ -46,7 +46,7 @@ const getPaymentStatusBadge = (paymentStatus: string) => {
 const getGrowthIndicator = (growth: number) => {
   const isPositive = growth >= 0
   const Icon = isPositive ? TrendingUp : TrendingDown
-  const colorClass = isPositive ? "text-green-500" : "text-red-500"
+  const colorClass = isPositive ? "text-success" : "text-destructive"
   
   return (
     <div className={`flex items-center space-x-1 text-xs ${colorClass}`}>
@@ -304,7 +304,7 @@ export default function DashboardPage() {
               config={{
                 mrr: {
                   label: "MRR",
-                  color: "hsl(var(--chart-1))",
+                  color: "var(--primary)",
                 },
               }}
               className="h-[350px] aspect-auto"
@@ -374,7 +374,7 @@ export default function DashboardPage() {
                       <p className="text-sm font-medium">{review.author}</p>
                       <div className="flex">
                         {Array.from({ length: review.rating }).map((_, i) => (
-                          <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                          <Star key={i} className="w-3 h-3 fill-warning text-warning" />
                         ))}
                       </div>
                       {!review.isApproved && (

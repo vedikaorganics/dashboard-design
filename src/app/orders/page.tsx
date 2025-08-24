@@ -31,13 +31,13 @@ import type { Order } from "@/types"
 const getOrderStatusBadge = (orderStatus: string) => {
   switch (orderStatus) {
     case 'CONFIRMED':
-      return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" />Confirmed</Badge>
+      return <Badge className="bg-success/20 text-success"><CheckCircle className="w-3 h-3 mr-1" />Confirmed</Badge>
     case 'PENDING':
-      return <Badge className="bg-yellow-100 text-yellow-800"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
+      return <Badge className="bg-warning/20 text-warning"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
     case 'DELIVERED':
-      return <Badge className="bg-blue-100 text-blue-800"><CheckCircle className="w-3 h-3 mr-1" />Delivered</Badge>
+      return <Badge className="bg-info/20 text-info"><CheckCircle className="w-3 h-3 mr-1" />Delivered</Badge>
     case 'CANCELLED':
-      return <Badge className="bg-red-100 text-red-800">Cancelled</Badge>
+      return <Badge className="bg-destructive/20 text-destructive">Cancelled</Badge>
     default:
       return <Badge variant="outline">{orderStatus}</Badge>
   }
@@ -48,9 +48,9 @@ const getDeliveryStatusBadge = (deliveryStatus: string) => {
     case 'PENDING':
       return <Badge variant="outline"><Package className="w-3 h-3 mr-1" />Pending</Badge>
     case 'SHIPPED':
-      return <Badge className="bg-blue-100 text-blue-800"><Truck className="w-3 h-3 mr-1" />Shipped</Badge>
+      return <Badge className="bg-info/20 text-info"><Truck className="w-3 h-3 mr-1" />Shipped</Badge>
     case 'DELIVERED':
-      return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" />Delivered</Badge>
+      return <Badge className="bg-success/20 text-success"><CheckCircle className="w-3 h-3 mr-1" />Delivered</Badge>
     default:
       return <Badge variant="outline">{deliveryStatus}</Badge>
   }
@@ -59,13 +59,13 @@ const getDeliveryStatusBadge = (deliveryStatus: string) => {
 const getPaymentStatusBadge = (paymentStatus: string) => {
   switch (paymentStatus) {
     case 'PAID':
-      return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" />Paid</Badge>
+      return <Badge className="bg-success/20 text-success"><CheckCircle className="w-3 h-3 mr-1" />Paid</Badge>
     case 'CASH_ON_DELIVERY':
-      return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" />COD</Badge>
+      return <Badge className="bg-success/20 text-success"><CheckCircle className="w-3 h-3 mr-1" />COD</Badge>
     case 'PENDING':
       return <Badge className="bg-yellow-100 text-yellow-800"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
     case 'FAILED':
-      return <Badge className="bg-red-100 text-red-800">Failed</Badge>
+      return <Badge className="bg-destructive/20 text-destructive">Failed</Badge>
     default:
       return <Badge variant="outline">{paymentStatus}</Badge>
   }
