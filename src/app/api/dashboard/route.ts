@@ -33,7 +33,8 @@ export async function GET() {
       confirmedOrdersCount,
       averageRating,
       pendingReviews,
-      customerOrderCounts
+      customerOrderCounts,
+      ordersToShip
     ] = await Promise.all([
       // Total revenue (only from confirmed orders with payment)
       ordersCollection.aggregate([
@@ -136,7 +137,16 @@ export async function GET() {
         { $group: { _id: '$userId', orderCount: { $sum: 1 } } },
         { $group: { _id: '$orderCount', customerCount: { $sum: 1 } } },
         { $sort: { _id: 1 } }
-      ]).toArray()
+      ]).toArray(),
+
+      // Orders that need to be shipped (confirmed orders with pending delivery)
+      ordersCollection.countDocuments({
+        $or: [
+          { paymentStatus: 'PAID' },
+          { paymentStatus: 'CASH_ON_DELIVERY' }
+        ],
+        deliveryStatus: 'PENDING'
+      })
     ])
 
     // Calculate MRR (last 30 days revenue)
@@ -184,7 +194,10 @@ export async function GET() {
       
       // Additional data
       customerOrderDistributionData,
-      avgOrderValue: last30DaysOrders.length > 0 ? mrr / last30DaysOrders.length : 0
+      avgOrderValue: last30DaysOrders.length > 0 ? mrr / last30DaysOrders.length : 0,
+      
+      // Quick Actions data
+      ordersToShip
     }
 
     // Cache for 5 minutes (dashboard updates frequently)

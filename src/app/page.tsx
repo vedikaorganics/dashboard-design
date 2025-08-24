@@ -4,7 +4,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { TrendingUp, TrendingDown, Users, ShoppingCart, Package, DollarSign, Star, AlertCircle, Clock, CheckCircle } from "lucide-react"
+import { TrendingUp, TrendingDown, Users, ShoppingCart, Package, DollarSign, Star, AlertCircle, Clock, CheckCircle, Truck } from "lucide-react"
 import { AreaChart, LineChart, BarChart, PieChart } from "@/components/charts"
 import { useDashboard, useOrders, useReviews, usePrefetch } from "@/hooks/use-data"
 import Link from "next/link"
@@ -131,6 +131,7 @@ export default function DashboardPage() {
   const averageRating = data?.averageRating || 0
   const pendingReviews = data?.pendingReviews || 0
   const customerOrderDistributionData = data?.customerOrderDistributionData || []
+  const ordersToShip = data?.ordersToShip || 0
   
   return (
     <DashboardLayout title="Overview">
@@ -285,48 +286,20 @@ export default function DashboardPage() {
                   className="justify-start h-auto p-4"
                   onMouseEnter={() => handlePrefetch('orders')}
                 >
-                  <Link href="/orders">
-                    <ShoppingCart className="h-5 w-5 mr-3" />
+                  <Link href="/orders?filter=ready_to_ship">
+                    <Truck className="h-5 w-5 mr-3" />
                     <div className="text-left">
-                      <div className="font-medium">Manage Orders</div>
-                      <div className="text-sm text-muted-foreground">{pendingOrders} pending orders</div>
-                    </div>
-                  </Link>
-                </Button>
-                <Button 
-                  asChild 
-                  variant="outline" 
-                  className="justify-start h-auto p-4"
-                  onMouseEnter={() => handlePrefetch('products')}
-                >
-                  <Link href="/products">
-                    <Package className="h-5 w-5 mr-3" />
-                    <div className="text-left">
-                      <div className="font-medium">Products</div>
-                      <div className="text-sm text-muted-foreground">Oil product catalog</div>
+                      <div className="font-medium">Orders to Ship</div>
+                      <div className="text-sm text-muted-foreground">{ordersToShip} confirmed orders ready for shipping</div>
                     </div>
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="justify-start h-auto p-4">
-                  <Link href="/reviews">
+                  <Link href="/reviews?filter=unapproved">
                     <Star className="h-5 w-5 mr-3" />
                     <div className="text-left">
-                      <div className="font-medium">Reviews</div>
-                      <div className="text-sm text-muted-foreground">{pendingReviews > 0 ? `${pendingReviews} to moderate` : 'All up to date'}</div>
-                    </div>
-                  </Link>
-                </Button>
-                <Button 
-                  asChild 
-                  variant="outline" 
-                  className="justify-start h-auto p-4"
-                  onMouseEnter={() => handlePrefetch('users')}
-                >
-                  <Link href="/users">
-                    <Users className="h-5 w-5 mr-3" />
-                    <div className="text-left">
-                      <div className="font-medium">Customers</div>
-                      <div className="text-sm text-muted-foreground">{totalUsers} registered</div>
+                      <div className="font-medium">Review Moderation</div>
+                      <div className="text-sm text-muted-foreground">{pendingReviews > 0 ? `${pendingReviews} reviews need approval` : 'All reviews approved'}</div>
                     </div>
                   </Link>
                 </Button>
