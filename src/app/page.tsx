@@ -8,8 +8,9 @@ import { TrendingUp, TrendingDown, Users, ShoppingCart, Package, DollarSign, Sta
 import { AreaChart, LineChart, BarChart, PieChart } from "@/components/charts"
 import { useDashboard, useOrders, useReviews, usePrefetch } from "@/hooks/use-data"
 import Link from "next/link"
-import { Area, AreaChart as RechartsAreaChart, XAxis, YAxis } from "recharts"
+import { Area, AreaChart as RechartsAreaChart, XAxis, YAxis, CartesianGrid } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { Skeleton } from "@/components/ui/skeleton"
 
 
 const productSalesData = [
@@ -95,12 +96,12 @@ export default function DashboardPage() {
             {[...Array(5)].map((_, i) => (
               <Card key={i}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <div className="h-4 bg-muted animate-pulse rounded w-24"></div>
-                  <div className="h-4 w-4 bg-muted animate-pulse rounded"></div>
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-4" />
                 </CardHeader>
                 <CardContent>
-                  <div className="h-8 bg-muted animate-pulse rounded w-16 mb-2"></div>
-                  <div className="h-3 bg-muted animate-pulse rounded w-20"></div>
+                  <Skeleton className="h-8 w-16 mb-2" />
+                  <Skeleton className="h-3 w-20" />
                 </CardContent>
               </Card>
             ))}
@@ -278,27 +279,33 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-4">
-                <Link 
-                  href="/orders?filter=ready_to_ship"
-                  className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start h-auto p-3"
+                  asChild
                   onMouseEnter={() => handlePrefetch('orders')}
                 >
-                  <Truck className="h-5 w-5 text-muted-foreground" />
-                  <div className="flex-1">
-                    <div className="font-medium">Orders to Ship</div>
-                    <div className="text-sm text-muted-foreground">{ordersToShip} confirmed orders ready for shipping</div>
-                  </div>
-                </Link>
-                <Link 
-                  href="/reviews?filter=unapproved"
-                  className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                  <Link href="/orders?filter=ready_to_ship" className="flex items-center space-x-3">
+                    <Truck className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex-1 text-left">
+                      <div className="font-medium">Orders to Ship</div>
+                      <div className="text-sm text-muted-foreground">{ordersToShip} confirmed orders ready for shipping</div>
+                    </div>
+                  </Link>
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start h-auto p-3"
+                  asChild
                 >
-                  <Star className="h-5 w-5 text-muted-foreground" />
-                  <div className="flex-1">
-                    <div className="font-medium">Review Moderation</div>
-                    <div className="text-sm text-muted-foreground">{pendingReviews > 0 ? `${pendingReviews} reviews need approval` : 'All reviews approved'}</div>
-                  </div>
-                </Link>
+                  <Link href="/reviews?filter=unapproved" className="flex items-center space-x-3">
+                    <Star className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex-1 text-left">
+                      <div className="font-medium">Review Moderation</div>
+                      <div className="text-sm text-muted-foreground">{pendingReviews > 0 ? `${pendingReviews} reviews need approval` : 'All reviews approved'}</div>
+                    </div>
+                  </Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -307,19 +314,26 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>MRR</CardTitle>
+              <CardTitle>Monthly Recurring Revenue</CardTitle>
             </CardHeader>
             <CardContent>
               <ChartContainer
                 config={{
                   mrr: {
-                    label: "30-day Average",
+                    label: "MRR",
                     color: "hsl(var(--chart-1))",
                   },
                 }}
-                className="h-[350px]"
+                className="h-[350px] aspect-auto"
               >
                 <RechartsAreaChart data={dailyRevenueChart}>
+                  <defs>
+                    <linearGradient id="colorMrr" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--color-mrr)" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="var(--color-mrr)" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" vertical={false} />
                   <XAxis 
                     dataKey="name"
                     tickLine={false}
@@ -327,18 +341,23 @@ export default function DashboardPage() {
                     tickMargin={8}
                     tickFormatter={(value) => value.slice(0, 3)}
                   />
+                  <YAxis 
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    tickFormatter={(value) => `₹${(Number(value) / 1000).toFixed(0)}K`}
+                  />
                   <ChartTooltip 
                     cursor={false}
-                    content={<ChartTooltipContent indicator="line" hideLabel />}
-                    formatter={(value: any) => `₹${(Number(value) * 30 / 100000).toFixed(2)}L`}
+                    content={<ChartTooltipContent indicator="dot" />}
                   />
                   <Area 
                     dataKey="mrr"
-                    type="natural"
-                    fill="var(--color-mrr)"
-                    fillOpacity={0.4}
+                    type="monotone"
+                    fill="url(#colorMrr)"
+                    fillOpacity={1}
                     stroke="var(--color-mrr)"
-                    stackId="a"
+                    strokeWidth={2}
                   />
                 </RechartsAreaChart>
               </ChartContainer>

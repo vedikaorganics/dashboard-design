@@ -205,7 +205,7 @@ export async function GET() {
 
     // Get all unique dates and sort them
     const allDates = Array.from(revenueByDate.keys()).sort()
-    const dailyRevenueChart = []
+    const dailyRevenueChart: any[] = []
 
     // Calculate 30-day moving average for each date
     allDates.forEach((dateStr, index) => {

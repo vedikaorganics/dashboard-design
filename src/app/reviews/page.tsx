@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Search, Filter, Star, TrendingUp, TrendingDown } from "lucide-react"
 import { useReviews } from "@/hooks/use-data"
+import { StarRating } from "@/components/ui/star-rating"
 
 const mockReviews = [
   {
@@ -94,23 +95,6 @@ const getStatusBadge = (status: string) => {
   return <Badge variant={variants[status] || "outline"}>{status}</Badge>
 }
 
-const renderStars = (rating: number) => {
-  return (
-    <div className="flex items-center">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          className={`h-4 w-4 ${
-            star <= rating
-              ? "fill-yellow-400 text-yellow-400"
-              : "text-gray-300"
-          }`}
-        />
-      ))}
-      <span className="ml-2 text-sm text-muted-foreground">({rating})</span>
-    </div>
-  )
-}
 
 export default function ReviewsPage() {
   const [currentPage, setCurrentPage] = useState<number>(1)
@@ -238,7 +222,7 @@ export default function ReviewsPage() {
                         </div>
                       </TableCell>
                       <TableCell className="font-medium">{review.product?.title || 'Unknown Product'}</TableCell>
-                      <TableCell>{renderStars(review.rating)}</TableCell>
+                      <TableCell><StarRating rating={review.rating} showRating={false} /></TableCell>
                       <TableCell className="max-w-xs">
                         <div>
                           <div className="font-medium text-sm">{review.title}</div>

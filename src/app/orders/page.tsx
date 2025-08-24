@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Search, Filter, Eye, CheckCircle, Clock, Truck, Package, Phone, MapPin, CreditCard, Gift } from "lucide-react"
 import { useOrders } from "@/hooks/use-data"
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 import type { Order } from "@/types"
 
 
@@ -206,7 +207,7 @@ export default function OrdersPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredOrders.map((order) => {
+                    {filteredOrders.map((order: any) => {
                       const customerName = getCustomerName(order)
                       return (
                         <TableRow key={order._id}>
@@ -235,7 +236,7 @@ export default function OrdersPage() {
                                 </div>
                               )}
                               <div className="text-xs text-muted-foreground">
-                                Qty: {order.items.reduce((sum, item) => sum + item.quantity, 0)}
+                                Qty: {order.items.reduce((sum: number, item: any) => sum + item.quantity, 0)}
                               </div>
                             </div>
                           </TableCell>
@@ -259,7 +260,7 @@ export default function OrdersPage() {
                               {order.offers.length > 0 && (
                                 <div className="text-xs text-green-600 flex items-center">
                                   <Gift className="w-3 h-3 mr-1" />
-                                  ₹{order.offers.reduce((sum, offer) => sum + offer.discount, 0)} saved
+                                  ₹{order.offers.reduce((sum: number, offer: any) => sum + offer.discount, 0)} saved
                                 </div>
                               )}
                             </div>
@@ -291,6 +292,59 @@ export default function OrdersPage() {
                 </Table>
               </div>
             </div>
+            {pagination.totalPages > 1 && (
+              <div className="flex justify-center pt-6">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        href="#" 
+                        onClick={(e) => {
+                          e.preventDefault()
+                          if (currentPage > 1) setCurrentPage(currentPage - 1)
+                        }}
+                        className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                      const pageNumber = i + 1
+                      return (
+                        <PaginationItem key={pageNumber}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              setCurrentPage(pageNumber)
+                            }}
+                            isActive={currentPage === pageNumber}
+                          >
+                            {pageNumber}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )
+                    })}
+                    
+                    {pagination.totalPages > 5 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+                    
+                    <PaginationItem>
+                      <PaginationNext
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          if (currentPage < pagination.totalPages) setCurrentPage(currentPage + 1)
+                        }}
+                        className={currentPage >= pagination.totalPages ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </CardContent>
         </Card>
         

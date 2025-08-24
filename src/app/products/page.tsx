@@ -38,6 +38,8 @@ import { MoreHorizontal, Search, Filter, Package, TrendingUp, TrendingDown, Aler
 import { useProducts } from "@/hooks/use-data"
 import type { Product, ProductVariant } from "@/types"
 import Image from "next/image"
+import { AspectRatio } from "@/components/ui/aspect-ratio"
+import { StarRating } from "@/components/ui/star-rating"
 
 
 const getBadge = (text: string, variant?: "default" | "secondary" | "destructive" | "outline") => {
@@ -148,19 +150,21 @@ export default function ProductsPage() {
                 
                 return (
                   <Card key={product._id} className="overflow-hidden hover:shadow-md transition-shadow">
-                    <div className="aspect-video bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center relative">
-                      <div 
-                        className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white"
-                        style={{ backgroundColor: product.colorHex }}
-                      >
-                        <Package className="w-8 h-8" />
-                      </div>
-                      {product.tags.length > 0 && (
-                        <div className="absolute top-2 right-2">
-                          {getBadge(product.tags[0], "default")}
+                    <AspectRatio ratio={16 / 9}>
+                      <div className="bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center relative h-full">
+                        <div 
+                          className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white"
+                          style={{ backgroundColor: product.colorHex }}
+                        >
+                          <Package className="w-8 h-8" />
                         </div>
-                      )}
-                    </div>
+                        {product.tags.length > 0 && (
+                          <div className="absolute top-2 right-2">
+                            {getBadge(product.tags[0], "default")}
+                          </div>
+                        )}
+                      </div>
+                    </AspectRatio>
                     
                     <CardContent className="p-4">
                       <div className="space-y-3">
@@ -183,16 +187,12 @@ export default function ProductsPage() {
                           </div>
                           
                           {rating > 0 && (
-                            <div className="flex items-center space-x-1 text-sm">
-                              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                              <span>{rating.toFixed(1)}</span>
-                              <span className="text-muted-foreground">({reviewCount})</span>
-                            </div>
+                            <StarRating rating={rating} size="sm" />
                           )}
                         </div>
                         
                         <div className="flex flex-wrap gap-1">
-                          {product.badges.map((badge, index) => (
+                          {product.badges.map((badge: any, index: number) => (
                             <Badge key={index} variant="secondary" className="text-xs">
                               {badge}
                             </Badge>
@@ -307,7 +307,7 @@ export default function ProductsPage() {
                 
                 <TabsContent value="variants" className="space-y-4">
                   <div className="space-y-4">
-                    {getProductVariants(selectedProduct.id).map((variant) => (
+                    {getProductVariants(selectedProduct.id).map((variant: any) => (
                       <Card key={variant._id}>
                         <CardContent className="p-4">
                           <div className="flex items-center space-x-4">

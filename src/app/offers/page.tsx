@@ -41,6 +41,11 @@ import { useOffers } from "@/hooks/use-data"
 import type { Offer } from "@/types"
 
 
+const getOfferUsage = (offerId: string) => {
+  // Mock usage data - replace with real API call
+  return Math.floor(Math.random() * 100)
+}
+
 const getOfferStatus = (offer: Offer) => {
   const now = new Date()
   const startDate = new Date(offer.createdAt)
@@ -191,7 +196,7 @@ export default function OffersPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredOffers.map((offer) => {
+                    {filteredOffers.map((offer: any) => {
                       const usageCount = getOfferUsage(offer.id)
                       const status = getOfferStatus(offer)
                       
@@ -329,11 +334,11 @@ export default function OffersPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {mockOrders
-                        .filter(order => order.offers.some(offer => offer.offerId === selectedOffer.id))
+                      {([] as any[])
+                        .filter(order => order.offers?.some((offer: any) => offer.offerId === selectedOffer.id))
                         .slice(0, 3)
-                        .map((order) => {
-                          const offerUsed = order.offers.find(offer => offer.offerId === selectedOffer.id)
+                        .map((order: any) => {
+                          const offerUsed = order.offers.find((offer: any) => offer.offerId === selectedOffer.id)
                           return (
                             <div key={order._id} className="flex justify-between items-center p-2 border rounded">
                               <div>

@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Search, Filter, Users, CheckCircle, XCircle, Phone, Mail, MapPin, ShoppingBag, Gift, MessageCircle } from "lucide-react"
 import { useUsers } from "@/hooks/use-data"
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 import type { User } from "@/types"
 
 
@@ -193,7 +194,7 @@ export default function CustomersPage() {
                             <div className="flex items-center space-x-3">
                               <Avatar className="h-10 w-10">
                                 <AvatarFallback className="bg-orange-100 text-orange-800">
-                                  {customer.name ? customer.name.split(' ').map(n => n[0]).join('') : 
+                                  {customer.name ? customer.name.split(' ').map((n: string) => n[0]).join('') : 
                                    customer.phoneNumber.slice(-2)}
                                 </AvatarFallback>
                               </Avatar>
@@ -273,6 +274,59 @@ export default function CustomersPage() {
                 </Table>
               </div>
             </div>
+            {pagination.totalPages > 1 && (
+              <div className="flex justify-center pt-6">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        href="#" 
+                        onClick={(e) => {
+                          e.preventDefault()
+                          if (currentPage > 1) setCurrentPage(currentPage - 1)
+                        }}
+                        className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                      const pageNumber = i + 1
+                      return (
+                        <PaginationItem key={pageNumber}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              setCurrentPage(pageNumber)
+                            }}
+                            isActive={currentPage === pageNumber}
+                          >
+                            {pageNumber}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )
+                    })}
+                    
+                    {pagination.totalPages > 5 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+                    
+                    <PaginationItem>
+                      <PaginationNext
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          if (currentPage < pagination.totalPages) setCurrentPage(currentPage + 1)
+                        }}
+                        className={currentPage >= pagination.totalPages ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </CardContent>
         </Card>
         
@@ -317,9 +371,9 @@ export default function CustomersPage() {
                       <CardTitle className="text-lg">Order Summary</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <div><strong>Total Orders:</strong> {selectedCustomer.orderCount || 0}</div>
-                      <div><strong>Total Spent:</strong> ₹{(selectedCustomer.totalSpent || 0).toLocaleString()}</div>
-                      <div><strong>Customer Type:</strong> {getCustomerTypeBadge(selectedCustomer.customerType)}</div>
+                      <div><strong>Total Orders:</strong> {(selectedCustomer as any).orderCount || 0}</div>
+                      <div><strong>Total Spent:</strong> ₹{((selectedCustomer as any).totalSpent || 0).toLocaleString()}</div>
+                      <div><strong>Customer Type:</strong> {getCustomerTypeBadge((selectedCustomer as any).customerType)}</div>
                       
                       {selectedCustomer.notes && (
                         <div>
@@ -354,7 +408,7 @@ export default function CustomersPage() {
                       <div>
                         <strong>Rewards History:</strong>
                         <div className="mt-2">
-                          <div className="text-sm">Total earned: ₹{(selectedCustomer.unclaimedRewards || 0).toLocaleString()}</div>
+                          <div className="text-sm">Total earned: ₹{((selectedCustomer as any).unclaimedRewards || 0).toLocaleString()}</div>
                           <div className="text-xs text-muted-foreground">Detailed reward history available in full view</div>
                         </div>
                       </div>
@@ -369,10 +423,10 @@ export default function CustomersPage() {
                   <CardContent>
                     <div className="space-y-2">
                       <div className="text-sm">
-                        <div><strong>Total Orders:</strong> {selectedCustomer.orderCount || 0}</div>
-                        <div><strong>Total Spent:</strong> ₹{(selectedCustomer.totalSpent || 0).toLocaleString()}</div>
-                        {selectedCustomer.lastOrder && (
-                          <div><strong>Last Order:</strong> {new Date(selectedCustomer.lastOrder).toLocaleDateString()}</div>
+                        <div><strong>Total Orders:</strong> {(selectedCustomer as any).orderCount || 0}</div>
+                        <div><strong>Total Spent:</strong> ₹{((selectedCustomer as any).totalSpent || 0).toLocaleString()}</div>
+                        {(selectedCustomer as any).lastOrder && (
+                          <div><strong>Last Order:</strong> {new Date((selectedCustomer as any).lastOrder).toLocaleDateString()}</div>
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground mt-2">

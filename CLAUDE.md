@@ -28,14 +28,14 @@ npx shadcn@latest add [component-name]
 
 ## Architecture Overview
 
-### Design System Structure
-This project implements a centralized design system architecture:
+### Theming Structure
+This project follows shadcn/ui theming conventions:
 
-- **Design Tokens** (`src/design-system/tokens/`): Centralized color, spacing, and typography definitions that serve as the single source of truth
-- **Themes** (`src/design-system/themes/`): Light/dark theme configurations that reference design tokens
-- **Primitives** (`src/design-system/primitives/`): Base component variant definitions
+- **CSS Variables** (`src/app/globals.css`): Uses CSS variables as the single source of truth for colors and design tokens
+- **Theme Provider** (`src/components/theme-provider.tsx`): next-themes integration for light/dark mode switching
+- **Tailwind Integration**: CSS variables mapped to Tailwind utilities for consistent theming across components
 
-The design system enables easy UI overhauls by modifying tokens rather than individual components.
+Theming is handled entirely through CSS variables, enabling easy UI overhauls by modifying variable values in `globals.css`.
 
 ### Layout Architecture
 - **DashboardLayout** (`src/components/layout/dashboard-layout.tsx`): Main layout wrapper using sidebar + header pattern
@@ -118,7 +118,7 @@ Each management page follows this structure:
 - `src/components/ui/`: shadcn/ui components (managed by CLI)
 - `src/components/layout/`: Layout-specific components
 - `src/components/charts/`: Reusable chart components
-- `src/design-system/`: Design tokens, themes, and primitives
+- `src/components/theme-provider.tsx`: Theme provider for light/dark mode
 - `src/lib/`: Utility functions (`utils.ts`, `mongodb.ts`, `cache.ts`)
 - `src/hooks/`: Custom React hooks for data fetching (`use-data.ts`)
 - `src/types/`: TypeScript interfaces matching MongoDB schema
@@ -136,14 +136,14 @@ Each management page follows this structure:
    - Follow existing page patterns (API hooks, KPI cards, table)
    - Use `DashboardLayout` wrapper
 4. **Integration:** Import charts from `src/components/charts/` if needed
-5. **Styling:** Use design tokens for custom styling needs
+5. **Styling:** Use CSS variables and Tailwind utilities for custom styling needs
 6. **Navigation:** Add navigation item to `AppSidebar` component
 
 ### Theme Customization
-- Update color tokens in `src/design-system/tokens/colors.ts`
-- Modify theme mappings in `src/design-system/themes/default.ts`
-- CSS variables are automatically updated in `src/app/globals.css`
-- All components inherit theme changes automatically
+- Update CSS variables in `src/app/globals.css` (`:root` for light mode, `.dark` for dark mode)
+- Variables use OKLCH color format for modern color handling
+- All components inherit theme changes automatically through Tailwind utilities
+- Toggle between light/dark modes using the theme provider
 
 ### Component Development
 - Use composition over inheritance patterns

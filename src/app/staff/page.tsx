@@ -22,8 +22,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Search, Filter, Users, Shield, Clock, TrendingUp } from "lucide-react"
-import { FloatingActionButton } from "@/components/ui/floating-action-button"
+import { MoreHorizontal, Search, Filter, Users, Shield, Clock, TrendingUp, Plus } from "lucide-react"
 import { useStaff } from "@/hooks/use-data"
 
 const mockStaff = [
@@ -284,7 +283,13 @@ export default function StaffPage() {
           </CardContent>
         </Card>
       </div>
-      <FloatingActionButton onClick={() => console.log('Add Staff Member')} />
+      <Button 
+        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+        onClick={() => console.log('Add Staff Member')}
+        size="icon"
+      >
+        <Plus className="h-6 w-6" />
+      </Button>
     </DashboardLayout>
   )
 }

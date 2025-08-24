@@ -21,7 +21,7 @@ function useData<T>(url: string, cacheKey: string, ttl: number = 300): UseDataRe
       // Check cache first
       const cachedData = cache.get(cacheKey)
       if (cachedData) {
-        setData(cachedData)
+        setData(cachedData as T)
         setError(null)
         return
       }

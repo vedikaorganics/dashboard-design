@@ -43,10 +43,10 @@ import { useCampaigns } from "@/hooks/use-data"
 
 
 const getChannelIcon = (source: string, medium?: string) => {
-  if (medium.toLowerCase().includes('call') || source.toLowerCase().includes('call')) {
+  if (medium?.toLowerCase().includes('call') || source.toLowerCase().includes('call')) {
     return <Phone className="w-4 h-4" />
   }
-  if (source.toLowerCase().includes('whatsapp') || medium.toLowerCase().includes('whatsapp')) {
+  if (source.toLowerCase().includes('whatsapp') || medium?.toLowerCase().includes('whatsapp')) {
     return <MessageSquare className="w-4 h-4" />
   }
   if (source.toLowerCase().includes('google') || source.toLowerCase().includes('facebook') || source.toLowerCase().includes('instagram')) {
@@ -204,7 +204,7 @@ export default function CampaignsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredCampaigns.map((campaign, index) => {
+                    {filteredCampaigns.map((campaign: any, index: number) => {
                       const [source, medium] = campaign.campaign.split(' - ')
                       const revenueShare = (campaign.revenue / totalRevenue) * 100
                       
