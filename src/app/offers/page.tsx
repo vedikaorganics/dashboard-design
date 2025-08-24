@@ -20,7 +20,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Search, Filter, Plus, Gift, Percent, TrendingUp, Calendar, Users } from "lucide-react"
+import { MoreHorizontal, Search, Filter, Gift, Percent, TrendingUp, Calendar, Users } from "lucide-react"
+import { FloatingActionButton } from "@/components/ui/floating-action-button"
 import { Progress } from "@/components/ui/progress"
 
 const offers = [
@@ -134,15 +135,8 @@ const getUsageProgress = (used: number, limit: number) => {
 
 export default function OffersPage() {
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Offers & Discounts">
       <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold tracking-tight">Offers & Discounts</h2>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Offer
-          </Button>
-        </div>
         
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
@@ -297,6 +291,7 @@ export default function OffersPage() {
           </CardContent>
         </Card>
       </div>
+      <FloatingActionButton onClick={() => console.log('Create Offer')} />
     </DashboardLayout>
   )
 }

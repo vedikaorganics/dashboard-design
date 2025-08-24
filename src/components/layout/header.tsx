@@ -17,7 +17,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
-export function Header() {
+interface HeaderProps {
+  title?: string
+}
+
+export function Header({ title }: HeaderProps) {
   const { theme, setTheme } = useTheme()
 
   return (
@@ -27,13 +31,19 @@ export function Header() {
           <SidebarTrigger />
         </div>
         
-        <div className="flex flex-1 items-center justify-between space-x-2">
-          <div className="hidden w-full flex-1 md:block md:w-auto md:flex-none">
-            <div className="relative">
+        <div className="flex flex-1 items-center justify-between space-x-4">
+          <div className="flex items-center">
+            {title && (
+              <h1 className="text-xl font-semibold">{title}</h1>
+            )}
+          </div>
+          
+          <div className="hidden w-full flex-1 md:flex md:justify-center md:max-w-md">
+            <div className="relative w-full">
               <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search..."
-                className="pl-8 w-[200px] lg:w-[300px]"
+                className="pl-8 w-full"
               />
             </div>
           </div>

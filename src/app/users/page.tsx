@@ -21,7 +21,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Search, Filter, UserPlus } from "lucide-react"
+import { MoreHorizontal, Search, Filter } from "lucide-react"
+import { FloatingActionButton } from "@/components/ui/floating-action-button"
 
 const users = [
   {
@@ -101,15 +102,8 @@ const getRoleBadge = (role: string) => {
 
 export default function UsersPage() {
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Users">
       <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold tracking-tight">Users</h2>
-          <Button>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Add User
-          </Button>
-        </div>
         
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
@@ -238,6 +232,7 @@ export default function UsersPage() {
           </CardContent>
         </Card>
       </div>
+      <FloatingActionButton onClick={() => console.log('Add User')} />
     </DashboardLayout>
   )
 }

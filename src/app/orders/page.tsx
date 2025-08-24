@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Search, Filter } from "lucide-react"
+import { FloatingActionButton } from "@/components/ui/floating-action-button"
 
 const orders = [
   {
@@ -79,12 +80,8 @@ const getStatusBadge = (status: string) => {
 
 export default function OrdersPage() {
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Orders">
       <div className="flex-1 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold tracking-tight">Orders</h2>
-          <Button>Create Order</Button>
-        </div>
         
         <Card>
           <CardHeader>
@@ -163,6 +160,7 @@ export default function OrdersPage() {
           </CardContent>
         </Card>
       </div>
+      <FloatingActionButton onClick={() => console.log('Create Order')} />
     </DashboardLayout>
   )
 }
