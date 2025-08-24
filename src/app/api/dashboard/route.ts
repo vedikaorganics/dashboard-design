@@ -35,7 +35,8 @@ export async function GET() {
       pendingReviews,
       customerOrderCounts,
       ordersToShip,
-      dailyRevenueData
+      dailyRevenueData,
+      orderAmountRanges
     ] = await Promise.all([
       // Total revenue (only from confirmed orders with payment)
       ordersCollection.aggregate([
@@ -133,8 +134,16 @@ export async function GET() {
       // Pending reviews count
       reviewsCollection.countDocuments({ isApproved: false }),
 
-      // Customer order distribution
+      // Customer order distribution (only confirmed orders)
       ordersCollection.aggregate([
+        { 
+          $match: { 
+            $or: [
+              { paymentStatus: 'PAID' },
+              { paymentStatus: 'CASH_ON_DELIVERY' }
+            ]
+          }
+        },
         { $group: { _id: '$userId', orderCount: { $sum: 1 } } },
         { $group: { _id: '$orderCount', customerCount: { $sum: 1 } } },
         { $sort: { _id: 1 } }
@@ -172,6 +181,35 @@ export async function GET() {
           }
         },
         { $sort: { _id: 1 } }
+      ]).toArray(),
+
+      // Order amount ranges (₹500 intervals, only confirmed orders)
+      ordersCollection.aggregate([
+        { 
+          $match: { 
+            $or: [
+              { paymentStatus: 'PAID' },
+              { paymentStatus: 'CASH_ON_DELIVERY' }
+            ]
+          }
+        },
+        {
+          $addFields: {
+            amountRange: {
+              $multiply: [
+                { $floor: { $divide: ["$amount", 500] } },
+                500
+              ]
+            }
+          }
+        },
+        {
+          $group: {
+            _id: "$amountRange",
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { _id: 1 } }
       ]).toArray()
     ])
 
@@ -195,6 +233,12 @@ export async function GET() {
     const customerOrderDistributionData = customerOrderCounts.map(item => ({
       name: `${item._id} order${item._id === 1 ? '' : 's'}`,
       value: item.customerCount
+    }))
+
+    // Order amount range data
+    const orderAmountRangeData = orderAmountRanges.map(item => ({
+      name: `₹${item._id.toLocaleString()}-₹${(item._id + 499).toLocaleString()}`,
+      value: item.count
     }))
 
     // Process daily revenue data with 30-day moving average
@@ -260,6 +304,7 @@ export async function GET() {
       
       // Additional data
       customerOrderDistributionData,
+      orderAmountRangeData,
       avgOrderValue: last30DaysOrders.length > 0 ? mrr / last30DaysOrders.length : 0,
       
       // Quick Actions data

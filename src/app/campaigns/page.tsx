@@ -35,10 +35,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Search, Filter, TrendingUp, TrendingDown, Eye, Users, Phone, MessageSquare, Globe, Target } from "lucide-react"
+import { MoreHorizontal, Search, Filter, TrendingUp, TrendingDown, Eye, Users, Phone, MessageSquare, Globe, Target, Edit, Trash2, Copy, BarChart3 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { PieChart, BarChart } from "@/components/charts"
 import { useCampaigns } from "@/hooks/use-data"
+import { DataTable } from "@/components/ui/data-table"
+import type { ColumnDef } from "@tanstack/react-table"
+import { Checkbox } from "@/components/ui/checkbox"
 
 
 
@@ -75,6 +78,158 @@ const getChannelBadge = (source: string, medium: string) => {
   }
   return <Badge variant="outline">Other</Badge>
 }
+
+const columns: ColumnDef<any>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected()}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "campaign",
+    header: "Campaign",
+    cell: ({ row }) => {
+      const campaign = row.original
+      return (
+        <div>
+          <div className="font-medium">{campaign.campaign}</div>
+          <div className="text-sm text-muted-foreground">
+            {campaign.source} • {campaign.medium}
+          </div>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "source",
+    header: "Channel",
+    cell: ({ row }) => {
+      const campaign = row.original
+      return (
+        <div className="flex items-center space-x-2">
+          {getChannelIcon(campaign.source, campaign.medium)}
+          {getChannelBadge(campaign.source, campaign.medium)}
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "orders",
+    header: "Orders",
+    cell: ({ row }) => {
+      const orders = row.getValue("orders") as number
+      return (
+        <div>
+          <div className="font-medium">{orders}</div>
+          <div className="text-xs text-muted-foreground">total orders</div>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "revenue",
+    header: "Revenue",
+    cell: ({ row }) => {
+      const revenue = row.getValue("revenue") as number
+      return (
+        <div>
+          <div className="font-medium">₹{revenue.toLocaleString()}</div>
+          <div className="text-xs text-muted-foreground">total revenue</div>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "customers",
+    header: "Customers",
+    cell: ({ row }) => {
+      const customers = row.getValue("customers") as number
+      return (
+        <div>
+          <div className="font-medium">{customers}</div>
+          <div className="text-xs text-muted-foreground">unique customers</div>
+        </div>
+      )
+    },
+  },
+  {
+    id: "avgOrderValue",
+    header: "AOV",
+    cell: ({ row }) => {
+      const campaign = row.original
+      const aov = campaign.orders > 0 ? campaign.revenue / campaign.orders : 0
+      return (
+        <div>
+          <div className="font-medium">₹{Math.round(aov).toLocaleString()}</div>
+          <div className="text-xs text-muted-foreground">avg order value</div>
+        </div>
+      )
+    },
+  },
+  {
+    id: "conversionRate",
+    header: "Performance",
+    cell: ({ row }) => {
+      const campaign = row.original
+      const conversionRate = campaign.customers > 0 ? (campaign.orders / campaign.customers) * 100 : 0
+      return (
+        <div>
+          <div className="font-medium">{conversionRate.toFixed(1)}%</div>
+          <div className="text-xs text-muted-foreground">conversion rate</div>
+        </div>
+      )
+    },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const campaign = row.original
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => setSelectedCampaign(campaign)}>
+              <Eye className="mr-2 h-4 w-4" />
+              View details
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <BarChart3 className="mr-2 h-4 w-4" />
+              View analytics
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit campaign
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Copy className="mr-2 h-4 w-4" />
+              Duplicate
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    },
+  },
+]
 
 export default function CampaignsPage() {
   const [searchTerm, setSearchTerm] = useState<string>("")
@@ -174,111 +329,12 @@ export default function CampaignsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-2 py-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search campaigns..." 
-                    className="pl-8" 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div className="rounded-md border">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Campaign Source</TableHead>
-                      <TableHead>Channel</TableHead>
-                      <TableHead>Orders</TableHead>
-                      <TableHead>Revenue</TableHead>
-                      <TableHead>Customers</TableHead>
-                      <TableHead>Avg Order Value</TableHead>
-                      <TableHead>Performance</TableHead>
-                      <TableHead className="w-[70px]">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredCampaigns.map((campaign: any, index: number) => {
-                      const [source, medium] = campaign.campaign.split(' - ')
-                      const revenueShare = (campaign.revenue / totalRevenue) * 100
-                      
-                      return (
-                        <TableRow key={index}>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              {getChannelIcon(source, medium)}
-                              <div>
-                                <div className="font-medium">{source}</div>
-                                <div className="text-sm text-muted-foreground">{medium}</div>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>{getChannelBadge(source, medium)}</TableCell>
-                          <TableCell>
-                            <div className="font-medium">{campaign.orders}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {Math.round((campaign.orders / totalOrders) * 100)}% of total
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium">₹{campaign.revenue.toLocaleString()}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {revenueShare.toFixed(1)}% of total
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium">{campaign.customers}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {(campaign.customers / campaign.orders * 100).toFixed(0)}% unique
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium">₹{Math.round(campaign.avgOrderValue).toLocaleString()}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {campaign.avgOrderValue > avgOrderValue ? '+' : ''}{Math.round(((campaign.avgOrderValue - avgOrderValue) / avgOrderValue) * 100)}% vs avg
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="space-y-1">
-                              <Progress value={revenueShare} className="w-full h-2" />
-                              <div className="text-xs text-muted-foreground">
-                                Revenue share: {revenueShare.toFixed(1)}%
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                  <span className="sr-only">Open menu</span>
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => setSelectedCampaign(campaign)}>
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  View details
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>View orders</DropdownMenuItem>
-                                <DropdownMenuItem>Customer analysis</DropdownMenuItem>
-                                <DropdownMenuItem>Export data</DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
+            <DataTable 
+              columns={columns} 
+              data={filteredCampaigns}
+              searchKey="campaign"
+              searchPlaceholder="Search campaigns..."
+            />
           </CardContent>
         </Card>
         

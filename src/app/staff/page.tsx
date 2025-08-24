@@ -22,8 +22,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Search, Filter, Users, Shield, Clock, TrendingUp, Plus } from "lucide-react"
+import { MoreHorizontal, Search, Filter, Users, Shield, Clock, TrendingUp, Plus, Eye, UserCog, Trash2, Key } from "lucide-react"
 import { useStaff } from "@/hooks/use-data"
+import { DataTable } from "@/components/ui/data-table"
+import type { ColumnDef } from "@tanstack/react-table"
+import { Checkbox } from "@/components/ui/checkbox"
 
 const mockStaff = [
   {
@@ -108,6 +111,139 @@ const getRoleBadge = (role: string) => {
   return <Badge variant={variants[role] || "outline"}>{role}</Badge>
 }
 
+const columns: ColumnDef<any>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected()}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "name",
+    header: "Staff Member",
+    cell: ({ row }) => {
+      const staff = row.original
+      return (
+        <div className="flex items-center space-x-3">
+          <Avatar className="h-9 w-9">
+            <AvatarImage src={staff.avatar} alt={staff.name} />
+            <AvatarFallback className="bg-blue-100 text-blue-800">
+              {staff.name.split(' ').map((n: string) => n[0]).join('')}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="font-medium">{staff.name}</div>
+            <div className="text-sm text-muted-foreground">{staff.email}</div>
+          </div>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "role",
+    header: "Role",
+    cell: ({ row }) => getRoleBadge(row.getValue("role")),
+  },
+  {
+    accessorKey: "department",
+    header: "Department",
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => getStatusBadge(row.getValue("status")),
+  },
+  {
+    accessorKey: "joinDate",
+    header: "Join Date",
+    cell: ({ row }) => {
+      const joinDate = row.getValue("joinDate") as string
+      return new Date(joinDate).toLocaleDateString()
+    },
+  },
+  {
+    accessorKey: "lastLogin",
+    header: "Last Login",
+    cell: ({ row }) => {
+      const lastLogin = row.getValue("lastLogin") as string
+      return (
+        <div className="text-sm">
+          {new Date(lastLogin).toLocaleDateString()}
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "permissions",
+    header: "Permissions",
+    cell: ({ row }) => {
+      const permissions = row.getValue("permissions") as string[]
+      return (
+        <div className="flex flex-wrap gap-1">
+          {permissions.slice(0, 2).map((permission, index) => (
+            <Badge key={index} variant="outline" className="text-xs">
+              {permission.replace('_', ' ')}
+            </Badge>
+          ))}
+          {permissions.length > 2 && (
+            <Badge variant="outline" className="text-xs">
+              +{permissions.length - 2} more
+            </Badge>
+          )}
+        </div>
+      )
+    },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const staff = row.original
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem>
+              <Eye className="mr-2 h-4 w-4" />
+              View details
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <UserCog className="mr-2 h-4 w-4" />
+              Edit profile
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Key className="mr-2 h-4 w-4" />
+              Manage permissions
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Deactivate
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    },
+  },
+]
+
 export default function StaffPage() {
   const [searchTerm, setSearchTerm] = useState<string>("")
   
@@ -186,100 +322,12 @@ export default function StaffPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-2 py-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search staff members..." className="pl-8" />
-                </div>
-              </div>
-              <Button variant="outline" size="sm">
-                <Filter className="mr-2 h-4 w-4" />
-                Filter
-              </Button>
-            </div>
-            
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Staff Member</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Join Date</TableHead>
-                    <TableHead>Last Login</TableHead>
-                    <TableHead>Permissions</TableHead>
-                    <TableHead className="w-[70px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredStaff.map((member: any) => (
-                    <TableRow key={member._id}>
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={member.avatar} alt={member.name || 'Staff'} />
-                            <AvatarFallback>
-                              {(member.name || 'UN').split(' ').map((n: string) => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium">{member.name || 'Unknown'}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {member.email || 'No email'}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getRoleBadge(member.role || 'staff')}</TableCell>
-                      <TableCell>{member.department || 'Unknown'}</TableCell>
-                      <TableCell>{getStatusBadge(member.isActive ? 'active' : 'inactive')}</TableCell>
-                      <TableCell>{member.joinDate ? new Date(member.joinDate).toLocaleDateString() : 'Unknown'}</TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          {member.lastLogin ? new Date(member.lastLogin).toLocaleString() : 'Never'}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1 max-w-40">
-                          {(member.permissions || []).slice(0, 2).map((permission: string) => (
-                            <Badge key={permission} variant="outline" className="text-xs">
-                              {permission.replace('_', ' ')}
-                            </Badge>
-                          ))}
-                          {(member.permissions || []).length > 2 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{(member.permissions || []).length - 2}
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Open menu</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>View profile</DropdownMenuItem>
-                            <DropdownMenuItem>Edit details</DropdownMenuItem>
-                            <DropdownMenuItem>Manage permissions</DropdownMenuItem>
-                            <DropdownMenuItem>Reset password</DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">
-                              Deactivate user
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <DataTable 
+              columns={columns} 
+              data={filteredStaff.length > 0 ? filteredStaff : mockStaff}
+              searchKey="name"
+              searchPlaceholder="Search staff members..."
+            />
           </CardContent>
         </Card>
       </div>

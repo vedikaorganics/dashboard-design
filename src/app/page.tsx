@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { TrendingUp, TrendingDown, Users, ShoppingCart, Package, DollarSign, Star, AlertCircle, Clock, CheckCircle, Truck } from "lucide-react"
-import { AreaChart, LineChart, BarChart, PieChart } from "@/components/charts"
+import { AreaChart, BarChart, PieChart } from "@/components/charts"
 import { useDashboard, useOrders, useReviews, usePrefetch } from "@/hooks/use-data"
 import Link from "next/link"
 import { Area, AreaChart as RechartsAreaChart, XAxis, YAxis, CartesianGrid } from "recharts"
@@ -13,22 +13,6 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { Skeleton } from "@/components/ui/skeleton"
 
 
-const productSalesData = [
-  { name: 'Mustard Oil', value: 45 },
-  { name: 'Sesame Oil', value: 30 },
-  { name: 'Groundnut Oil', value: 20 },
-  { name: 'Coconut Oil', value: 5 },
-]
-
-
-const utmData = [
-  { name: 'WhatsApp Calls', value: 8500 },
-  { name: 'Google Ads', value: 6200 },
-  { name: 'Facebook', value: 4100 },
-  { name: 'Direct', value: 3200 },
-  { name: 'Instagram', value: 2800 },
-  { name: 'Referral', value: 1900 },
-]
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -327,12 +311,6 @@ export default function DashboardPage() {
                 className="h-[350px] aspect-auto"
               >
                 <RechartsAreaChart data={dailyRevenueChart}>
-                  <defs>
-                    <linearGradient id="colorMrr" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--color-mrr)" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="var(--color-mrr)" stopOpacity={0.1}/>
-                    </linearGradient>
-                  </defs>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" vertical={false} />
                   <XAxis 
                     dataKey="name"
@@ -354,8 +332,8 @@ export default function DashboardPage() {
                   <Area 
                     dataKey="mrr"
                     type="monotone"
-                    fill="url(#colorMrr)"
-                    fillOpacity={1}
+                    fill="var(--color-mrr)"
+                    fillOpacity={0.1}
                     stroke="var(--color-mrr)"
                     strokeWidth={2}
                   />
@@ -373,17 +351,10 @@ export default function DashboardPage() {
         </div>
         
         <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
-          <PieChart
-            title="Sales by Product Type"
-            description="Breakdown by oil varieties"
-            data={productSalesData}
-            height={350}
-          />
-          
-          <LineChart
-            title="Marketing Campaign Performance"
-            description="Revenue by UTM source (₹)"
-            data={utmData}
+          <BarChart
+            title="Orders by Amount Range"
+            description="Distribution of orders by price range (₹500 intervals)"
+            data={data?.orderAmountRangeData || []}
             height={350}
           />
         </div>

@@ -1,7 +1,8 @@
 "use client"
 
-import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
 interface DataPoint {
   name: string
@@ -29,22 +30,51 @@ export function BarChart({
   data,
   dataKey = "value",
   xAxisKey = "name",
-  color = "hsl(var(--primary))",
+  color = "hsl(var(--chart-1))",
   height = 300,
   showXAxis = true,
   showYAxis = true,
   showTooltip = true,
   className = "",
 }: BarChartProps) {
+  const chartConfig = {
+    [dataKey]: {
+      label: dataKey.charAt(0).toUpperCase() + dataKey.slice(1),
+      color: color,
+    },
+  }
+
   const ChartComponent = (
-    <ResponsiveContainer width="100%" height={height}>
+    <ChartContainer
+      config={chartConfig}
+      className={`min-h-[${height}px]`}
+    >
       <RechartsBarChart data={data}>
-        {showXAxis && <XAxis dataKey={xAxisKey} />}
-        {showYAxis && <YAxis />}
-        {showTooltip && <Tooltip />}
-        <Bar dataKey={dataKey} fill={color} />
+        <CartesianGrid vertical={false} />
+        {showXAxis && (
+          <XAxis
+            dataKey={xAxisKey}
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+          />
+        )}
+        {showYAxis && (
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+          />
+        )}
+        {showTooltip && (
+          <ChartTooltip
+            cursor={false}
+            content={<ChartTooltipContent hideLabel />}
+          />
+        )}
+        <Bar dataKey={dataKey} fill={`var(--color-${dataKey})`} radius={4} />
       </RechartsBarChart>
-    </ResponsiveContainer>
+    </ChartContainer>
   )
 
   if (title || description) {

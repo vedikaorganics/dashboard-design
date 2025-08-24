@@ -35,10 +35,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Search, Filter, Gift, Percent, TrendingUp, Calendar, Users, Eye, Tag, Clock, CheckCircle } from "lucide-react"
+import { MoreHorizontal, Search, Filter, Gift, Percent, TrendingUp, Calendar, Users, Eye, Tag, Clock, CheckCircle, Edit, Trash2, Copy } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { useOffers } from "@/hooks/use-data"
 import type { Offer } from "@/types"
+import { DataTable } from "@/components/ui/data-table"
+import type { ColumnDef } from "@tanstack/react-table"
+import { Checkbox } from "@/components/ui/checkbox"
 
 
 const getOfferUsage = (offerId: string) => {
@@ -73,6 +76,144 @@ const getOfferType = (isUserOffer: boolean, triggerPrice: number | null) => {
   return 'General'
 }
 
+const columns: ColumnDef<any>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected()}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "title",
+    header: "Offer",
+    cell: ({ row }) => {
+      const offer = row.original
+      return (
+        <div>
+          <div className="font-medium">{offer.title}</div>
+          <div className="text-sm text-muted-foreground">#{offer.id}</div>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "discount",
+    header: "Discount",
+    cell: ({ row }) => {
+      const offer = row.original
+      return (
+        <div className="flex items-center space-x-2">
+          <Badge variant="outline" className="bg-orange-50">
+            <Percent className="w-3 h-3 mr-1" />
+            ₹{offer.discount}
+          </Badge>
+        </div>
+      )
+    },
+  },
+  {
+    id: "type",
+    header: "Type",
+    cell: ({ row }) => {
+      const offer = row.original
+      const type = getOfferType(offer.isUserOffer, offer.triggerPrice)
+      return (
+        <Badge variant={type === 'User-specific' ? 'default' : type === 'Conditional' ? 'secondary' : 'outline'}>
+          {type}
+        </Badge>
+      )
+    },
+  },
+  {
+    id: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const offer = row.original
+      const status = getOfferStatus(offer)
+      return getOfferStatusBadge(status)
+    },
+  },
+  {
+    accessorKey: "triggerPrice",
+    header: "Min Order",
+    cell: ({ row }) => {
+      const triggerPrice = row.getValue("triggerPrice") as number | null
+      return triggerPrice ? `₹${triggerPrice.toLocaleString()}` : 'No minimum'
+    },
+  },
+  {
+    id: "usage",
+    header: "Usage",
+    cell: ({ row }) => {
+      const offer = row.original
+      const usage = getOfferUsage(offer.id)
+      return (
+        <div className="w-24">
+          <div className="flex justify-between text-sm mb-1">
+            <span>{usage}%</span>
+          </div>
+          <Progress value={usage} className="h-2" />
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "createdAt",
+    header: "Created",
+    cell: ({ row }) => {
+      const createdAt = row.getValue("createdAt") as string
+      return new Date(createdAt).toLocaleDateString()
+    },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const offer = row.original
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => setSelectedOffer(offer)}>
+              <Eye className="mr-2 h-4 w-4" />
+              View details
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit offer
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Copy className="mr-2 h-4 w-4" />
+              Duplicate
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    },
+  },
+]
 
 export default function OffersPage() {
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null)
@@ -156,125 +297,12 @@ export default function OffersPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-2 py-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search offers by title or code..." 
-                    className="pl-8" 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Offers</SelectItem>
-                  <SelectItem value="general">General Offers</SelectItem>
-                  <SelectItem value="user">User-specific</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="rounded-md border">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Offer Details</TableHead>
-                      <TableHead>Code</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Discount</TableHead>
-                      <TableHead>Trigger Price</TableHead>
-                      <TableHead>Usage Count</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="w-[70px]">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredOffers.map((offer: any) => {
-                      const usageCount = getOfferUsage(offer.id)
-                      const status = getOfferStatus(offer)
-                      
-                      return (
-                        <TableRow key={offer._id}>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">{offer.title}</div>
-                              <div className="text-sm text-muted-foreground line-clamp-2">
-                                {offer.description}
-                              </div>
-                              <div className="text-xs text-muted-foreground mt-1">
-                                Created: {new Date(offer.createdAt).toLocaleDateString()}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <code className="bg-muted px-2 py-1 rounded text-sm font-mono">
-                              {offer.id}
-                            </code>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={offer.isUserOffer ? "default" : "secondary"}>
-                              {getOfferType(offer.isUserOffer, offer.triggerPrice)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium text-green-600">
-                              ₹{offer.discount.toLocaleString()} off
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {offer.triggerPrice ? (
-                              <div className="text-sm">
-                                <span className="font-medium">₹{offer.triggerPrice.toLocaleString()}</span>
-                                <div className="text-xs text-muted-foreground">minimum order</div>
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground text-sm">No minimum</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium">{usageCount}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {usageCount === 0 ? 'Not used yet' : 'times used'}
-                            </div>
-                          </TableCell>
-                          <TableCell>{getOfferStatusBadge(status)}</TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                  <span className="sr-only">Open menu</span>
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => setSelectedOffer(offer)}>
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  View details
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>Edit offer</DropdownMenuItem>
-                                <DropdownMenuItem>View usage analytics</DropdownMenuItem>
-                                <DropdownMenuItem>Duplicate offer</DropdownMenuItem>
-                                <DropdownMenuItem className="text-red-600">
-                                  Deactivate offer
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
+            <DataTable 
+              columns={columns} 
+              data={filteredOffers}
+              searchKey="title"
+              searchPlaceholder="Search offers by title or code..."
+            />
           </CardContent>
         </Card>
         

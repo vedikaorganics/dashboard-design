@@ -36,10 +36,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Search, Filter, Users, CheckCircle, XCircle, Phone, Mail, MapPin, ShoppingBag, Gift, MessageCircle } from "lucide-react"
+import { MoreHorizontal, Search, Filter, Users, CheckCircle, XCircle, Phone, Mail, MapPin, ShoppingBag, Gift, MessageCircle, Eye } from "lucide-react"
 import { useUsers } from "@/hooks/use-data"
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 import type { User } from "@/types"
+import { DataTable } from "@/components/ui/data-table"
+import type { ColumnDef } from "@tanstack/react-table"
+import { Checkbox } from "@/components/ui/checkbox"
 
 
 const getVerificationBadge = (verified: boolean) => {
@@ -62,6 +64,153 @@ const getCustomerTypeBadge = (customerType: string) => {
     default: return <Badge variant="secondary">Customer</Badge>
   }
 }
+
+const columns: ColumnDef<any>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected()}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "name",
+    header: "Customer",
+    cell: ({ row }) => {
+      const customer = row.original
+      return (
+        <div className="flex items-center space-x-3">
+          <Avatar className="h-10 w-10">
+            <AvatarFallback className="bg-orange-100 text-orange-800">
+              {customer.name ? customer.name.split(' ').map((n: string) => n[0]).join('') : 
+               customer.phoneNumber.slice(-2)}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="font-medium">
+              {customer.name || 'Unnamed Customer'}
+            </div>
+            <div className="text-sm text-muted-foreground flex items-center">
+              <Phone className="w-3 h-3 mr-1" />
+              {customer.phoneNumber}
+            </div>
+            {customer.email && !customer.email.includes('@temp.local') && (
+              <div className="text-sm text-muted-foreground flex items-center">
+                <Mail className="w-3 h-3 mr-1" />
+                {customer.email}
+              </div>
+            )}
+          </div>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "phoneNumberVerified",
+    header: "Phone Verification",
+    cell: ({ row }) => getVerificationBadge(row.getValue("phoneNumberVerified")),
+  },
+  {
+    accessorKey: "customerType",
+    header: "Customer Type",
+    cell: ({ row }) => getCustomerTypeBadge(row.getValue("customerType")),
+  },
+  {
+    accessorKey: "orderCount",
+    header: "Orders",
+    cell: ({ row }) => {
+      const orderCount = row.getValue("orderCount") as number || 0
+      return (
+        <div>
+          <div className="font-medium">{orderCount}</div>
+          <div className="text-xs text-muted-foreground">Total orders placed</div>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "totalSpent",
+    header: "Total Spent",
+    cell: ({ row }) => {
+      const totalSpent = row.getValue("totalSpent") as number || 0
+      const orderCount = row.original.orderCount || 1
+      return (
+        <div>
+          <div className="font-medium">₹{totalSpent.toLocaleString()}</div>
+          {totalSpent > 0 && (
+            <div className="text-xs text-muted-foreground">
+              Avg: ₹{Math.round(totalSpent / Math.max(orderCount, 1)).toLocaleString()}
+            </div>
+          )}
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "unclaimedRewards",
+    header: "Offers Used",
+    cell: ({ row }) => {
+      const unclaimedRewards = row.getValue("unclaimedRewards") as number || 0
+      return (
+        <div>
+          <div className="text-sm">₹{unclaimedRewards.toLocaleString()}</div>
+          <div className="text-xs text-muted-foreground">Unclaimed rewards</div>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "notes",
+    header: "Notes",
+    cell: ({ row }) => {
+      const notes = row.getValue("notes") as string
+      return (
+        <div className="max-w-32 truncate text-sm text-muted-foreground">
+          {notes || 'No notes'}
+          {notes && <MessageCircle className="w-3 h-3 inline ml-1 text-blue-500" />}
+        </div>
+      )
+    },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const customer = row.original
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => setSelectedCustomer(customer)}>
+              <Eye className="mr-2 h-4 w-4" />
+              View details
+            </DropdownMenuItem>
+            <DropdownMenuItem>Add note</DropdownMenuItem>
+            <DropdownMenuItem>Update info</DropdownMenuItem>
+            <DropdownMenuItem>Send offer</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    },
+  },
+]
 
 export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null)
@@ -147,186 +296,12 @@ export default function CustomersPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-2 py-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search by name, phone, or email..." 
-                    className="pl-8" 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
-              <Select value={verificationFilter} onValueChange={setVerificationFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by verification" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Customers</SelectItem>
-                  <SelectItem value="verified">Verified</SelectItem>
-                  <SelectItem value="unverified">Unverified</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="rounded-md border">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Phone Verification</TableHead>
-                      <TableHead>Customer Type</TableHead>
-                      <TableHead>Orders</TableHead>
-                      <TableHead>Total Spent</TableHead>
-                      <TableHead>Offers Used</TableHead>
-                      <TableHead>Notes</TableHead>
-                      <TableHead className="w-[70px]">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredCustomers.map((customer: any) => {
-                      return (
-                        <TableRow key={customer._id}>
-                          <TableCell>
-                            <div className="flex items-center space-x-3">
-                              <Avatar className="h-10 w-10">
-                                <AvatarFallback className="bg-orange-100 text-orange-800">
-                                  {customer.name ? customer.name.split(' ').map((n: string) => n[0]).join('') : 
-                                   customer.phoneNumber.slice(-2)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <div className="font-medium">
-                                  {customer.name || 'Unnamed Customer'}
-                                </div>
-                                <div className="text-sm text-muted-foreground flex items-center">
-                                  <Phone className="w-3 h-3 mr-1" />
-                                  {customer.phoneNumber}
-                                </div>
-                                {customer.email && !customer.email.includes('@temp.local') && (
-                                  <div className="text-sm text-muted-foreground flex items-center">
-                                    <Mail className="w-3 h-3 mr-1" />
-                                    {customer.email}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>{getVerificationBadge(customer.phoneNumberVerified)}</TableCell>
-                          <TableCell>{getCustomerTypeBadge(customer.customerType)}</TableCell>
-                          <TableCell>
-                            <div className="font-medium">{customer.orderCount || 0}</div>
-                            <div className="text-xs text-muted-foreground">
-                              Total orders placed
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium">₹{(customer.totalSpent || 0).toLocaleString()}</div>
-                            {customer.totalSpent > 0 && (
-                              <div className="text-xs text-muted-foreground">
-                                Avg: ₹{Math.round((customer.totalSpent || 0) / Math.max((customer.orderCount || 1), 1)).toLocaleString()}
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              ₹{(customer.unclaimedRewards || 0).toLocaleString()}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              Unclaimed rewards
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="max-w-32 truncate text-sm text-muted-foreground">
-                              {customer.notes || 'No notes'}
-                            </div>
-                            {customer.notes && (
-                              <MessageCircle className="w-3 h-3 inline ml-1 text-blue-500" />
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                  <span className="sr-only">Open menu</span>
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => setSelectedCustomer(customer)}>
-                                  View details
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>View orders</DropdownMenuItem>
-                                <DropdownMenuItem>Edit notes</DropdownMenuItem>
-                                <DropdownMenuItem>Send offer</DropdownMenuItem>
-                                <DropdownMenuItem>Contact customer</DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-            {pagination.totalPages > 1 && (
-              <div className="flex justify-center pt-6">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        href="#" 
-                        onClick={(e) => {
-                          e.preventDefault()
-                          if (currentPage > 1) setCurrentPage(currentPage - 1)
-                        }}
-                        className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
-                      />
-                    </PaginationItem>
-                    
-                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                      const pageNumber = i + 1
-                      return (
-                        <PaginationItem key={pageNumber}>
-                          <PaginationLink
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              setCurrentPage(pageNumber)
-                            }}
-                            isActive={currentPage === pageNumber}
-                          >
-                            {pageNumber}
-                          </PaginationLink>
-                        </PaginationItem>
-                      )
-                    })}
-                    
-                    {pagination.totalPages > 5 && (
-                      <PaginationItem>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    )}
-                    
-                    <PaginationItem>
-                      <PaginationNext
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          if (currentPage < pagination.totalPages) setCurrentPage(currentPage + 1)
-                        }}
-                        className={currentPage >= pagination.totalPages ? "pointer-events-none opacity-50" : ""}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
-            )}
+            <DataTable 
+              columns={columns} 
+              data={filteredCustomers}
+              searchKey="name"
+              searchPlaceholder="Search by name, phone, or email..."
+            />
           </CardContent>
         </Card>
         

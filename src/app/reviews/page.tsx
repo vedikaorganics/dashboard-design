@@ -22,9 +22,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Search, Filter, Star, TrendingUp, TrendingDown } from "lucide-react"
+import { MoreHorizontal, Search, Filter, Star, TrendingUp, TrendingDown, Eye, Check, X, Flag } from "lucide-react"
 import { useReviews } from "@/hooks/use-data"
 import { StarRating } from "@/components/ui/star-rating"
+import { DataTable } from "@/components/ui/data-table"
+import type { ColumnDef } from "@tanstack/react-table"
+import { Checkbox } from "@/components/ui/checkbox"
 
 const mockReviews = [
   {
@@ -95,6 +98,141 @@ const getStatusBadge = (status: string) => {
   return <Badge variant={variants[status] || "outline"}>{status}</Badge>
 }
 
+const columns: ColumnDef<any>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected()}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "customer",
+    header: "Customer",
+    cell: ({ row }) => {
+      const review = row.original
+      return (
+        <div className="flex items-center space-x-3">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-blue-100 text-blue-800">
+              {review.customer.split(' ').map((n: string) => n[0]).join('')}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="font-medium text-sm">{review.customer}</div>
+            <div className="text-xs text-muted-foreground">{review.date}</div>
+          </div>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "product",
+    header: "Product",
+    cell: ({ row }) => {
+      const review = row.original
+      return (
+        <div>
+          <div className="font-medium text-sm">{review.product}</div>
+          <div className="text-xs text-muted-foreground">#{review.id}</div>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "rating",
+    header: "Rating",
+    cell: ({ row }) => {
+      const rating = row.getValue("rating") as number
+      return (
+        <div className="flex items-center space-x-2">
+          <StarRating rating={rating} />
+          <span className="text-sm font-medium">{rating}/5</span>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "title",
+    header: "Review",
+    cell: ({ row }) => {
+      const review = row.original
+      return (
+        <div className="max-w-md">
+          <div className="font-medium text-sm mb-1">{review.title}</div>
+          <div className="text-xs text-muted-foreground line-clamp-2">
+            {review.comment}
+          </div>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => getStatusBadge(row.getValue("status")),
+  },
+  {
+    accessorKey: "helpful",
+    header: "Helpful",
+    cell: ({ row }) => {
+      const helpful = row.getValue("helpful") as number
+      return (
+        <div className="text-center">
+          <div className="font-medium text-sm">{helpful}</div>
+          <div className="text-xs text-muted-foreground">votes</div>
+        </div>
+      )
+    },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const review = row.original
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem>
+              <Eye className="mr-2 h-4 w-4" />
+              View details
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Check className="mr-2 h-4 w-4" />
+              Approve review
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Flag className="mr-2 h-4 w-4" />
+              Flag review
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <X className="mr-2 h-4 w-4" />
+              Reject review
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    },
+  },
+]
 
 export default function ReviewsPage() {
   const [currentPage, setCurrentPage] = useState<number>(1)
@@ -181,83 +319,12 @@ export default function ReviewsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-2 py-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search reviews..." className="pl-8" />
-                </div>
-              </div>
-              <Button variant="outline" size="sm">
-                <Filter className="mr-2 h-4 w-4" />
-                Filter
-              </Button>
-            </div>
-            
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Rating</TableHead>
-                    <TableHead>Review</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Helpful</TableHead>
-                    <TableHead className="w-[70px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reviews.map((review: any) => (
-                    <TableRow key={review._id}>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>
-                              {review.customerName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="font-medium">{review.customerName || 'Anonymous'}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium">{review.product?.title || 'Unknown Product'}</TableCell>
-                      <TableCell><StarRating rating={review.rating} showRating={false} /></TableCell>
-                      <TableCell className="max-w-xs">
-                        <div>
-                          <div className="font-medium text-sm">{review.title}</div>
-                          <div className="text-sm text-muted-foreground truncate">
-                            {review.comment}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{new Date(review.createdAt).toLocaleDateString()}</TableCell>
-                      <TableCell>{getStatusBadge(review.isApproved ? 'published' : 'pending')}</TableCell>
-                      <TableCell>{review.likes || 0}</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Open menu</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>View full review</DropdownMenuItem>
-                            <DropdownMenuItem>Respond to review</DropdownMenuItem>
-                            <DropdownMenuItem>Approve review</DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">
-                              Flag as inappropriate
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <DataTable 
+              columns={columns} 
+              data={reviews.length > 0 ? reviews : mockReviews}
+              searchKey="customer"
+              searchPlaceholder="Search reviews..."
+            />
           </CardContent>
         </Card>
       </div>
