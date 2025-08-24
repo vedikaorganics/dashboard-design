@@ -4,8 +4,8 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { TrendingUp, TrendingDown, Users, ShoppingCart, Package, DollarSign, Star, AlertCircle, Clock, CheckCircle, Truck } from "lucide-react"
-import { AreaChart, BarChart, PieChart } from "@/components/charts"
+import { TrendingUp, TrendingDown, Users, ShoppingCart, DollarSign, Star, AlertCircle, Clock, CheckCircle, Truck } from "lucide-react"
+import { BarChart } from "@/components/charts"
 import { useDashboard, useOrders, useReviews, usePrefetch } from "@/hooks/use-data"
 import Link from "next/link"
 import { Area, AreaChart as RechartsAreaChart, XAxis, YAxis, CartesianGrid } from "recharts"
@@ -316,7 +316,18 @@ export default function DashboardPage() {
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
-                  tickFormatter={(value) => value.slice(0, 3)}
+                  tickFormatter={(value) => {
+                    // Format as MM/YY if it looks like a date string
+                    try {
+                      const date = new Date(value);
+                      if (!isNaN(date.getTime())) {
+                        return date.toLocaleDateString('en-US', { month: '2-digit', year: '2-digit' });
+                      }
+                      return value.slice(0, 3);
+                    } catch {
+                      return value.slice(0, 3);
+                    }
+                  }}
                 />
                 <YAxis 
                   tickLine={false}
@@ -328,6 +339,18 @@ export default function DashboardPage() {
                   cursor={false}
                   content={<ChartTooltipContent 
                     indicator="dot" 
+                    labelFormatter={(label) => {
+                      // Show x-axis value in tooltip
+                      try {
+                        const date = new Date(label);
+                        if (!isNaN(date.getTime())) {
+                          return date.toLocaleDateString('en-US', { month: '2-digit', year: '2-digit' });
+                        }
+                        return label;
+                      } catch {
+                        return label;
+                      }
+                    }}
                     formatter={(value) => [`₹${((Number(value) * 30) / 100000).toFixed(2)}L`]}
                   />}
                 />
