@@ -279,30 +279,28 @@ export default function DashboardPage() {
               <CardDescription>Manage your store</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-3">
-                <Button 
-                  asChild 
-                  variant="outline" 
-                  className="justify-start h-auto p-4"
+              <div className="space-y-4">
+                <Link 
+                  href="/orders?filter=ready_to_ship"
+                  className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
                   onMouseEnter={() => handlePrefetch('orders')}
                 >
-                  <Link href="/orders?filter=ready_to_ship">
-                    <Truck className="h-5 w-5 mr-3" />
-                    <div className="text-left">
-                      <div className="font-medium">Orders to Ship</div>
-                      <div className="text-sm text-muted-foreground">{ordersToShip} confirmed orders ready for shipping</div>
-                    </div>
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="justify-start h-auto p-4">
-                  <Link href="/reviews?filter=unapproved">
-                    <Star className="h-5 w-5 mr-3" />
-                    <div className="text-left">
-                      <div className="font-medium">Review Moderation</div>
-                      <div className="text-sm text-muted-foreground">{pendingReviews > 0 ? `${pendingReviews} reviews need approval` : 'All reviews approved'}</div>
-                    </div>
-                  </Link>
-                </Button>
+                  <Truck className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex-1">
+                    <div className="font-medium">Orders to Ship</div>
+                    <div className="text-sm text-muted-foreground">{ordersToShip} confirmed orders ready for shipping</div>
+                  </div>
+                </Link>
+                <Link 
+                  href="/reviews?filter=unapproved"
+                  className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <Star className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex-1">
+                    <div className="font-medium">Review Moderation</div>
+                    <div className="text-sm text-muted-foreground">{pendingReviews > 0 ? `${pendingReviews} reviews need approval` : 'All reviews approved'}</div>
+                  </div>
+                </Link>
               </div>
             </CardContent>
           </Card>
