@@ -64,11 +64,17 @@ const getCustomerName = (order: Order) => {
 export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [currentPage, setCurrentPage] = useState<number>(1)
+  const [pageSize, setPageSize] = useState<number>(10)
   
-  const { data: ordersData, isLoading } = useOrders(currentPage, 50, statusFilter === "all" ? undefined : statusFilter)
+  const { data: ordersData, isLoading } = useOrders(currentPage, pageSize, statusFilter === "all" ? undefined : statusFilter)
   
   const orders = (ordersData as any)?.orders || []
   const pagination = (ordersData as any)?.pagination || {}
+  
+  const handlePaginationChange = ({ pageIndex, pageSize: newPageSize }: { pageIndex: number; pageSize: number }) => {
+    setCurrentPage(pageIndex + 1) // Convert 0-based to 1-based
+    setPageSize(newPageSize)
+  }
 
   const columns: ColumnDef<Order>[] = [
     {
@@ -204,6 +210,11 @@ export default function OrdersPage() {
           data={orders}
           searchKey="orderId"
           searchPlaceholder="Search by order ID, customer name, or phone..."
+          manualPagination={true}
+          pageCount={pagination.totalPages || 0}
+          pageIndex={(currentPage - 1) || 0} // Convert 1-based to 0-based
+          pageSize={pageSize}
+          onPaginationChange={handlePaginationChange}
         />
       </div>
     </DashboardLayout>

@@ -30,6 +30,12 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
   searchKey?: string
   searchPlaceholder?: string
+  // Server-side pagination props
+  pageCount?: number
+  pageIndex?: number
+  pageSize?: number
+  onPaginationChange?: (pagination: { pageIndex: number; pageSize: number }) => void
+  manualPagination?: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -37,28 +43,55 @@ export function DataTable<TData, TValue>({
   data,
   searchKey = "name",
   searchPlaceholder = "Search...",
+  pageCount,
+  pageIndex = 0,
+  pageSize = 10,
+  onPaginationChange,
+  manualPagination = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
 
+  const [pagination, setPagination] = React.useState({
+    pageIndex: pageIndex || 0,
+    pageSize: pageSize || 10,
+  })
+
+  React.useEffect(() => {
+    if (onPaginationChange && manualPagination) {
+      onPaginationChange(pagination)
+    }
+  }, [pagination, onPaginationChange, manualPagination])
+
   const table = useReactTable({
     data,
     columns,
+    pageCount: manualPagination ? pageCount : undefined,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    getPaginationRowModel: manualPagination ? undefined : getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    onPaginationChange: manualPagination ? setPagination : undefined,
+    manualPagination,
+    ...(!manualPagination && {
+      initialState: {
+        pagination: {
+          pageSize: pageSize || 10,
+        },
+      },
+    }),
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
+      ...(manualPagination ? { pagination } : {}),
     },
   })
 
