@@ -112,7 +112,7 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium">Revenue</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">₹{totalRevenue.toLocaleString()}</div>
+              <div className="text-2xl font-bold">₹{(totalRevenue / 100000).toFixed(2)}L</div>
               <p className="text-xs text-muted-foreground">All time revenue</p>
             </CardContent>
           </Card>
@@ -123,11 +123,11 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium">Orders</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalOrders}</div>
+              <div className="text-2xl font-bold">{(totalOrders / 1000).toFixed(2)}K</div>
               <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                <span className="text-green-600">{confirmedOrders} confirmed</span>
+                <span className="text-green-600">{(confirmedOrders / 1000).toFixed(2)}K confirmed</span>
                 <span>·</span>
-                <span className="text-yellow-600">{pendingOrders} pending</span>
+                <span className="text-yellow-600">{(pendingOrders / 1000).toFixed(2)}K pending</span>
               </div>
             </CardContent>
           </Card>
@@ -138,7 +138,7 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium">Users</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalUsers}</div>
+              <div className="text-2xl font-bold">{(totalUsers / 1000).toFixed(2)}K</div>
               <p className="text-xs text-muted-foreground">Registered customers</p>
             </CardContent>
           </Card>
@@ -155,7 +155,7 @@ export default function DashboardPage() {
                 {pendingReviews > 0 && (
                   <>
                     <span>·</span>
-                    <span className="text-yellow-600">{pendingReviews} pending</span>
+                    <span className="text-yellow-600">{(pendingReviews / 1000).toFixed(2)}K pending</span>
                   </>
                 )}
               </div>
