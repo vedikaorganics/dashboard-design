@@ -127,8 +127,14 @@ export function useCampaigns() {
 }
 
 // Staff management
-export function useStaff() {
-  return useData('/api/staff', 'staff-all', 900) // 15 minutes refresh
+export function useStaff(page = 1, limit = 50) {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString()
+  })
+  
+  const cacheKey = `staff-${page}-${limit}`
+  return useData(`/api/staff?${params}`, cacheKey, 900) // 15 minutes refresh
 }
 
 // Utility hook for manual cache invalidation
