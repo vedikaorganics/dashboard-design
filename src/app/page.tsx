@@ -352,7 +352,7 @@ export default function DashboardPage() {
                     return (
                       <div className="rounded-lg border bg-background p-3 shadow-sm">
                         <p className="text-sm font-medium mb-2">{label}</p>
-                        <div className="space-y-1">
+                        <div className="space-y-1 font-mono">
                           <p className="text-sm">₹{totalMrr}L Mrr</p>
                           <p className="text-sm">₹{repeatMrr}L Repeat</p>
                           <p className="text-sm">₹{newMrr}L New</p>

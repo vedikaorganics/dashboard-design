@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ObjectId } from 'mongodb'
 import { getCollection } from '@/lib/mongodb'
 import { cache } from '@/lib/cache'
+import { limechatService } from '@/lib/limechat'
 
 export async function GET(
   request: NextRequest,
@@ -150,6 +151,56 @@ export async function PATCH(
         { error: 'Order not found' },
         { status: 404 }
       )
+    }
+
+    // Get the updated order and user data for LimeChat events
+    const [updatedOrder, usersCollection] = await Promise.all([
+      ordersCollection.findOne({ orderId }),
+      getCollection('users')
+    ])
+
+    // Send LimeChat event asynchronously if order is dispatched or delivered (non-blocking)
+    if (deliveryStatus === 'DISPATCHED' || deliveryStatus === 'DELIVERED') {
+      setImmediate(async () => {
+        try {
+          if (updatedOrder && updatedOrder.userId) {
+            const user = await usersCollection.findOne({ 
+              $or: [
+                { _id: new ObjectId(updatedOrder.userId) },
+                { userId: updatedOrder.userId }
+              ]
+            })
+            
+            if (user && user.phoneNumber) {
+              const phoneAsDistinctId = user.phoneNumber.startsWith('+') 
+                ? user.phoneNumber.substring(1) 
+                : user.phoneNumber;
+              
+              // Get product info from first item
+              const firstItem = updatedOrder.items?.[0];
+              const productName = firstItem?.title || '';
+              const coverImage = firstItem?.image || '';
+              
+              const eventName = deliveryStatus === 'DISPATCHED' ? 'order_shipped' : 'order_delivered';
+              
+              limechatService.sendShippingEvent(
+                eventName,
+                updatedOrder.orderId,
+                updatedOrder.amount || updatedOrder.totalAmount || 0,
+                productName,
+                coverImage,
+                updatedOrder.waybill || '',
+                user.phoneNumber,
+                phoneAsDistinctId,
+                user.name || ''
+              );
+            }
+          }
+        } catch (error) {
+          // Log error but don't fail the API call
+          console.error(`Failed to send LimeChat ${deliveryStatus.toLowerCase()} event for order ${orderId}:`, error);
+        }
+      });
     }
 
     // Clear related caches
