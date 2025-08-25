@@ -97,7 +97,7 @@ export default function OrdersPage() {
       cell: ({ row }) => (
         <Link 
           href={`/orders/${row.getValue("orderId")}`}
-          className="font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 hover:underline"
+          className="font-medium hover:underline"
         >
           #{row.getValue("orderId")}
         </Link>
