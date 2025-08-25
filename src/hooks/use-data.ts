@@ -200,8 +200,23 @@ export function useOffers(page = 1, limit = 50) {
 }
 
 // Marketing campaigns
-export function useCampaigns() {
-  return useData('/api/campaigns', 'campaigns-utm-analytics', 300) // 5 minutes refresh
+export function useCampaigns(
+  page = 1,
+  limit = 10,
+  search?: string
+) {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    ...(search && search.trim() && { search: search.trim() })
+  })
+  
+  const filterParams = {
+    search: search || ''
+  }
+  const cacheKey = `campaigns-${page}-${limit}-${JSON.stringify(filterParams)}`
+  
+  return useData(`/api/campaigns?${params}`, cacheKey, 60) // 1 minute refresh
 }
 
 // Staff management

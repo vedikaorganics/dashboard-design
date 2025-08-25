@@ -6,20 +6,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import {
   Table,
   TableBody,
@@ -35,27 +42,31 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Search, Filter, TrendingUp, TrendingDown, Eye, Users, Phone, MessageSquare, Globe, Target, Edit, Trash2, Copy, BarChart3 } from "lucide-react"
-import { Progress } from "@/components/ui/progress"
-import { PieChart, BarChart } from "@/components/charts"
+import { MoreHorizontal, Plus, Edit, Trash2, Copy, Link, ExternalLink, Check } from "lucide-react"
 import { useCampaigns } from "@/hooks/use-data"
 import { DataTable } from "@/components/ui/data-table"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 
 
+interface Campaign {
+  _id: string
+  shortId: string
+  utm_source: string
+  utm_medium: string
+  utm_campaign: string
+  utm_content: string
+  utm_term: string
+  createdAt: string
+  updatedAt: string
+}
 
-const getChannelIcon = (source: string, medium?: string) => {
-  if (medium?.toLowerCase().includes('call') || source.toLowerCase().includes('call')) {
-    return <Phone className="w-4 h-4" />
-  }
-  if (source.toLowerCase().includes('whatsapp') || medium?.toLowerCase().includes('whatsapp')) {
-    return <MessageSquare className="w-4 h-4" />
-  }
-  if (source.toLowerCase().includes('google') || source.toLowerCase().includes('facebook') || source.toLowerCase().includes('instagram')) {
-    return <Globe className="w-4 h-4" />
-  }
-  return <Target className="w-4 h-4" />
+interface CampaignFormData {
+  utm_source: string
+  utm_medium: string
+  utm_campaign: string
+  utm_content: string
+  utm_term: string
 }
 
 const getChannelBadge = (source: string, medium: string) => {
@@ -80,10 +91,119 @@ const getChannelBadge = (source: string, medium: string) => {
 }
 
 export default function CampaignsPage() {
-  const [searchTerm, setSearchTerm] = useState<string>("")
-  const [selectedCampaign, setSelectedCampaign] = useState<any>(null)
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [pageSize, setPageSize] = useState<number>(10)
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [createFormData, setCreateFormData] = useState<CampaignFormData>({
+    utm_source: '',
+    utm_medium: '',
+    utm_campaign: '',
+    utm_content: '',
+    utm_term: ''
+  })
   
-  const columns: ColumnDef<any>[] = [
+  const [editFormData, setEditFormData] = useState<CampaignFormData>({
+    utm_source: '',
+    utm_medium: '',
+    utm_campaign: '',
+    utm_content: '',
+    utm_term: ''
+  })
+  
+  const handlePaginationChange = ({ pageIndex, pageSize: newPageSize }: { pageIndex: number; pageSize: number }) => {
+    setCurrentPage(pageIndex + 1) // Convert 0-based to 1-based
+    setPageSize(newPageSize)
+  }
+  
+  const handleSearchChange = (search: string) => {
+    setSearchQuery(search)
+    setCurrentPage(1) // Reset to first page when searching
+  }
+  
+  const copyToClipboard = async (shortId: string) => {
+    const url = `${window.location.origin}/r/${shortId}`
+    await navigator.clipboard.writeText(url)
+    setCopiedId(shortId)
+    setTimeout(() => setCopiedId(null), 2000)
+  }
+  
+  const handleCreate = async () => {
+    try {
+      const response = await fetch('/api/campaigns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(createFormData)
+      })
+      
+      if (response.ok) {
+        setIsCreateDialogOpen(false)
+        setCreateFormData({ utm_source: '', utm_medium: '', utm_campaign: '', utm_content: '', utm_term: '' })
+        setCurrentPage(1) // Reset to first page to see new campaign
+        // Force re-fetch by changing a dependency
+        setSearchQuery(searchQuery === '' ? ' ' : '')
+        setTimeout(() => setSearchQuery(''), 100)
+      }
+    } catch (error) {
+      console.error('Error creating campaign:', error)
+    }
+  }
+  
+  const handleUpdate = async () => {
+    if (!selectedCampaign) return
+    
+    try {
+      const response = await fetch('/api/campaigns', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ _id: selectedCampaign._id, ...editFormData })
+      })
+      
+      if (response.ok) {
+        setIsEditDialogOpen(false)
+        setSelectedCampaign(null)
+        setEditFormData({ utm_source: '', utm_medium: '', utm_campaign: '', utm_content: '', utm_term: '' })
+        // Force re-fetch by changing a dependency
+        setSearchQuery(searchQuery === '' ? ' ' : '')
+        setTimeout(() => setSearchQuery(''), 100)
+      }
+    } catch (error) {
+      console.error('Error updating campaign:', error)
+    }
+  }
+  
+  const handleDelete = async (campaignId: string) => {
+    try {
+      const response = await fetch(`/api/campaigns?_id=${campaignId}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        // Force re-fetch by changing a dependency
+        setSearchQuery(searchQuery === '' ? ' ' : '')
+        setTimeout(() => setSearchQuery(''), 100)
+      }
+    } catch (error) {
+      console.error('Error deleting campaign:', error)
+    }
+  }
+  
+  const openEditDialog = (campaign: Campaign) => {
+    setSelectedCampaign(campaign)
+    setEditFormData({
+      utm_source: campaign.utm_source,
+      utm_medium: campaign.utm_medium,
+      utm_campaign: campaign.utm_campaign,
+      utm_content: campaign.utm_content,
+      utm_term: campaign.utm_term
+    })
+    setIsEditDialogOpen(true)
+  }
+  
+  const columns: ColumnDef<Campaign>[] = [
     {
       id: "select",
       header: ({ table }) => (
@@ -104,96 +224,84 @@ export default function CampaignsPage() {
       enableHiding: false,
     },
     {
-      accessorKey: "campaign",
-      header: "Campaign",
-      cell: ({ row }) => {
-        const campaign = row.original
-        return (
-          <div>
-            <div>{campaign.campaign}</div>
-            <div className="text-sm text-muted-foreground">
-              {campaign.source} • {campaign.medium}
-            </div>
-          </div>
-        )
-      },
-    },
-    {
-      accessorKey: "source",
-      header: "Channel",
+      accessorKey: "shortId",
+      header: "Short ID",
       cell: ({ row }) => {
         const campaign = row.original
         return (
           <div className="flex items-center space-x-2">
-            {getChannelIcon(campaign.source, campaign.medium)}
-            {getChannelBadge(campaign.source, campaign.medium)}
+            <code className="bg-muted px-2 py-1 rounded text-sm font-mono">{campaign.shortId}</code>
+            <Button
+              variant="ghost" 
+              size="sm"
+              onClick={() => copyToClipboard(campaign.shortId)}
+              className="h-6 w-6 p-0"
+            >
+              {copiedId === campaign.shortId ? 
+                <Check className="h-3 w-3 text-green-600" /> : 
+                <Copy className="h-3 w-3" />
+              }
+            </Button>
           </div>
         )
       },
     },
     {
-      accessorKey: "orders",
-      header: "Orders",
+      accessorKey: "utm_source",
+      header: "Source",
       cell: ({ row }) => {
-        const orders = row.getValue("orders") as number
+        const source = row.getValue("utm_source") as string
         return (
           <div>
-            <div>{orders}</div>
-            <div className="text-xs text-muted-foreground">total orders</div>
+            {source || "-"}
           </div>
         )
       },
     },
     {
-      accessorKey: "revenue",
-      header: "Revenue",
+      accessorKey: "utm_medium",
+      header: "Medium",
       cell: ({ row }) => {
-        const revenue = row.getValue("revenue") as number
+        const medium = row.getValue("utm_medium") as string
         return (
           <div>
-            <div>₹{revenue.toLocaleString()}</div>
-            <div className="text-xs text-muted-foreground">total revenue</div>
+            {medium || "-"}
           </div>
         )
       },
     },
     {
-      accessorKey: "customers",
-      header: "Customers",
+      accessorKey: "utm_campaign",
+      header: "Campaign",
       cell: ({ row }) => {
-        const customers = row.getValue("customers") as number
+        const campaign = row.getValue("utm_campaign") as string
         return (
           <div>
-            <div>{customers}</div>
-            <div className="text-xs text-muted-foreground">unique customers</div>
+            {campaign || "-"}
           </div>
         )
       },
     },
     {
-      id: "avgOrderValue",
-      header: "AOV",
+      accessorKey: "utm_content",
+      header: "Content",
       cell: ({ row }) => {
-        const campaign = row.original
-        const aov = campaign.orders > 0 ? campaign.revenue / campaign.orders : 0
+        const content = row.getValue("utm_content") as string
         return (
-          <div>
-            <div>₹{Math.round(aov).toLocaleString()}</div>
-            <div className="text-xs text-muted-foreground">avg order value</div>
+          <div className="max-w-[150px] truncate">
+            {content || "-"}
           </div>
         )
       },
     },
     {
-      id: "conversionRate",
-      header: "Performance",
+      accessorKey: "utm_term",
+      header: "Term",
       cell: ({ row }) => {
-        const campaign = row.original
-        const conversionRate = campaign.customers > 0 ? (campaign.orders / campaign.customers) * 100 : 0
+        const term = row.getValue("utm_term") as string
         return (
-          <div>
-            <div>{conversionRate.toFixed(1)}%</div>
-            <div className="text-xs text-muted-foreground">conversion rate</div>
+          <div className="max-w-[150px] truncate">
+            {term || "-"}
           </div>
         )
       },
@@ -212,22 +320,40 @@ export default function CampaignsPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => setSelectedCampaign(campaign)}>
-                <Eye className="mr-2 h-4 w-4" />
-                View details
+              <DropdownMenuItem onClick={() => copyToClipboard(campaign.shortId)}>
+                <Copy className="mr-2 h-4 w-4" />
+                Copy short URL
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <BarChart3 className="mr-2 h-4 w-4" />
-                View analytics
+              <DropdownMenuItem onClick={() => window.open(`/r/${campaign.shortId}`, '_blank')}>
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Test URL
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => openEditDialog(campaign)}>
                 <Edit className="mr-2 h-4 w-4" />
                 Edit campaign
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Copy className="mr-2 h-4 w-4" />
-                Duplicate
-              </DropdownMenuItem>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete campaign
+                  </DropdownMenuItem>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete this campaign? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleDelete(campaign._id)}>
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </DropdownMenuContent>
           </DropdownMenu>
         )
@@ -235,169 +361,172 @@ export default function CampaignsPage() {
     },
   ]
   
-  const { data: campaignsData, isLoading } = useCampaigns()
-  
-  const campaigns = (campaignsData as any)?.campaigns || []
-  const summary = (campaignsData as any)?.summary || {}
-  const chartData = (campaignsData as any)?.chartData || {}
-  
-  const totalRevenue = summary.totalRevenue || 0
-  const totalOrders = summary.totalOrders || 0
-  const totalCustomers = summary.totalCustomers || 0
-  const avgOrderValue = summary.avgOrderValue || 0
-  const totalCampaigns = summary.totalCampaigns || 0
-  
-  const filteredCampaigns = campaigns.filter((campaign: any) =>
-    campaign.campaign.toLowerCase().includes(searchTerm.toLowerCase())
+  const { data: campaignsData, isLoading } = useCampaigns(
+    currentPage,
+    pageSize,
+    searchQuery
   )
   
-  // Chart data from API
-  const revenueChartData = chartData.revenueChart || []
-  const ordersChartData = chartData.ordersChart || []
+  const campaigns = (campaignsData as any)?.campaigns || []
+  const pagination = (campaignsData as any)?.pagination || {}
+  const summary = (campaignsData as any)?.summary || {}
+  
+  const totalCampaigns = summary.totalCampaigns || 0
   
   return (
-    <DashboardLayout title="Marketing Campaigns">
-      <div className="flex-1 space-y-6">
+    <DashboardLayout title="Campaign Management">
+      <div className="flex-1 space-y-4">
+        <DataTable 
+          columns={columns} 
+          data={campaigns}
+          searchKey="utm_campaign"
+          searchPlaceholder="Search campaigns..."
+          searchValue={searchQuery}
+          onSearchChange={handleSearchChange}
+          manualPagination={true}
+          manualFiltering={true}
+          pageCount={pagination.totalPages || 0}
+          pageIndex={(currentPage - 1) || 0}
+          pageSize={pageSize}
+          onPaginationChange={handlePaginationChange}
+          toolbarActions={
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Campaign
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create New Campaign</DialogTitle>
+                  <DialogDescription>
+                    Create a new short URL campaign with UTM parameters.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="utm_source">UTM Source *</Label>
+                    <Input
+                      id="utm_source"
+                      value={createFormData.utm_source}
+                      onChange={(e) => setCreateFormData({ ...createFormData, utm_source: e.target.value })}
+                      placeholder="e.g., google, facebook, newsletter"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="utm_medium">UTM Medium *</Label>
+                    <Input
+                      id="utm_medium"
+                      value={createFormData.utm_medium}
+                      onChange={(e) => setCreateFormData({ ...createFormData, utm_medium: e.target.value })}
+                      placeholder="e.g., cpc, banner, email"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="utm_campaign">UTM Campaign *</Label>
+                    <Input
+                      id="utm_campaign"
+                      value={createFormData.utm_campaign}
+                      onChange={(e) => setCreateFormData({ ...createFormData, utm_campaign: e.target.value })}
+                      placeholder="e.g., summer_sale, product_launch"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="utm_content">UTM Content</Label>
+                    <Input
+                      id="utm_content"
+                      value={createFormData.utm_content}
+                      onChange={(e) => setCreateFormData({ ...createFormData, utm_content: e.target.value })}
+                      placeholder="e.g., logolink, textlink"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="utm_term">UTM Term</Label>
+                    <Input
+                      id="utm_term"
+                      value={createFormData.utm_term}
+                      onChange={(e) => setCreateFormData({ ...createFormData, utm_term: e.target.value })}
+                      placeholder="e.g., running+shoes"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreate} disabled={!createFormData.utm_source || !createFormData.utm_medium || !createFormData.utm_campaign}>
+                    Create Campaign
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          }
+        />
         
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Campaign Sources</CardTitle>
-              <Target className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalCampaigns}</div>
-              <p className="text-xs text-muted-foreground">Active marketing channels</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">₹{totalRevenue.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">From tracked campaigns</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalOrders}</div>
-              <p className="text-xs text-muted-foreground">Orders with UTM tracking</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Order Value</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">₹{Math.round(avgOrderValue).toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">Across all campaigns</p>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
-          <PieChart
-            title="Revenue by Campaign Source"
-            description="Revenue breakdown by marketing channel"
-            data={revenueChartData}
-            height={350}
-          />
-          
-          <BarChart
-            title="Orders by Campaign"
-            description="Order volume per marketing source"
-            data={ordersChartData}
-            height={350}
-          />
-        </div>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Campaign Performance Analysis</CardTitle>
-            <CardDescription>
-              UTM tracking and attribution analysis for your marketing efforts. Data based on actual orders.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable 
-              columns={columns} 
-              data={filteredCampaigns}
-              searchKey="campaign"
-              searchPlaceholder="Search campaigns..."
-            />
-          </CardContent>
-        </Card>
-        
-        <Dialog open={selectedCampaign !== null} onOpenChange={() => setSelectedCampaign(null)}>
-          <DialogContent className="max-w-2xl">
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
             <DialogHeader>
-              <DialogTitle>Campaign Details</DialogTitle>
+              <DialogTitle>Edit Campaign</DialogTitle>
               <DialogDescription>
-                Performance analysis for {selectedCampaign?.campaign}
+                Update UTM parameters for campaign {selectedCampaign?.shortId}
               </DialogDescription>
             </DialogHeader>
-            
-            {selectedCampaign && (
-              <div className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Campaign Overview</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div><strong>Source:</strong> {selectedCampaign.campaign.split(' - ')[0]}</div>
-                      <div><strong>Medium:</strong> {selectedCampaign.campaign.split(' - ')[1]}</div>
-                      <div><strong>Total Orders:</strong> {selectedCampaign.orders}</div>
-                      <div><strong>Unique Customers:</strong> {selectedCampaign.customers}</div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Financial Performance</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div><strong>Total Revenue:</strong> ₹{selectedCampaign.revenue.toLocaleString()}</div>
-                      <div><strong>Average Order Value:</strong> ₹{Math.round(selectedCampaign.avgOrderValue).toLocaleString()}</div>
-                      <div><strong>Revenue Share:</strong> {((selectedCampaign.revenue / totalRevenue) * 100).toFixed(1)}%</div>
-                      <div><strong>Customer Lifetime Value:</strong> ₹{Math.round(selectedCampaign.revenue / selectedCampaign.customers).toLocaleString()}</div>
-                    </CardContent>
-                  </Card>
-                </div>
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Performance Insights</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="grid gap-2">
-                      <div className="flex justify-between items-center">
-                        <span>Orders per Customer:</span>
-                        <span className="font-medium">{(selectedCampaign.orders / selectedCampaign.customers).toFixed(1)}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span>Customer Acquisition Rate:</span>
-                        <span className="font-medium">{((selectedCampaign.customers / selectedCampaign.orders) * 100).toFixed(0)}%</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span>Revenue per Customer:</span>
-                        <span className="font-medium">₹{Math.round(selectedCampaign.revenue / selectedCampaign.customers).toLocaleString()}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit_utm_source">UTM Source *</Label>
+                <Input
+                  id="edit_utm_source"
+                  value={editFormData.utm_source}
+                  onChange={(e) => setEditFormData({ ...editFormData, utm_source: e.target.value })}
+                  placeholder="e.g., google, facebook, newsletter"
+                />
               </div>
-            )}
+              <div className="grid gap-2">
+                <Label htmlFor="edit_utm_medium">UTM Medium *</Label>
+                <Input
+                  id="edit_utm_medium"
+                  value={editFormData.utm_medium}
+                  onChange={(e) => setEditFormData({ ...editFormData, utm_medium: e.target.value })}
+                  placeholder="e.g., cpc, banner, email"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit_utm_campaign">UTM Campaign *</Label>
+                <Input
+                  id="edit_utm_campaign"
+                  value={editFormData.utm_campaign}
+                  onChange={(e) => setEditFormData({ ...editFormData, utm_campaign: e.target.value })}
+                  placeholder="e.g., summer_sale, product_launch"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit_utm_content">UTM Content</Label>
+                <Input
+                  id="edit_utm_content"
+                  value={editFormData.utm_content}
+                  onChange={(e) => setEditFormData({ ...editFormData, utm_content: e.target.value })}
+                  placeholder="e.g., logolink, textlink"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit_utm_term">UTM Term</Label>
+                <Input
+                  id="edit_utm_term"
+                  value={editFormData.utm_term}
+                  onChange={(e) => setEditFormData({ ...editFormData, utm_term: e.target.value })}
+                  placeholder="e.g., running+shoes"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpdate} disabled={!editFormData.utm_source || !editFormData.utm_medium || !editFormData.utm_campaign}>
+                Update Campaign
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

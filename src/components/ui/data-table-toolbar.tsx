@@ -161,6 +161,7 @@ interface DataTableToolbarProps<TData> {
     onChange?: (value: string[]) => void
   }>
   manualFiltering?: boolean
+  toolbarActions?: React.ReactNode
 }
 
 export function DataTableToolbar<TData>({
@@ -170,6 +171,7 @@ export function DataTableToolbar<TData>({
   onSearchChange,
   filterableColumns = [],
   manualFiltering = false,
+  toolbarActions,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = manualFiltering 
     ? (searchValue && searchValue.trim().length > 0) || filterableColumns.some(col => col.value && col.value.length > 0)
@@ -238,7 +240,10 @@ export function DataTableToolbar<TData>({
           </Button>
         )}
       </div>
-      <DataTableViewOptions table={table} />
+      <div className="flex items-center space-x-2">
+        {toolbarActions}
+        <DataTableViewOptions table={table} />
+      </div>
     </div>
   )
 }

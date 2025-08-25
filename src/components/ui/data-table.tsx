@@ -44,6 +44,7 @@ interface DataTableProps<TData, TValue> {
     onChange?: (value: string[]) => void
   }>
   globalFilterFn?: (row: TData, searchQuery: string) => boolean
+  toolbarActions?: React.ReactNode
   // Server-side pagination and filtering props
   pageCount?: number
   pageIndex?: number
@@ -62,6 +63,7 @@ export function DataTable<TData, TValue>({
   onSearchChange,
   filterableColumns = [],
   globalFilterFn,
+  toolbarActions,
   pageCount,
   pageIndex = 0,
   pageSize = 10,
@@ -116,7 +118,7 @@ export function DataTable<TData, TValue>({
     getFilteredRowModel: manualFiltering ? undefined : getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    onPaginationChange: manualPagination ? setPagination : undefined,
+    onPaginationChange: setPagination,
     manualPagination,
     manualFiltering,
     ...(!manualPagination && {
@@ -131,8 +133,8 @@ export function DataTable<TData, TValue>({
       columnFilters,
       columnVisibility,
       rowSelection,
+      pagination,
       ...(!manualFiltering && { globalFilter }),
-      ...(manualPagination ? { pagination } : {}),
     },
   })
 
@@ -146,6 +148,7 @@ export function DataTable<TData, TValue>({
         onSearchChange={onSearchChange}
         filterableColumns={filterableColumns}
         manualFiltering={manualFiltering}
+        toolbarActions={toolbarActions}
       />
       <div className="rounded-md border">
         <Table>

@@ -52,16 +52,21 @@ export async function GET() {
         { $group: { _id: null, total: { $sum: '$amount' } } }
       ]).toArray(),
 
-      // Total orders
-      ordersCollection.countDocuments(),
+      // Total orders (only confirmed orders based on payment status)
+      ordersCollection.countDocuments({
+        $or: [
+          { paymentStatus: 'PAID' },
+          { paymentStatus: 'CASH_ON_DELIVERY' }
+        ]
+      }),
 
-      // Total users
-      usersCollection.countDocuments(),
+      // Total users (only verified users)
+      usersCollection.countDocuments({ phoneNumberVerified: true }),
 
       // Total reviews
       reviewsCollection.countDocuments(),
 
-      // Last 30 days orders (only confirmed orders for revenue calculation)
+      // Last 30 days orders (only confirmed orders based on payment status)
       ordersCollection.find({
         createdAt: { 
           $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) 
@@ -72,7 +77,7 @@ export async function GET() {
         ]
       }).toArray(),
 
-      // Previous 30 days orders (days 31-60 ago, only confirmed orders)
+      // Previous 30 days orders (days 31-60 ago, only confirmed orders based on payment status)
       ordersCollection.find({
         createdAt: { 
           $gte: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
@@ -84,19 +89,21 @@ export async function GET() {
         ]
       }).toArray(),
 
-      // Last 30 days users
+      // Last 30 days users (only verified users)
       usersCollection.find({
         createdAt: { 
           $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) 
-        }
+        },
+        phoneNumberVerified: true
       }).toArray(),
 
-      // Previous 30 days users (days 31-60 ago)
+      // Previous 30 days users (days 31-60 ago, only verified users)
       usersCollection.find({
         createdAt: { 
           $gte: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
           $lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-        }
+        },
+        phoneNumberVerified: true
       }).toArray(),
 
       // Last 30 days reviews
@@ -135,7 +142,7 @@ export async function GET() {
       // Pending reviews count
       reviewsCollection.countDocuments({ isApproved: false }),
 
-      // Customer order distribution (only confirmed orders)
+      // Customer order distribution (only confirmed orders based on payment status)
       ordersCollection.aggregate([
         { 
           $match: { 
