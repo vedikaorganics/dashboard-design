@@ -5,7 +5,6 @@ import { toast } from "sonner"
 import { ColumnDef } from "@tanstack/react-table"
 import Link from "next/link"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -20,13 +19,87 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CheckCircle, Clock, Truck, Package, CreditCard, Ban } from "lucide-react"
+import { CheckCircle, Clock, Truck, Package, Ban, ChevronRight } from "lucide-react"
 import { useOrders } from "@/hooks/use-data"
 import { DataTable } from "@/components/ui/data-table"
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 import type { Order } from "@/types"
+import { cn } from "@/lib/utils"
 
+interface AlertMetricProps {
+  title: string
+  count: number
+  description: string
+  icon: React.ComponentType<{ className?: string }>
+  variant: 'warning' | 'action' | 'info'
+  onClick?: () => void
+}
 
+const AlertMetric = ({ title, count, description, icon: Icon, variant, onClick }: AlertMetricProps) => {
+  const isActive = count > 0
+  
+  const variantClasses = {
+    warning: {
+      container: isActive 
+        ? "bg-yellow-50 border-yellow-200 hover:bg-yellow-100 dark:bg-yellow-950/50 dark:border-yellow-800 dark:hover:bg-yellow-900/50" 
+        : "bg-muted/30 border-border",
+      icon: isActive ? "text-yellow-600 dark:text-yellow-400" : "text-muted-foreground",
+      count: isActive ? "text-yellow-900 dark:text-yellow-100" : "text-muted-foreground",
+      pulse: isActive ? "animate-pulse" : ""
+    },
+    action: {
+      container: isActive 
+        ? "bg-orange-50 border-orange-200 hover:bg-orange-100 dark:bg-orange-950/50 dark:border-orange-800 dark:hover:bg-orange-900/50" 
+        : "bg-muted/30 border-border",
+      icon: isActive ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground",
+      count: isActive ? "text-orange-900 dark:text-orange-100" : "text-muted-foreground",
+      pulse: isActive ? "animate-pulse" : ""
+    },
+    info: {
+      container: isActive 
+        ? "bg-blue-50 border-blue-200 hover:bg-blue-100 dark:bg-blue-950/50 dark:border-blue-800 dark:hover:bg-blue-900/50" 
+        : "bg-muted/30 border-border",
+      icon: isActive ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground",
+      count: isActive ? "text-blue-900 dark:text-blue-100" : "text-muted-foreground",
+      pulse: isActive ? "animate-pulse" : ""
+    }
+  }
+
+  const classes = variantClasses[variant]
+
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between px-4 py-3 rounded-lg border transition-all duration-200 cursor-pointer group",
+        classes.container,
+        onClick && "hover:shadow-sm"
+      )}
+      onClick={onClick}
+    >
+      <div className="flex items-center space-x-3">
+        <div className={cn("p-2 rounded-full", classes.pulse)}>
+          <Icon className={cn("h-5 w-5", classes.icon)} />
+        </div>
+        <div>
+          <div className="flex items-center space-x-2">
+            <h3 className="font-medium text-sm">{title}</h3>
+            <span className={cn("text-lg font-bold", classes.count)}>
+              {count}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground">{description}</p>
+        </div>
+      </div>
+      
+      {onClick && isActive && (
+        <div className="flex items-center space-x-1 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+          <span>View</span>
+          <ChevronRight className="h-3 w-3" />
+        </div>
+      )}
+    </div>
+  )
+}
 
 const deliveryStatusOptions = [
   { value: 'PENDING', label: 'Pending', icon: Package, className: 'border-gray-200 text-gray-700' },
@@ -143,46 +216,6 @@ const deliveryStatusFilterOptions = deliveryStatusOptions.map(option => ({
   icon: option.icon
 }))
 
-// Global search function for orders
-const globalOrderFilter = (order: any, searchQuery: string): boolean => {
-  if (!searchQuery) return true
-  
-  const query = searchQuery.toLowerCase()
-  
-  // Search in Order ID
-  if (order.orderId?.toString().toLowerCase().includes(query)) {
-    return true
-  }
-  
-  // Search in Customer Name
-  const customerName = getCustomerName(order).toLowerCase()
-  if (customerName.includes(query)) {
-    return true
-  }
-  
-  // Search in Amount
-  const amount = (order.totalAmount || order.amount || 0).toString()
-  if (amount.includes(query)) {
-    return true
-  }
-  
-  // Search in UTM parameters
-  if (order.utmParams) {
-    const utmValues = [
-      order.utmParams.utm_source,
-      order.utmParams.utm_medium,
-      order.utmParams.utm_campaign,
-      order.utmParams.utm_term,
-      order.utmParams.utm_content
-    ].filter(Boolean).map(val => val.toLowerCase())
-    
-    if (utmValues.some(val => val.includes(query))) {
-      return true
-    }
-  }
-  
-  return false
-}
 
 export default function OrdersPage() {
   const [currentPage, setCurrentPage] = useState<number>(1)
@@ -417,39 +450,33 @@ export default function OrdersPage() {
     <DashboardLayout title="Orders">
       <div className="flex-1 space-y-6">
         
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Payment Pending</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{summary.paymentPending || 0}</div>
-              <p className="text-xs text-muted-foreground">Awaiting payment</p>
-            </CardContent>
-          </Card>
+        <div className="space-y-3">
+          <AlertMetric
+            title="Payment Pending"
+            count={summary.paymentPending || 0}
+            description="Orders awaiting payment"
+            icon={Clock}
+            variant="warning"
+            onClick={() => handlePaymentStatusChange(['PENDING'])}
+          />
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Shipping Pending</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{summary.shippingPending || 0}</div>
-              <p className="text-xs text-muted-foreground">Ready to ship</p>
-            </CardContent>
-          </Card>
+          <AlertMetric
+            title="Shipping Pending"
+            count={summary.shippingPending || 0}
+            description="Orders ready to ship"
+            icon={Package}
+            variant="action"
+            onClick={() => handleDeliveryStatusChange(['PENDING'])}
+          />
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">In Transit</CardTitle>
-              <Truck className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{summary.inTransit || 0}</div>
-              <p className="text-xs text-muted-foreground">On the way</p>
-            </CardContent>
-          </Card>
+          <AlertMetric
+            title="In Transit"
+            count={summary.inTransit || 0}
+            description="Orders on the way"
+            icon={Truck}
+            variant="info"
+            onClick={() => handleDeliveryStatusChange(['DISPATCHED'])}
+          />
         </div>
         
         <DataTable 
