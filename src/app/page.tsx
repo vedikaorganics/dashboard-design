@@ -8,7 +8,7 @@ import { TrendingUp, TrendingDown, AlertCircle, Clock, CheckCircle, Truck, Star 
 import { BarChart } from "@/components/charts"
 import { useDashboard, useOrders, useReviews, usePrefetch } from "@/hooks/use-data"
 import Link from "next/link"
-import { Area, AreaChart as RechartsAreaChart, XAxis, YAxis, CartesianGrid } from "recharts"
+import { Area, AreaChart as RechartsAreaChart, Line, ComposedChart, XAxis, YAxis, CartesianGrid } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -313,7 +313,7 @@ export default function DashboardPage() {
               }}
               className="h-[350px] aspect-auto"
             >
-              <RechartsAreaChart data={dailyRevenueChart}>
+              <ComposedChart data={dailyRevenueChart}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" vertical={false} />
                 <XAxis 
                   dataKey="name"
@@ -365,27 +365,25 @@ export default function DashboardPage() {
                   dataKey="mrr"
                   type="monotone"
                   fill="var(--color-mrr)"
-                  fillOpacity={0.3}
+                  fillOpacity={0.2}
                   stroke="var(--color-mrr)"
                   strokeWidth={3}
                 />
-                <Area 
+                <Line 
                   dataKey="newCustomerMrr"
                   type="monotone"
-                  fill="var(--color-newCustomerMrr)"
-                  fillOpacity={0.2}
-                  stroke="var(--color-newCustomerMrr)"
-                  strokeWidth={2}
+                  stroke="#f59e0b"
+                  strokeWidth={3}
+                  dot={false}
                 />
-                <Area 
+                <Line 
                   dataKey="repeatCustomerMrr"
                   type="monotone"
-                  fill="var(--color-repeatCustomerMrr)"
-                  fillOpacity={0.2}
-                  stroke="var(--color-repeatCustomerMrr)"
-                  strokeWidth={2}
+                  stroke="#10b981"
+                  strokeWidth={3}
+                  dot={false}
                 />
-              </RechartsAreaChart>
+              </ComposedChart>
             </ChartContainer>
           </CardContent>
         </Card>

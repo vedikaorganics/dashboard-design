@@ -36,6 +36,7 @@ export async function GET() {
       customerOrderCounts,
       ordersToShip,
       dailyRevenueData,
+      newCustomerRevenueData,
       orderAmountRanges
     ] = await Promise.all([
       // Total revenue (only from confirmed orders with payment)
@@ -158,7 +159,7 @@ export async function GET() {
         deliveryStatus: 'PENDING'
       }),
 
-      // Daily revenue data for all time (for 30-day moving average) - separated by new vs repeat customers
+      // Get total daily revenue for all time
       ordersCollection.aggregate([
         {
           $match: {
@@ -171,27 +172,50 @@ export async function GET() {
         {
           $group: {
             _id: {
-              date: {
-                $dateToString: {
-                  format: "%Y-%m-%d",
-                  date: "$createdAt",
-                  timezone: "Asia/Kolkata"
-                }
-              },
-              orderType: {
-                $cond: {
-                  if: {
-                    $in: ["WELCOME_50", "$offers.offerId"]
-                  },
-                  then: "new",
-                  else: "repeat"
-                }
+              $dateToString: {
+                format: "%Y-%m-%d",
+                date: "$createdAt",
+                timezone: "Asia/Kolkata"
               }
             },
             revenue: { $sum: "$amount" }
           }
         },
-        { $sort: { "_id.date": 1 } }
+        { $sort: { _id: 1 } }
+      ]).toArray(),
+
+      // Get new customer revenue (orders with WELCOME_50 offer)
+      ordersCollection.aggregate([
+        {
+          $match: {
+            $and: [
+              {
+                $or: [
+                  { paymentStatus: 'PAID' },
+                  { paymentStatus: 'CASH_ON_DELIVERY' }
+                ]
+              },
+              {
+                $expr: {
+                  $in: ["WELCOME_50", { $ifNull: ["$offers.offerId", []] }]
+                }
+              }
+            ]
+          }
+        },
+        {
+          $group: {
+            _id: {
+              $dateToString: {
+                format: "%Y-%m-%d",
+                date: "$createdAt",
+                timezone: "Asia/Kolkata"
+              }
+            },
+            revenue: { $sum: "$amount" }
+          }
+        },
+        { $sort: { _id: 1 } }
       ]).toArray(),
 
       // Order amount ranges (₹500 intervals, only confirmed orders)
@@ -255,25 +279,19 @@ export async function GET() {
     // Process daily revenue data with 30-day moving average, separated by new vs repeat customers
     const revenueByDate = new Map()
     const newRevenueByDate = new Map()
-    const repeatRevenueByDate = new Map()
     
+    // Build total revenue map
     dailyRevenueData.forEach(item => {
-      const date = item._id.date
-      const orderType = item._id.orderType
+      const date = item._id
       const revenue = item.revenue
-      
-      // Track total revenue
-      if (!revenueByDate.has(date)) {
-        revenueByDate.set(date, 0)
-      }
-      revenueByDate.set(date, revenueByDate.get(date) + revenue)
-      
-      // Track revenue by customer type
-      if (orderType === 'new') {
-        newRevenueByDate.set(date, (newRevenueByDate.get(date) || 0) + revenue)
-      } else {
-        repeatRevenueByDate.set(date, (repeatRevenueByDate.get(date) || 0) + revenue)
-      }
+      revenueByDate.set(date, revenue)
+    })
+    
+    // Build new customer revenue map
+    newCustomerRevenueData.forEach(item => {
+      const date = item._id
+      const revenue = item.revenue
+      newRevenueByDate.set(date, revenue)
     })
 
     // Get all unique dates and sort them
@@ -285,24 +303,21 @@ export async function GET() {
       // Calculate 30-day moving average for total revenue
       let movingAvgSum = 0
       let newMovingAvgSum = 0
-      let repeatMovingAvgSum = 0
       let movingAvgCount = 0
       
       for (let j = Math.max(0, index - 29); j <= index; j++) {
         const avgDateStr = allDates[j]
         const avgRevenue = revenueByDate.get(avgDateStr) || 0
         const newAvgRevenue = newRevenueByDate.get(avgDateStr) || 0
-        const repeatAvgRevenue = repeatRevenueByDate.get(avgDateStr) || 0
         
         movingAvgSum += avgRevenue
         newMovingAvgSum += newAvgRevenue
-        repeatMovingAvgSum += repeatAvgRevenue
         movingAvgCount++
       }
       
       const movingAverage = movingAvgCount > 0 ? movingAvgSum / movingAvgCount : 0
       const newMovingAverage = movingAvgCount > 0 ? newMovingAvgSum / movingAvgCount : 0
-      const repeatMovingAverage = movingAvgCount > 0 ? repeatMovingAvgSum / movingAvgCount : 0
+      const repeatMovingAverage = movingAverage - newMovingAverage // Repeat = Total - New
       
       // Format date for display
       const displayDate = new Date(dateStr)
