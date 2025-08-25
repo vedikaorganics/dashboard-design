@@ -112,13 +112,26 @@ export function useProducts() {
 }
 
 // Users/customers with analytics
-export function useUsers(page = 1, limit = 50) {
+export function useUsers(
+  page = 1, 
+  limit = 50,
+  search?: string,
+  phoneVerified?: string[]
+) {
   const params = new URLSearchParams({
     page: page.toString(),
-    limit: limit.toString()
+    limit: limit.toString(),
+    ...(search && search.trim() && { search: search.trim() }),
+    ...(phoneVerified && phoneVerified.length > 0 && { phoneVerified: phoneVerified.join(',') })
   })
   
-  const cacheKey = `users-${page}-${limit}`
+  // Create cache key that includes all filter parameters
+  const filterParams = {
+    search: search || '',
+    phoneVerified: phoneVerified?.sort().join(',') || ''
+  }
+  const cacheKey = `users-${page}-${limit}-${JSON.stringify(filterParams)}`
+  
   return useData(`/api/users?${params}`, cacheKey, 300) // 5 minutes refresh
 }
 

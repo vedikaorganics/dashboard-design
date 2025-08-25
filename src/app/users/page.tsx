@@ -20,7 +20,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, CheckCircle, XCircle, Phone, Mail, MessageCircle, Eye } from "lucide-react"
+import { MoreHorizontal, CheckCircle, XCircle, Phone, Mail, MessageCircle, Eye, Calendar } from "lucide-react"
 import { useUsers } from "@/hooks/use-data"
 import type { User } from "@/types"
 import { DataTable } from "@/components/ui/data-table"
@@ -41,12 +41,26 @@ const getVerificationBadge = (verified: boolean) => {
 }
 
 
+// Phone verification filter options
+const phoneVerificationOptions = [
+  { value: 'verified', label: 'Verified', icon: CheckCircle },
+  { value: 'unverified', label: 'Unverified', icon: XCircle }
+]
+
+
 export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null)
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [phoneVerifiedFilter, setPhoneVerifiedFilter] = useState<string[]>([])
   
-  const { data: usersData } = useUsers(currentPage, pageSize)
+  const { data: usersData } = useUsers(
+    currentPage, 
+    pageSize,
+    searchQuery,
+    phoneVerifiedFilter
+  )
   
   const users = (usersData as any)?.users || []
   const pagination = (usersData as any)?.pagination || {}
@@ -54,6 +68,17 @@ export default function CustomersPage() {
   const handlePaginationChange = ({ pageIndex, pageSize: newPageSize }: { pageIndex: number; pageSize: number }) => {
     setCurrentPage(pageIndex + 1) // Convert 0-based to 1-based
     setPageSize(newPageSize)
+  }
+  
+  // Handle filter changes - reset to page 1 when filters change
+  const handleSearchChange = (search: string) => {
+    setSearchQuery(search)
+    setCurrentPage(1)
+  }
+  
+  const handlePhoneVerifiedChange = (verified: string[]) => {
+    setPhoneVerifiedFilter(verified)
+    setCurrentPage(1)
   }
 
   const columns: ColumnDef<any>[] = [
@@ -114,10 +139,10 @@ export default function CustomersPage() {
       cell: ({ row }) => getVerificationBadge(row.getValue("phoneNumberVerified")),
     },
     {
-      accessorKey: "orderCount",
+      accessorKey: "noOfOrders",
       header: "Orders",
       cell: ({ row }) => {
-        const orderCount = row.getValue("orderCount") as number || 0
+        const orderCount = row.getValue("noOfOrders") as number || 0
         return (
           <div>
             <div>{orderCount}</div>
@@ -126,20 +151,26 @@ export default function CustomersPage() {
       },
     },
     {
-      accessorKey: "totalSpent",
+      accessorKey: "lastOrderedOn",
+      header: "Last Ordered",
+      cell: ({ row }) => {
+        const lastOrderedOn = row.getValue("lastOrderedOn")
+        if (!lastOrderedOn) return <div className="text-sm text-muted-foreground">Never</div>
+        
+        const date = new Date(lastOrderedOn as string)
+        return (
+          <div className="text-sm">
+            {date.toLocaleDateString()}
+          </div>
+        )
+      },
+    },
+    {
+      id: "totalSpent",
       header: "Total Spent",
       cell: ({ row }) => {
-        const totalSpent = row.getValue("totalSpent") as number || 0
-        const orderCount = row.original.orderCount || 1
         return (
-          <div>
-            <div>₹{totalSpent.toLocaleString()}</div>
-            {totalSpent > 0 && (
-              <div className="text-xs text-muted-foreground">
-                Avg: ₹{Math.round(totalSpent / Math.max(orderCount, 1)).toLocaleString()}
-              </div>
-            )}
-          </div>
+          <div className="text-sm text-muted-foreground">-</div>
         )
       },
     },
@@ -192,8 +223,20 @@ export default function CustomersPage() {
           columns={columns} 
           data={users}
           searchKey="name"
-          searchPlaceholder="Search by name, phone, or email..."
+          searchPlaceholder="Search by name, phone, email, ID, or notes..."
+          searchValue={searchQuery}
+          onSearchChange={handleSearchChange}
+          filterableColumns={[
+            {
+              id: "phoneNumberVerified",
+              title: "Phone Verification",
+              options: phoneVerificationOptions,
+              value: phoneVerifiedFilter,
+              onChange: handlePhoneVerifiedChange
+            }
+          ]}
           manualPagination={true}
+          manualFiltering={true}
           pageCount={pagination.totalPages || 0}
           pageIndex={(currentPage - 1) || 0}
           pageSize={pageSize}
@@ -241,8 +284,8 @@ export default function CustomersPage() {
                       <CardTitle className="text-lg">Order Summary</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <div><strong>Total Orders:</strong> {(selectedCustomer as any).orderCount || 0}</div>
-                      <div><strong>Total Spent:</strong> ₹{((selectedCustomer as any).totalSpent || 0).toLocaleString()}</div>
+                      <div><strong>Total Orders:</strong> {selectedCustomer.noOfOrders || 0}</div>
+                      <div><strong>Last Ordered:</strong> {selectedCustomer.lastOrderedOn ? new Date(selectedCustomer.lastOrderedOn).toLocaleDateString() : 'Never'}</div>
                       
                       {selectedCustomer.notes && (
                         <div>
@@ -292,10 +335,9 @@ export default function CustomersPage() {
                   <CardContent>
                     <div className="space-y-2">
                       <div className="text-sm">
-                        <div><strong>Total Orders:</strong> {(selectedCustomer as any).orderCount || 0}</div>
-                        <div><strong>Total Spent:</strong> ₹{((selectedCustomer as any).totalSpent || 0).toLocaleString()}</div>
-                        {(selectedCustomer as any).lastOrder && (
-                          <div><strong>Last Order:</strong> {new Date((selectedCustomer as any).lastOrder).toLocaleDateString()}</div>
+                        <div><strong>Total Orders:</strong> {selectedCustomer.noOfOrders || 0}</div>
+                        {selectedCustomer.lastOrderedOn && (
+                          <div><strong>Last Order:</strong> {new Date(selectedCustomer.lastOrderedOn).toLocaleDateString()}</div>
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground mt-2">

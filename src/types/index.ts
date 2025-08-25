@@ -192,6 +192,7 @@ export interface User {
   noOfOrders: number;
   notes: string;
   userId: string;
+  lastOrderedOn?: string;
   createdAt: string;
   updatedAt: string;
 }
