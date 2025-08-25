@@ -5,7 +5,6 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   Dialog,
@@ -15,28 +14,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Search, Filter, Users, CheckCircle, XCircle, Phone, Mail, MapPin, ShoppingBag, Gift, MessageCircle, Eye } from "lucide-react"
+import { MoreHorizontal, CheckCircle, XCircle, Phone, Mail, MessageCircle, Eye } from "lucide-react"
 import { useUsers } from "@/hooks/use-data"
 import type { User } from "@/types"
 import { DataTable } from "@/components/ui/data-table"
@@ -56,25 +40,21 @@ const getVerificationBadge = (verified: boolean) => {
   )
 }
 
-const getCustomerTypeBadge = (customerType: string) => {
-  switch (customerType) {
-    case 'VIP': return <Badge className="bg-gold-100 text-gold-800">VIP</Badge>
-    case 'Regular': return <Badge className="bg-blue-100 text-blue-800">Regular</Badge>
-    case 'New': return <Badge variant="outline">New</Badge>
-    default: return <Badge variant="secondary">Customer</Badge>
-  }
-}
 
 export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null)
-  const [searchTerm, setSearchTerm] = useState<string>("")
-  const [verificationFilter, setVerificationFilter] = useState<string>("all")
   const [currentPage, setCurrentPage] = useState<number>(1)
+  const [pageSize, setPageSize] = useState<number>(10)
   
-  const { data: usersData, isLoading } = useUsers(currentPage, 50)
+  const { data: usersData } = useUsers(currentPage, pageSize)
   
   const users = (usersData as any)?.users || []
   const pagination = (usersData as any)?.pagination || {}
+  
+  const handlePaginationChange = ({ pageIndex, pageSize: newPageSize }: { pageIndex: number; pageSize: number }) => {
+    setCurrentPage(pageIndex + 1) // Convert 0-based to 1-based
+    setPageSize(newPageSize)
+  }
 
   const columns: ColumnDef<any>[] = [
     {
@@ -111,7 +91,7 @@ export default function CustomersPage() {
             </Avatar>
             <div>
               <div className="font-medium">
-                {customer.name || 'Unnamed Customer'}
+                {customer.name || '-'}
               </div>
               <div className="text-sm text-muted-foreground flex items-center">
                 <Phone className="w-3 h-3 mr-1" />
@@ -134,11 +114,6 @@ export default function CustomersPage() {
       cell: ({ row }) => getVerificationBadge(row.getValue("phoneNumberVerified")),
     },
     {
-      accessorKey: "customerType",
-      header: "Customer Type",
-      cell: ({ row }) => getCustomerTypeBadge(row.getValue("customerType")),
-    },
-    {
       accessorKey: "orderCount",
       header: "Orders",
       cell: ({ row }) => {
@@ -146,7 +121,6 @@ export default function CustomersPage() {
         return (
           <div>
             <div className="font-medium">{orderCount}</div>
-            <div className="text-xs text-muted-foreground">Total orders placed</div>
           </div>
         )
       },
@@ -170,26 +144,13 @@ export default function CustomersPage() {
       },
     },
     {
-      accessorKey: "unclaimedRewards",
-      header: "Offers Used",
-      cell: ({ row }) => {
-        const unclaimedRewards = row.getValue("unclaimedRewards") as number || 0
-        return (
-          <div>
-            <div className="text-sm">₹{unclaimedRewards.toLocaleString()}</div>
-            <div className="text-xs text-muted-foreground">Unclaimed rewards</div>
-          </div>
-        )
-      },
-    },
-    {
       accessorKey: "notes",
       header: "Notes",
       cell: ({ row }) => {
         const notes = row.getValue("notes") as string
         return (
           <div className="max-w-32 truncate text-sm text-muted-foreground">
-            {notes || 'No notes'}
+            {notes || '-'}
             {notes && <MessageCircle className="w-3 h-3 inline ml-1 text-blue-500" />}
           </div>
         )
@@ -223,87 +184,21 @@ export default function CustomersPage() {
     },
   ]
   
-  const filteredCustomers = users.filter((user: any) => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.phoneNumber.includes(searchTerm) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesVerification = verificationFilter === "all" || 
-                              (verificationFilter === "verified" && user.phoneNumberVerified) ||
-                              (verificationFilter === "unverified" && !user.phoneNumberVerified)
-    return matchesSearch && matchesVerification
-  })
-  
-  const totalUsers = pagination.total || 0
-  const verifiedCount = users.filter((u: any) => u.phoneNumberVerified).length
-  const avgOrders = users.length > 0 ? users.reduce((sum: number, user: any) => sum + (user.orderCount || 0), 0) / users.length : 0
-  const vipCount = users.filter((u: any) => u.customerType === 'VIP').length
-  
   return (
-    <DashboardLayout title="Customers Management">
+    <DashboardLayout title="Customers">
       <div className="flex-1 space-y-6">
         
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalUsers}</div>
-              <p className="text-xs text-muted-foreground">Registered users</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Verified Customers</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{verifiedCount}</div>
-              <p className="text-xs text-muted-foreground">{totalUsers > 0 ? Math.round((verifiedCount / totalUsers) * 100) : 0}% verified</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Orders</CardTitle>
-              <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{avgOrders.toFixed(1)}</div>
-              <p className="text-xs text-muted-foreground">per customer</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">VIP Customers</CardTitle>
-              <Gift className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{vipCount}</div>
-              <p className="text-xs text-muted-foreground">10+ orders</p>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>All Customers</CardTitle>
-            <CardDescription>
-              View and manage customer accounts, order history, and rewards.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable 
-              columns={columns} 
-              data={filteredCustomers}
-              searchKey="name"
-              searchPlaceholder="Search by name, phone, or email..."
-            />
-          </CardContent>
-        </Card>
+        <DataTable 
+          columns={columns} 
+          data={users}
+          searchKey="name"
+          searchPlaceholder="Search by name, phone, or email..."
+          manualPagination={true}
+          pageCount={pagination.totalPages || 0}
+          pageIndex={(currentPage - 1) || 0}
+          pageSize={pageSize}
+          onPaginationChange={handlePaginationChange}
+        />
         
         <Dialog open={selectedCustomer !== null} onOpenChange={() => setSelectedCustomer(null)}>
           <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
@@ -348,7 +243,6 @@ export default function CustomersPage() {
                     <CardContent className="space-y-3">
                       <div><strong>Total Orders:</strong> {(selectedCustomer as any).orderCount || 0}</div>
                       <div><strong>Total Spent:</strong> ₹{((selectedCustomer as any).totalSpent || 0).toLocaleString()}</div>
-                      <div><strong>Customer Type:</strong> {getCustomerTypeBadge((selectedCustomer as any).customerType)}</div>
                       
                       {selectedCustomer.notes && (
                         <div>
