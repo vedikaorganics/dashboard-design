@@ -133,7 +133,7 @@ export default function OrdersPage() {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Notes" />
       ),
-      size: 120, // Fixed column width
+      size: 160, // Bigger fixed column width
       cell: ({ row }) => {
         const order = row.original
         const user = (order as any).user
