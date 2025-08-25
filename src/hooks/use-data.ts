@@ -82,6 +82,12 @@ export function useOrders(page = 1, limit = 50, status?: string) {
   return useData(`/api/orders?${params}`, cacheKey, 30) // 30 seconds refresh
 }
 
+// Individual order details
+export function useOrder(orderId: string) {
+  const cacheKey = `order-${orderId}`
+  return useData(`/api/orders/${orderId}`, cacheKey, 300) // 5 minutes refresh
+}
+
 // Products with variants and reviews
 export function useProducts() {
   return useData('/api/products', 'products-all', 600) // 10 minutes refresh

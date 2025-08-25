@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
+import Link from "next/link"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -93,7 +94,14 @@ export default function OrdersPage() {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Order ID" />
       ),
-      cell: ({ row }) => <div className="font-medium">#{row.getValue("orderId")}</div>,
+      cell: ({ row }) => (
+        <Link 
+          href={`/orders/${row.getValue("orderId")}`}
+          className="font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 hover:underline"
+        >
+          #{row.getValue("orderId")}
+        </Link>
+      ),
     },
     {
       id: "customer",
