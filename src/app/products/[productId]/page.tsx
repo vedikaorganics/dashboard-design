@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { ColorPicker } from "@/components/ui/color-picker"
-import { SortableVariants } from "@/components/ui/sortable-variants"
+import { SortableVariants, SortableOtherImages } from "@/components/ui/sortable-variants"
 import { toast } from "sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -55,7 +55,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   
   const [editingField, setEditingField] = useState<string | null>(null)
   const [editValues, setEditValues] = useState<Record<string, any>>({})
-  const [selectedVariant, setSelectedVariant] = useState<any>(null)
   const [showVariantModal, setShowVariantModal] = useState(false)
   const [newVariantData, setNewVariantData] = useState({
     id: '',
@@ -69,7 +68,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     label: '',
     otherImages: ['']
   })
-  const [editVariantData, setEditVariantData] = useState<any>(null)
   
   // Fetch product details with variants and reviews
   const { data: productData, isLoading, error, mutate } = useProductDetails(productId)
@@ -244,14 +242,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       label: '',
       otherImages: ['']
     })
-  }
-
-  const handleEditVariant = (variant: any) => {
-    setEditVariantData({
-      ...variant,
-      otherImages: variant.otherImages || ['']
-    })
-    setSelectedVariant(variant)
   }
 
   const mainVariant = product.variants?.find((v: any) => v.id === product.mainVariant) || product.variants?.[0]
@@ -439,14 +429,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           </TabsList>
           
           <TabsContent value="overview">
-            <Card>
-              <CardHeader>
-                <CardTitle>Product Overview</CardTitle>
-                <div className="text-sm text-muted-foreground">
-                  Core product information and settings
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
+            <div className="space-y-6">
                 {/* Basic Information */}
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
@@ -631,27 +614,23 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
           </TabsContent>
 
           <TabsContent value="variants">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Product Variants</CardTitle>
-                    <div className="text-sm text-muted-foreground">
-                      Manage sizes, pricing, and packaging options
-                    </div>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold">Product Variants</h3>
+                  <div className="text-sm text-muted-foreground">
+                    Manage sizes, pricing, and packaging options
                   </div>
-                  <Button onClick={() => setShowVariantModal(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Variant
-                  </Button>
                 </div>
-              </CardHeader>
-              <CardContent>
+                <Button onClick={() => setShowVariantModal(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Variant
+                </Button>
+              </div>
                 {product.variants && product.variants.length > 0 ? (
                   <>
                     <div className="mb-4 p-3 bg-muted/50 rounded-lg">
@@ -662,8 +641,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     </div>
                     <SortableVariants 
                       variants={product.variants}
+                      productId={productId}
                       onReorder={handleVariantReorder}
-                      onEdit={handleEditVariant}
+                      onUpdate={mutate}
                     />
                   </>
                 ) : (
@@ -679,19 +659,17 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     </Button>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="content">
-            <Card>
-              <CardHeader>
-                <CardTitle>Content Sections</CardTitle>
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold">Content Sections</h3>
                 <div className="text-sm text-muted-foreground">
                   Manage product page content sections and images
                 </div>
-              </CardHeader>
-              <CardContent>
+              </div>
                 <div className="space-y-4">
                   {product.sections
                     ?.sort((a: any, b: any) => a.order - b.order)
@@ -741,19 +719,17 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     Add Content Section
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="reviews">
-            <Card>
-              <CardHeader>
-                <CardTitle>Customer Reviews</CardTitle>
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold">Customer Reviews</h3>
                 <div className="text-sm text-muted-foreground">
                   Moderate and respond to customer feedback
                 </div>
-              </CardHeader>
-              <CardContent>
+              </div>
                 {product.reviews?.length > 0 ? (
                   <div className="space-y-4">
                     {product.reviews.map((review: any) => (
@@ -794,8 +770,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     <p>No reviews yet for this product</p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+            </div>
           </TabsContent>
         </Tabs>
 
@@ -925,64 +900,17 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               </div>
 
               {/* Other Images Section */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Other Images</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addOtherImage(false)}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Image
-                  </Button>
+              <SortableOtherImages
+                images={newVariantData.otherImages}
+                onImagesChange={(images) => setNewVariantData({ ...newVariantData, otherImages: images })}
+                onAdd={() => addOtherImage(false)}
+              />
+              
+              {newVariantData.otherImages.some(img => img) && (
+                <div className="text-xs text-muted-foreground">
+                  Preview images will appear when valid URLs are entered. Drag to reorder images.
                 </div>
-                
-                <div className="space-y-3">
-                  {newVariantData.otherImages.map((imageUrl, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <div className="flex-1">
-                        <Input
-                          value={imageUrl}
-                          onChange={(e) => updateOtherImage(index, e.target.value, false)}
-                          placeholder={`Image URL ${index + 1}`}
-                        />
-                      </div>
-                      {imageUrl && (
-                        <div className="w-12 h-12 bg-muted rounded border overflow-hidden flex-shrink-0">
-                          <Image
-                            src={imageUrl}
-                            alt={`Preview ${index + 1}`}
-                            width={48}
-                            height={48}
-                            className="object-cover w-full h-full"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement
-                              target.style.display = 'none'
-                            }}
-                          />
-                        </div>
-                      )}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeOtherImage(index, false)}
-                        disabled={newVariantData.otherImages.length === 1}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                
-                {newVariantData.otherImages.some(img => img) && (
-                  <div className="text-xs text-muted-foreground">
-                    Preview images will appear when valid URLs are entered
-                  </div>
-                )}
-              </div>
+              )}
             </div>
 
             <DialogFooter>
@@ -1001,218 +929,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           </DialogContent>
         </Dialog>
 
-        {/* Edit Variant Modal */}
-        <Dialog open={selectedVariant !== null} onOpenChange={(open) => {
-          if (!open) {
-            setSelectedVariant(null)
-            setEditVariantData(null)
-          }
-        }}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Edit Variant</DialogTitle>
-              <DialogDescription>
-                Edit variant details for {editVariantData?.title}
-              </DialogDescription>
-            </DialogHeader>
-            
-            {editVariantData && (
-              <div className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Variant ID</Label>
-                    <Input
-                      value={editVariantData.id}
-                      disabled
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="editTitle">Title</Label>
-                    <Input
-                      id="editTitle"
-                      value={editVariantData.title}
-                      onChange={(e) => setEditVariantData({...editVariantData, title: e.target.value})}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="editSize">Size</Label>
-                    <Input
-                      id="editSize"
-                      type="number"
-                      value={editVariantData.size}
-                      onChange={(e) => setEditVariantData({...editVariantData, size: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="editUnit">Unit</Label>
-                    <select 
-                      id="editUnit"
-                      value={editVariantData.unit}
-                      onChange={(e) => setEditVariantData({...editVariantData, unit: e.target.value})}
-                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    >
-                      <option value="litre">Litre</option>
-                      <option value="ml">ML</option>
-                      <option value="kg">KG</option>
-                      <option value="grams">Grams</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="editType">Type</Label>
-                    <select 
-                      id="editType"
-                      value={editVariantData.type}
-                      onChange={(e) => setEditVariantData({...editVariantData, type: e.target.value})}
-                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    >
-                      <option value="Bottle">Bottle</option>
-                      <option value="Pouch">Pouch</option>
-                      <option value="Can">Can</option>
-                      <option value="Jar">Jar</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="editPrice">Price (₹)</Label>
-                    <Input
-                      id="editPrice"
-                      type="number"
-                      value={editVariantData.price}
-                      onChange={(e) => setEditVariantData({...editVariantData, price: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="editMrp">MRP (₹)</Label>
-                    <Input
-                      id="editMrp"
-                      type="number"
-                      value={editVariantData.mrp}
-                      onChange={(e) => setEditVariantData({...editVariantData, mrp: e.target.value})}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="editCoverImage">Cover Image URL</Label>
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      id="editCoverImage"
-                      value={editVariantData.coverImage}
-                      onChange={(e) => setEditVariantData({...editVariantData, coverImage: e.target.value})}
-                      className="flex-1"
-                    />
-                    {editVariantData.coverImage && (
-                      <div className="w-12 h-12 bg-muted rounded border overflow-hidden flex-shrink-0">
-                        <Image
-                          src={editVariantData.coverImage}
-                          alt="Cover preview"
-                          width={48}
-                          height={48}
-                          className="object-cover w-full h-full"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement
-                            target.style.display = 'none'
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="editLabel">Label</Label>
-                  <Input
-                    id="editLabel"
-                    value={editVariantData.label || ''}
-                    onChange={(e) => setEditVariantData({...editVariantData, label: e.target.value})}
-                  />
-                </div>
-
-                {/* Other Images Section */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label>Other Images</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => addOtherImage(true)}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Image
-                    </Button>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {(editVariantData.otherImages || ['']).map((imageUrl: string, index: number) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <div className="flex-1">
-                          <Input
-                            value={imageUrl}
-                            onChange={(e) => updateOtherImage(index, e.target.value, true)}
-                            placeholder={`Image URL ${index + 1}`}
-                          />
-                        </div>
-                        {imageUrl && (
-                          <div className="w-12 h-12 bg-muted rounded border overflow-hidden flex-shrink-0">
-                            <Image
-                              src={imageUrl}
-                              alt={`Preview ${index + 1}`}
-                              width={48}
-                              height={48}
-                              className="object-cover w-full h-full"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement
-                                target.style.display = 'none'
-                              }}
-                            />
-                          </div>
-                        )}
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeOtherImage(index, true)}
-                          disabled={(editVariantData.otherImages || ['']).length === 1}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {(editVariantData.otherImages || []).some((img: string) => img) && (
-                    <div className="text-xs text-muted-foreground">
-                      Preview images will appear when valid URLs are entered
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => {
-                setSelectedVariant(null)
-                setEditVariantData(null)
-              }}>
-                Cancel
-              </Button>
-              <Button onClick={() => {
-                // Handle form submission here
-                toast.success("Variant updated successfully!")
-                setSelectedVariant(null)
-                setEditVariantData(null)
-              }}>
-                Save Changes
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     </DashboardLayout>
   )
