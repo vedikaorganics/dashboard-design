@@ -299,8 +299,16 @@ export default function DashboardPage() {
             <ChartContainer
               config={{
                 mrr: {
-                  label: "MRR",
+                  label: "Total MRR",
                   color: "var(--primary)",
+                },
+                newCustomerMrr: {
+                  label: "New Customers",
+                  color: "hsl(var(--chart-2))",
+                },
+                repeatCustomerMrr: {
+                  label: "Repeat Customers",
+                  color: "hsl(var(--chart-3))",
                 },
               }}
               className="h-[350px] aspect-auto"
@@ -347,7 +355,10 @@ export default function DashboardPage() {
                         return label;
                       }
                     }}
-                    formatter={(value) => [`₹${((Number(value) * 30) / 100000).toFixed(2)}L`]}
+                    formatter={(value, name) => {
+                      const formattedValue = `₹${((Number(value) * 30) / 100000).toFixed(2)}L`
+                      return [formattedValue, name]
+                    }}
                   />}
                 />
                 <Area 
@@ -357,6 +368,22 @@ export default function DashboardPage() {
                   fillOpacity={0.3}
                   stroke="var(--color-mrr)"
                   strokeWidth={3}
+                />
+                <Area 
+                  dataKey="newCustomerMrr"
+                  type="monotone"
+                  fill="var(--color-newCustomerMrr)"
+                  fillOpacity={0.2}
+                  stroke="var(--color-newCustomerMrr)"
+                  strokeWidth={2}
+                />
+                <Area 
+                  dataKey="repeatCustomerMrr"
+                  type="monotone"
+                  fill="var(--color-repeatCustomerMrr)"
+                  fillOpacity={0.2}
+                  stroke="var(--color-repeatCustomerMrr)"
+                  strokeWidth={2}
                 />
               </RechartsAreaChart>
             </ChartContainer>

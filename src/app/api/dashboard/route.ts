@@ -158,7 +158,7 @@ export async function GET() {
         deliveryStatus: 'PENDING'
       }),
 
-      // Daily revenue data for all time (for 30-day moving average)
+      // Daily revenue data for all time (for 30-day moving average) - separated by new vs repeat customers
       ordersCollection.aggregate([
         {
           $match: {
@@ -171,16 +171,27 @@ export async function GET() {
         {
           $group: {
             _id: {
-              $dateToString: {
-                format: "%Y-%m-%d",
-                date: "$createdAt",
-                timezone: "Asia/Kolkata"
+              date: {
+                $dateToString: {
+                  format: "%Y-%m-%d",
+                  date: "$createdAt",
+                  timezone: "Asia/Kolkata"
+                }
+              },
+              orderType: {
+                $cond: {
+                  if: {
+                    $in: ["WELCOME_50", "$offers.offerId"]
+                  },
+                  then: "new",
+                  else: "repeat"
+                }
               }
             },
             revenue: { $sum: "$amount" }
           }
         },
-        { $sort: { _id: 1 } }
+        { $sort: { "_id.date": 1 } }
       ]).toArray(),
 
       // Order amount ranges (₹500 intervals, only confirmed orders)
@@ -241,10 +252,28 @@ export async function GET() {
       value: item.count
     }))
 
-    // Process daily revenue data with 30-day moving average
+    // Process daily revenue data with 30-day moving average, separated by new vs repeat customers
     const revenueByDate = new Map()
+    const newRevenueByDate = new Map()
+    const repeatRevenueByDate = new Map()
+    
     dailyRevenueData.forEach(item => {
-      revenueByDate.set(item._id, item.revenue)
+      const date = item._id.date
+      const orderType = item._id.orderType
+      const revenue = item.revenue
+      
+      // Track total revenue
+      if (!revenueByDate.has(date)) {
+        revenueByDate.set(date, 0)
+      }
+      revenueByDate.set(date, revenueByDate.get(date) + revenue)
+      
+      // Track revenue by customer type
+      if (orderType === 'new') {
+        newRevenueByDate.set(date, (newRevenueByDate.get(date) || 0) + revenue)
+      } else {
+        repeatRevenueByDate.set(date, (repeatRevenueByDate.get(date) || 0) + revenue)
+      }
     })
 
     // Get all unique dates and sort them
@@ -253,18 +282,27 @@ export async function GET() {
 
     // Calculate 30-day moving average for each date
     allDates.forEach((dateStr, index) => {
-      // Calculate 30-day moving average (looking back 29 days + current day)
+      // Calculate 30-day moving average for total revenue
       let movingAvgSum = 0
+      let newMovingAvgSum = 0
+      let repeatMovingAvgSum = 0
       let movingAvgCount = 0
       
       for (let j = Math.max(0, index - 29); j <= index; j++) {
         const avgDateStr = allDates[j]
         const avgRevenue = revenueByDate.get(avgDateStr) || 0
+        const newAvgRevenue = newRevenueByDate.get(avgDateStr) || 0
+        const repeatAvgRevenue = repeatRevenueByDate.get(avgDateStr) || 0
+        
         movingAvgSum += avgRevenue
+        newMovingAvgSum += newAvgRevenue
+        repeatMovingAvgSum += repeatAvgRevenue
         movingAvgCount++
       }
       
       const movingAverage = movingAvgCount > 0 ? movingAvgSum / movingAvgCount : 0
+      const newMovingAverage = movingAvgCount > 0 ? newMovingAvgSum / movingAvgCount : 0
+      const repeatMovingAverage = movingAvgCount > 0 ? repeatMovingAvgSum / movingAvgCount : 0
       
       // Format date for display
       const displayDate = new Date(dateStr)
@@ -277,7 +315,9 @@ export async function GET() {
       dailyRevenueChart.push({
         date: dateStr,
         name: name,
-        mrr: movingAverage
+        mrr: movingAverage,
+        newCustomerMrr: newMovingAverage,
+        repeatCustomerMrr: repeatMovingAverage
       })
     })
 
