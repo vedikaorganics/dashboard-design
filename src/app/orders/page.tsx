@@ -7,6 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { CheckCircle, Clock, Truck, Package } from "lucide-react"
 import { useOrders } from "@/hooks/use-data"
 import { DataTable } from "@/components/ui/data-table"
@@ -126,6 +132,51 @@ export default function OrdersPage() {
         const amount = (row.getValue("totalAmount") as number) || order.amount || 0
         return (
           <div className="font-medium">₹{amount.toLocaleString()}</div>
+        )
+      },
+    },
+    {
+      id: "utmParams",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="UTM" />
+      ),
+      cell: ({ row }) => {
+        const order = row.original
+        const utmParams = order.utmParams
+        
+        if (!utmParams || !utmParams.utm_source) {
+          return (
+            <div className="text-sm text-muted-foreground">-</div>
+          )
+        }
+        
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="cursor-help">
+                  <span className="text-sm font-medium">{utmParams.utm_source}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-80">
+                <div className="space-y-1">
+                  <div><strong>Source:</strong> {utmParams.utm_source}</div>
+                  {utmParams.utm_medium && (
+                    <div><strong>Medium:</strong> {utmParams.utm_medium}</div>
+                  )}
+                  {utmParams.utm_campaign && (
+                    <div><strong>Campaign:</strong> {utmParams.utm_campaign}</div>
+                  )}
+                  {utmParams.utm_term && (
+                    <div><strong>Term:</strong> {utmParams.utm_term}</div>
+                  )}
+                  {utmParams.utm_content && (
+                    <div><strong>Content:</strong> {utmParams.utm_content}</div>
+                  )}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )
       },
     },
