@@ -70,7 +70,7 @@ const AlertMetric = ({ title, count, description, icon: Icon, variant, onClick }
   return (
     <div
       className={cn(
-        "flex items-center justify-between px-3 py-2 rounded-md border transition-all duration-200 cursor-pointer group",
+        "inline-flex items-center px-3 py-2 rounded border transition-all duration-200 cursor-pointer group",
         classes.container,
         onClick && "hover:shadow-sm"
       )}
@@ -80,21 +80,17 @@ const AlertMetric = ({ title, count, description, icon: Icon, variant, onClick }
         <div className={cn("p-1 rounded-full", classes.pulse)}>
           <Icon className={cn("h-4 w-4", classes.icon)} />
         </div>
-        <div>
-          <div className="flex items-center space-x-1.5">
-            <h3 className="font-medium text-xs">{title}</h3>
-            <span className={cn("text-sm font-bold", classes.count)}>
-              {count}
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground/80">{description}</p>
+        <div className="flex items-center space-x-1.5">
+          <h3 className="font-medium text-sm">{title}</h3>
+          <span className={cn("text-sm font-bold", classes.count)}>
+            {count}
+          </span>
         </div>
       </div>
       
       {onClick && isActive && (
-        <div className="flex items-center space-x-1 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="text-xs">View</span>
-          <ChevronRight className="h-2.5 w-2.5" />
+        <div className="flex items-center ml-2 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+          <ChevronRight className="h-3 w-3" />
         </div>
       )}
     </div>
@@ -450,7 +446,7 @@ export default function OrdersPage() {
     <DashboardLayout title="Orders">
       <div className="flex-1 space-y-6">
         
-        <div className="space-y-3">
+        <div className="flex gap-3 flex-wrap">
           <AlertMetric
             title="Payment Pending"
             count={summary.paymentPending || 0}
