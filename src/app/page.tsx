@@ -49,8 +49,8 @@ const getGrowthIndicator = (growth: number) => {
   const colorClass = isPositive ? "text-success" : "text-destructive"
   
   return (
-    <div className={`flex items-center space-x-1 text-xs ${colorClass}`}>
-      <Icon className="h-3 w-3" />
+    <div className={`flex items-center space-x-1 text-sm ${colorClass}`}>
+      <Icon className="h-4 w-4" />
       <span>{Math.abs(growth).toFixed(1)}%</span>
     </div>
   )
