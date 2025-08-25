@@ -116,19 +116,22 @@ export function useUsers(
   page = 1, 
   limit = 50,
   search?: string,
-  phoneVerified?: string[]
+  phoneVerified?: string[],
+  lastOrdered?: string[]
 ) {
   const params = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
     ...(search && search.trim() && { search: search.trim() }),
-    ...(phoneVerified && phoneVerified.length > 0 && { phoneVerified: phoneVerified.join(',') })
+    ...(phoneVerified && phoneVerified.length > 0 && { phoneVerified: phoneVerified.join(',') }),
+    ...(lastOrdered && lastOrdered.length > 0 && { lastOrdered: lastOrdered.join(',') })
   })
   
   // Create cache key that includes all filter parameters
   const filterParams = {
     search: search || '',
-    phoneVerified: phoneVerified?.sort().join(',') || ''
+    phoneVerified: phoneVerified?.sort().join(',') || '',
+    lastOrdered: lastOrdered?.sort().join(',') || ''
   }
   const cacheKey = `users-${page}-${limit}-${JSON.stringify(filterParams)}`
   

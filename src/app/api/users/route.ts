@@ -9,11 +9,13 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const search = searchParams.get('search') || undefined
     const phoneVerified = searchParams.get('phoneVerified')?.split(',') || undefined
+    const lastOrdered = searchParams.get('lastOrdered')?.split(',') || undefined
 
     // Create cache key that includes all filter parameters
     const filterParams = {
       search,
-      phoneVerified: phoneVerified?.sort().join(',')
+      phoneVerified: phoneVerified?.sort().join(','),
+      lastOrdered: lastOrdered?.sort().join(',')
     }
     const cacheKey = `users-${page}-${limit}-${JSON.stringify(filterParams)}`
     
@@ -33,12 +35,60 @@ export async function GET(request: NextRequest) {
       const verifiedBooleans = phoneVerified.map(v => v === 'verified')
       filter.phoneNumberVerified = { $in: verifiedBooleans }
     }
+
+    // Last ordered date filter
+    if (lastOrdered && lastOrdered.length > 0) {
+      const now = new Date()
+      const dateFilters: any[] = []
+      
+      for (const range of lastOrdered) {
+        switch (range) {
+          case 'never':
+            dateFilters.push({ lastOrderedOn: { $exists: false } })
+            dateFilters.push({ lastOrderedOn: null })
+            break
+          case 'last_7_days':
+            const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+            dateFilters.push({ lastOrderedOn: { $gte: last7Days } })
+            break
+          case 'last_30_days':
+            const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+            dateFilters.push({ lastOrderedOn: { $gte: last30Days } })
+            break
+          case 'last_90_days':
+            const last90Days = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+            dateFilters.push({ lastOrderedOn: { $gte: last90Days } })
+            break
+          case 'over_90_days':
+            const over90Days = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+            dateFilters.push({ 
+              lastOrderedOn: { 
+                $exists: true, 
+                $ne: null, 
+                $lt: over90Days 
+              } 
+            })
+            break
+        }
+      }
+      
+      if (dateFilters.length > 0) {
+        if (dateFilters.length === 1) {
+          // Single date filter, apply directly
+          Object.assign(filter, dateFilters[0])
+        } else {
+          // Multiple date filters, use $or
+          const existingOr = filter.$or as any[] || []
+          filter.$or = [...existingOr, ...dateFilters]
+        }
+      }
+    }
     
     // Search filter - search across multiple fields
     if (search && search.trim()) {
       const searchRegex = new RegExp(search.trim(), 'i')
       
-      filter.$or = [
+      const searchFilters = [
         // Search in name
         { name: searchRegex },
         
@@ -54,6 +104,17 @@ export async function GET(request: NextRequest) {
         // Search in notes
         { notes: searchRegex }
       ]
+      
+      if (filter.$or) {
+        // Combine with existing $or filters using $and
+        filter.$and = [
+          { $or: filter.$or },
+          { $or: searchFilters }
+        ]
+        delete filter.$or
+      } else {
+        filter.$or = searchFilters
+      }
     }
 
     // Execute queries in parallel

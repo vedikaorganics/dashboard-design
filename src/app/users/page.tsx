@@ -20,7 +20,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, CheckCircle, XCircle, Phone, Mail, MessageCircle, Eye, Calendar } from "lucide-react"
+import { MoreHorizontal, CheckCircle, XCircle, Phone, Mail, MessageCircle, Eye, Calendar, CalendarDays } from "lucide-react"
 import { useUsers } from "@/hooks/use-data"
 import type { User } from "@/types"
 import { DataTable } from "@/components/ui/data-table"
@@ -47,6 +47,15 @@ const phoneVerificationOptions = [
   { value: 'unverified', label: 'Unverified', icon: XCircle }
 ]
 
+// Last ordered date range filter options
+const lastOrderedOptions = [
+  { value: 'never', label: 'Never ordered', icon: XCircle },
+  { value: 'last_7_days', label: 'Last 7 days', icon: CalendarDays },
+  { value: 'last_30_days', label: 'Last 30 days', icon: CalendarDays },
+  { value: 'last_90_days', label: 'Last 90 days', icon: CalendarDays },
+  { value: 'over_90_days', label: 'Over 90 days ago', icon: Calendar }
+]
+
 
 export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null)
@@ -54,12 +63,14 @@ export default function CustomersPage() {
   const [pageSize, setPageSize] = useState<number>(10)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [phoneVerifiedFilter, setPhoneVerifiedFilter] = useState<string[]>([])
+  const [lastOrderedFilter, setLastOrderedFilter] = useState<string[]>([])
   
   const { data: usersData } = useUsers(
     currentPage, 
     pageSize,
     searchQuery,
-    phoneVerifiedFilter
+    phoneVerifiedFilter,
+    lastOrderedFilter
   )
   
   const users = (usersData as any)?.users || []
@@ -78,6 +89,11 @@ export default function CustomersPage() {
   
   const handlePhoneVerifiedChange = (verified: string[]) => {
     setPhoneVerifiedFilter(verified)
+    setCurrentPage(1)
+  }
+
+  const handleLastOrderedChange = (dateRange: string[]) => {
+    setLastOrderedFilter(dateRange)
     setCurrentPage(1)
   }
 
@@ -251,6 +267,13 @@ export default function CustomersPage() {
               options: phoneVerificationOptions,
               value: phoneVerifiedFilter,
               onChange: handlePhoneVerifiedChange
+            },
+            {
+              id: "lastOrderedOn",
+              title: "Last Ordered",
+              options: lastOrderedOptions,
+              value: lastOrderedFilter,
+              onChange: handleLastOrderedChange
             }
           ]}
           manualPagination={true}
