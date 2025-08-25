@@ -106,6 +106,29 @@ export function useOrder(orderId: string) {
   return useData(`/api/orders/${orderId}`, cacheKey, 300) // 5 minutes refresh
 }
 
+// Individual user details with optional data
+export function useUserDetails(
+  userId: string, 
+  options: {
+    includeOrders?: boolean;
+    includeReviews?: boolean;
+    includeRewards?: boolean;
+  } = {}
+) {
+  const { includeOrders = false, includeReviews = false, includeRewards = false } = options
+  const params = new URLSearchParams()
+  
+  if (includeOrders) params.set('includeOrders', 'true')
+  if (includeReviews) params.set('includeReviews', 'true')  
+  if (includeRewards) params.set('includeRewards', 'true')
+  
+  const queryString = params.toString()
+  const url = `/api/users/${userId}${queryString ? `?${queryString}` : ''}`
+  const cacheKey = `user-details-${userId}-${includeOrders}-${includeReviews}-${includeRewards}`
+  
+  return useData(url, cacheKey, 300) // 5 minutes refresh
+}
+
 // Products with variants and reviews
 export function useProducts() {
   return useData('/api/products', 'products-all', 600) // 10 minutes refresh

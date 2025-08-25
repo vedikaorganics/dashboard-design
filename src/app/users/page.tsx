@@ -13,19 +13,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, CheckCircle, XCircle, Phone, Mail, MessageCircle, Eye, Calendar, CalendarDays } from "lucide-react"
-import { useUsers } from "@/hooks/use-data"
+import { CheckCircle, XCircle, Phone, MessageCircle, Calendar, CalendarDays, Edit3, Save, X, ExternalLink } from "lucide-react"
+import Link from "next/link"
+import { useUsers, useInvalidateCache } from "@/hooks/use-data"
 import type { User } from "@/types"
 import { DataTable } from "@/components/ui/data-table"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 
 
 const getVerificationBadge = (verified: boolean) => {
@@ -59,19 +55,23 @@ const lastOrderedOptions = [
 
 export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null)
+  const [noteCustomer, setNoteCustomer] = useState<User | null>(null)
+  const [noteText, setNoteText] = useState<string>('')
+  const [isSavingNote, setIsSavingNote] = useState<boolean>(false)
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [phoneVerifiedFilter, setPhoneVerifiedFilter] = useState<string[]>([])
   const [lastOrderedFilter, setLastOrderedFilter] = useState<string[]>([])
   
-  const { data: usersData } = useUsers(
+  const { data: usersData, mutate } = useUsers(
     currentPage, 
     pageSize,
     searchQuery,
     phoneVerifiedFilter,
     lastOrderedFilter
   )
+  const { invalidateAll } = useInvalidateCache()
   
   const users = (usersData as any)?.users || []
   const pagination = (usersData as any)?.pagination || {}
@@ -95,6 +95,42 @@ export default function CustomersPage() {
   const handleLastOrderedChange = (dateRange: string[]) => {
     setLastOrderedFilter(dateRange)
     setCurrentPage(1)
+  }
+
+  const handleOpenNoteDialog = (customer: User) => {
+    setNoteCustomer(customer)
+    setNoteText(customer.notes || '')
+  }
+
+  const handleSaveNote = async () => {
+    if (!noteCustomer) return
+    
+    setIsSavingNote(true)
+    try {
+      const response = await fetch(`/api/users/${noteCustomer._id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ notes: noteText })
+      })
+      
+      if (response.ok) {
+        // Refresh the data by invalidating cache and re-fetching
+        mutate()
+        setNoteCustomer(null)
+        setNoteText('')
+      }
+    } catch (error) {
+      console.error('Failed to update note:', error)
+    } finally {
+      setIsSavingNote(false)
+    }
+  }
+
+  const handleCloseNoteDialog = () => {
+    setNoteCustomer(null)
+    setNoteText('')
   }
 
   const columns: ColumnDef<any>[] = [
@@ -123,19 +159,20 @@ export default function CustomersPage() {
       cell: ({ row }) => {
         const customer = row.original
         return (
-          <div className="flex items-center space-x-2">
+          <Link href={`/users/${customer._id}`} className="flex items-center space-x-2 hover:bg-muted/50 -m-2 p-2 rounded group">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-primary/10 text-primary">
                 {customer.name ? customer.name.split(' ').map((n: string) => n[0]).join('') : 
                  customer.phoneNumber.slice(-2)}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <div className="font-medium">
+            <div className="flex-1">
+              <div className="font-medium flex items-center gap-1">
                 {customer.name || <span className="text-muted-foreground">-</span>}
+                <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             </div>
-          </div>
+          </Link>
         )
       },
     },
@@ -145,8 +182,7 @@ export default function CustomersPage() {
       cell: ({ row }) => {
         const customer = row.original
         return (
-          <div className="flex items-center">
-            <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
+          <div>
             {customer.phoneNumber}
           </div>
         )
@@ -212,38 +248,19 @@ export default function CustomersPage() {
       accessorKey: "notes",
       header: "Notes",
       cell: ({ row }) => {
-        const notes = row.getValue("notes") as string
-        return (
-          <div className="max-w-32 truncate text-sm text-muted-foreground">
-            {notes || '-'}
-            {notes && <MessageCircle className="w-3 h-3 inline ml-1 text-blue-500" />}
-          </div>
-        )
-      },
-    },
-    {
-      id: "actions",
-      cell: ({ row }) => {
         const customer = row.original
+        const notes = row.getValue("notes") as string
+        
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => setSelectedCustomer(customer)}>
-                <Eye className="mr-2 h-4 w-4" />
-                View details
-              </DropdownMenuItem>
-              <DropdownMenuItem>Add note</DropdownMenuItem>
-              <DropdownMenuItem>Update info</DropdownMenuItem>
-              <DropdownMenuItem>Send offer</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div 
+            className="flex items-center gap-2 max-w-48 cursor-pointer group hover:bg-muted/50 -m-2 p-2 rounded"
+            onClick={() => handleOpenNoteDialog(customer)}
+          >
+            <div className="text-sm text-muted-foreground truncate flex-1">
+              {notes || '-'}
+            </div>
+            <Edit3 className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
         )
       },
     },
@@ -392,6 +409,58 @@ export default function CustomersPage() {
                   <Button className="flex-1">Edit Customer</Button>
                   <Button variant="outline" className="flex-1">Send Offer</Button>
                   <Button variant="outline">Contact</Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+        
+        {/* Note Dialog */}
+        <Dialog open={noteCustomer !== null} onOpenChange={handleCloseNoteDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>{noteCustomer?.notes ? 'Edit Note' : 'Add Note'}</DialogTitle>
+              <DialogDescription>
+                {noteCustomer?.notes ? 'Update the note for' : 'Add a note for'} <strong>{noteCustomer?.name || 'this customer'}</strong>
+              </DialogDescription>
+            </DialogHeader>
+            
+            {noteCustomer && (
+              <div className="space-y-4">
+                {/* Customer Info */}
+                <div className="bg-muted/30 p-3 rounded-lg space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="w-4 h-4 text-muted-foreground" />
+                    <span>{noteCustomer.phoneNumber}</span>
+                    {getVerificationBadge(noteCustomer.phoneNumberVerified)}
+                  </div>
+                  {noteCustomer.name && (
+                    <div className="text-sm font-medium">{noteCustomer.name}</div>
+                  )}
+                </div>
+                
+                {/* Note Input */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Note</label>
+                  <Textarea
+                    placeholder="Add your note here..."
+                    value={noteText}
+                    onChange={(e) => setNoteText(e.target.value)}
+                    rows={4}
+                  />
+                </div>
+                
+                {/* Actions */}
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" onClick={handleCloseNoteDialog}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleSaveNote}
+                    disabled={isSavingNote}
+                  >
+                    {isSavingNote ? 'Saving...' : (noteCustomer.notes ? 'Update Note' : 'Save Note')}
+                  </Button>
                 </div>
               </div>
             )}
