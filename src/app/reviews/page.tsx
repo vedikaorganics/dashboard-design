@@ -21,9 +21,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 
 const getStatusBadge = (isApproved: boolean) => {
   return isApproved ? (
-    <Badge variant="default">Approved</Badge>
+    <Badge className="bg-success/20 text-success">Approved</Badge>
   ) : (
-    <Badge variant="secondary">Pending</Badge>
+    <Badge className="bg-warning/20 text-warning">Pending</Badge>
   )
 }
 
@@ -115,7 +115,7 @@ export default function ReviewsPage() {
       return (
         <div className="flex items-center space-x-3">
           <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-blue-100 text-blue-800">
+            <AvatarFallback className="bg-secondary text-secondary-foreground">
               {initials}
             </AvatarFallback>
           </Avatar>

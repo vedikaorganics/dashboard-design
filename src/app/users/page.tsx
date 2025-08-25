@@ -30,11 +30,11 @@ import { Checkbox } from "@/components/ui/checkbox"
 
 const getVerificationBadge = (verified: boolean) => {
   return verified ? (
-    <Badge className="bg-green-100 text-green-800">
+    <Badge className="bg-success/20 text-success">
       <CheckCircle className="w-3 h-3 mr-1" />Verified
     </Badge>
   ) : (
-    <Badge className="bg-red-100 text-red-800">
+    <Badge className="bg-destructive/20 text-destructive">
       <XCircle className="w-3 h-3 mr-1" />Unverified
     </Badge>
   )
@@ -109,7 +109,7 @@ export default function CustomersPage() {
         return (
           <div className="flex items-center space-x-3">
             <Avatar className="h-10 w-10">
-              <AvatarFallback className="bg-orange-100 text-orange-800">
+              <AvatarFallback className="bg-primary/10 text-primary">
                 {customer.name ? customer.name.split(' ').map((n: string) => n[0]).join('') : 
                  customer.phoneNumber.slice(-2)}
               </AvatarFallback>
