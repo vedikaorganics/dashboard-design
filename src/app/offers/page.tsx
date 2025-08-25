@@ -5,7 +5,6 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   Dialog,
   DialogContent,
@@ -14,29 +13,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Search, Filter, Gift, Percent, TrendingUp, Calendar, Users, Eye, Tag, Clock, CheckCircle, Edit, Trash2, Copy } from "lucide-react"
-import { Progress } from "@/components/ui/progress"
+import { MoreHorizontal, Eye, Clock, CheckCircle, Edit, Calendar } from "lucide-react"
 import { useOffers } from "@/hooks/use-data"
 import type { Offer } from "@/types"
 import { DataTable } from "@/components/ui/data-table"
@@ -44,10 +27,6 @@ import type { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 
 
-const getOfferUsage = (offerId: string) => {
-  // Mock usage data - replace with real API call
-  return Math.floor(Math.random() * 100)
-}
 
 const getOfferStatus = (offer: Offer) => {
   const now = new Date()
@@ -78,9 +57,19 @@ const getOfferType = (isUserOffer: boolean, triggerPrice: number | null) => {
 
 export default function OffersPage() {
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null)
-  const [searchTerm, setSearchTerm] = useState<string>("")
-  const [typeFilter, setTypeFilter] = useState<string>("all")
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [pageSize, setPageSize] = useState<number>(10)
   
+  const { data: offersData, isLoading } = useOffers(currentPage, pageSize)
+  
+  const offers = (offersData as any)?.offers || []
+  const pagination = (offersData as any)?.pagination || {}
+  
+  const handlePaginationChange = ({ pageIndex, pageSize: newPageSize }: { pageIndex: number; pageSize: number }) => {
+    setCurrentPage(pageIndex + 1) // Convert 0-based to 1-based
+    setPageSize(newPageSize)
+  }
+
   const columns: ColumnDef<any>[] = [
     {
       id: "select",
@@ -120,12 +109,7 @@ export default function OffersPage() {
       cell: ({ row }) => {
         const offer = row.original
         return (
-          <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="bg-orange-50">
-              <Percent className="w-3 h-3 mr-1" />
-              ₹{offer.discount}
-            </Badge>
-          </div>
+          <div className="font-medium">₹{offer.discount.toLocaleString()}</div>
         )
       },
     },
@@ -160,30 +144,6 @@ export default function OffersPage() {
       },
     },
     {
-      id: "usage",
-      header: "Usage",
-      cell: ({ row }) => {
-        const offer = row.original
-        const usage = getOfferUsage(offer.id)
-        return (
-          <div className="w-24">
-            <div className="flex justify-between text-sm mb-1">
-              <span>{usage}%</span>
-            </div>
-            <Progress value={usage} className="h-2" />
-          </div>
-        )
-      },
-    },
-    {
-      accessorKey: "createdAt",
-      header: "Created",
-      cell: ({ row }) => {
-        const createdAt = row.getValue("createdAt") as string
-        return new Date(createdAt).toLocaleDateString()
-      },
-    },
-    {
       id: "actions",
       cell: ({ row }) => {
         const offer = row.original
@@ -205,14 +165,6 @@ export default function OffersPage() {
                 <Edit className="mr-2 h-4 w-4" />
                 Edit offer
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Copy className="mr-2 h-4 w-4" />
-                Duplicate
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )
@@ -220,91 +172,21 @@ export default function OffersPage() {
     },
   ]
   
-  const { data: offersData, isLoading } = useOffers()
-  
-  const offers = (offersData as any)?.offers || []
-  const totalOffers = (offersData as any)?.totalOffers || 0
-  const totalUsage = (offersData as any)?.totalUsage || 0
-  const totalSavings = (offersData as any)?.totalSavings || 0
-  
-  const filteredOffers = offers.filter((offer: any) => {
-    const matchesSearch = offer.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         offer.id.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesType = typeFilter === "all" || 
-                       (typeFilter === "user" && offer.isUserOffer) ||
-                       (typeFilter === "general" && !offer.isUserOffer)
-    return matchesSearch && matchesType
-  })
-  
-  const userOffers = offers.filter((o: any) => o.isUserOffer).length
-  const conditionalOffers = offers.filter((o: any) => o.triggerPrice !== null).length
-  
   return (
     <DashboardLayout title="Offers & Promotions">
       <div className="flex-1 space-y-6">
         
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Offers</CardTitle>
-              <Gift className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalOffers}</div>
-              <p className="text-xs text-muted-foreground">Active discount codes</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Redemptions</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalUsage}</div>
-              <p className="text-xs text-muted-foreground">Offers applied to orders</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Savings</CardTitle>
-              <Percent className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">₹{totalSavings.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">Customer savings via offers</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">User Offers</CardTitle>
-              <Tag className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{userOffers}</div>
-              <p className="text-xs text-muted-foreground">Personalized offers</p>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>All Offers & Discount Codes</CardTitle>
-            <CardDescription>
-              Manage promotional offers, welcome discounts, and conditional deals for your oil store.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable 
-              columns={columns} 
-              data={filteredOffers}
-              searchKey="title"
-              searchPlaceholder="Search offers by title or code..."
-            />
-          </CardContent>
-        </Card>
+        <DataTable 
+          columns={columns} 
+          data={offers}
+          searchKey="title"
+          searchPlaceholder="Search offers by title or code..."
+          manualPagination={true}
+          pageCount={pagination.totalPages || 0}
+          pageIndex={(currentPage - 1) || 0}
+          pageSize={pageSize}
+          onPaginationChange={handlePaginationChange}
+        />
         
         <Dialog open={selectedOffer !== null} onOpenChange={() => setSelectedOffer(null)}>
           <DialogContent className="max-w-2xl">
@@ -336,7 +218,7 @@ export default function OffersPage() {
                       <CardTitle className="text-lg">Usage & Conditions</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <div><strong>Times Used:</strong> {getOfferUsage(selectedOffer.id)}</div>
+                      <div><strong>Times Used:</strong> {(selectedOffer as any).usageCount || 0}</div>
                       <div><strong>User-specific:</strong> {selectedOffer.isUserOffer ? 'Yes' : 'No'}</div>
                       {selectedOffer.triggerPrice && (
                         <div><strong>Minimum Order:</strong> ₹{selectedOffer.triggerPrice.toLocaleString()}</div>
@@ -383,7 +265,7 @@ export default function OffersPage() {
                           )
                         })
                       }
-                      {getOfferUsage(selectedOffer.id) === 0 && (
+                      {((selectedOffer as any).usageCount || 0) === 0 && (
                         <p className="text-muted-foreground">This offer hasn't been used yet.</p>
                       )}
                     </div>

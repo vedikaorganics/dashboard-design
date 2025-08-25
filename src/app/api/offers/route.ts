@@ -1,11 +1,16 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
 import { cache, cacheKeys } from '@/lib/cache'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '50')
+
     // Check cache first
-    const cached = cache.get(cacheKeys.offers)
+    const cacheKey = cacheKeys.offers + `_${page}_${limit}`
+    const cached = cache.get(cacheKey)
     if (cached) {
       return NextResponse.json(cached)
     }
@@ -16,8 +21,14 @@ export async function GET() {
     ])
 
     // Execute queries in parallel
-    const [offers, orders] = await Promise.all([
-      offersCollection.find({}).sort({ createdAt: -1 }).toArray(),
+    const [offers, totalCount, orders] = await Promise.all([
+      offersCollection
+        .find({})
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .toArray(),
+      offersCollection.countDocuments(),
       ordersCollection.find({ 'offers.0': { $exists: true } }).toArray()
     ])
 
@@ -55,13 +66,21 @@ export async function GET() {
 
     const result = {
       offers: enrichedOffers,
-      totalOffers: offers.length,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        hasNext: page < Math.ceil(totalCount / limit),
+        hasPrev: page > 1
+      },
+      totalOffers: totalCount,
       totalUsage: Object.values(offerUsage).reduce((sum: number, usage: any) => sum + usage.usageCount, 0),
       totalSavings: Object.values(offerUsage).reduce((sum: number, usage: any) => sum + usage.totalSavings, 0)
     }
 
     // Cache for 10 minutes
-    cache.set(cacheKeys.offers, result, 600)
+    cache.set(cacheKey, result, 600)
 
     return NextResponse.json(result)
   } catch (error) {

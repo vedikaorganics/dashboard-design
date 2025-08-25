@@ -111,8 +111,14 @@ export function useReviews(page = 1, limit = 50, approved?: boolean) {
 }
 
 // Offers and promotions
-export function useOffers() {
-  return useData('/api/offers', 'offers-all', 300) // 5 minutes refresh
+export function useOffers(page = 1, limit = 50) {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString()
+  })
+  
+  const cacheKey = `offers-${page}-${limit}`
+  return useData(`/api/offers?${params}`, cacheKey, 300) // 5 minutes refresh
 }
 
 // Marketing campaigns
