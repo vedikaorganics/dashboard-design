@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, User, Phone, Mail, Calendar, MapPin, ShoppingBag, Star, TrendingUp, Gift, MessageSquare, Edit3, Save, X, ExternalLink, Package, CreditCard, Truck } from "lucide-react"
+import { ArrowLeft, User, Phone, Mail, Calendar, MapPin, ShoppingBag, Star, TrendingUp, Gift, Save, X, ExternalLink, Package, CreditCard, Truck } from "lucide-react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -206,44 +206,25 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                   </AvatarFallback>
                 </Avatar>
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
+                  <div>
                     <h1 className="text-2xl font-bold">{user.name || 'Unnamed Customer'}</h1>
-                    <Badge variant={user.customerRank === 'VIP' ? 'default' : 'secondary'}>
-                      {user.customerRank}
-                    </Badge>
                   </div>
                   <div className="flex items-center space-x-4 text-muted-foreground">
                     <div className="flex items-center space-x-1">
                       <Phone className="h-4 w-4" />
                       <span>{user.phoneNumber}</span>
-                      {getVerificationBadge(user.phoneNumberVerified)}
                     </div>
-                    {user.email && !user.email.includes('@temp.local') && (
-                      <div className="flex items-center space-x-1">
-                        <Mail className="h-4 w-4" />
-                        <span>{user.email}</span>
-                      </div>
-                    )}
+                    <div className="flex items-center space-x-1">
+                      <Mail className="h-4 w-4" />
+                      <span>{user.email && !user.email.includes('@temp.local') ? user.email : '-'}</span>
+                    </div>
+                    {getVerificationBadge(user.phoneNumberVerified)}
                   </div>
                   <div className="flex items-center space-x-1 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
                     <span>Member since {new Date(user.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
-              </div>
-              <div className="flex space-x-2">
-                <Button variant="outline" size="sm">
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Contact
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Gift className="h-4 w-4 mr-2" />
-                  Send Offer
-                </Button>
-                <Button size="sm">
-                  <Edit3 className="h-4 w-4 mr-2" />
-                  Edit Info
-                </Button>
               </div>
             </div>
           </CardHeader>
