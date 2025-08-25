@@ -68,10 +68,10 @@ function ServerSideFilter({ title, options, value, onChange }: ServerSideFilterP
                     .filter((option) => selectedValues.has(option.value))
                     .map((option) => (
                       <Badge
-                        variant="secondary"
                         key={option.value}
-                        className="rounded-sm px-1 font-normal"
+                        className="rounded-sm px-1 font-semibold bg-primary text-primary-foreground hover:bg-primary/80 transition-colors"
                       >
+                        {option.icon && <option.icon className="w-3 h-3 mr-1" />}
                         {option.label}
                       </Badge>
                     ))
@@ -216,7 +216,8 @@ export function DataTableToolbar<TData>({
         })}
         {isFiltered && (
           <Button
-            variant="ghost"
+            variant="outline"
+            size="sm"
             onClick={() => {
               if (manualFiltering) {
                 // Reset manual filters
@@ -230,10 +231,10 @@ export function DataTableToolbar<TData>({
                 table.setGlobalFilter("")
               }
             }}
-            className="h-8 px-2 lg:px-3"
+            className="h-8 px-3 bg-muted/50 hover:bg-muted border-border hover:border-muted-foreground/20 transition-all duration-200 font-medium cursor-pointer"
           >
-            Reset
-            <Cross2Icon className="ml-2 h-4 w-4" />
+            <Cross2Icon className="mr-2 h-4 w-4" />
+            Clear all
           </Button>
         )}
       </div>
