@@ -62,7 +62,7 @@ export interface Order {
   currency: string;
   orderStatus: 'CONFIRMED' | 'PENDING' | 'DELIVERED' | 'CANCELLED';
   paymentStatus: 'PAID' | 'PENDING' | 'FAILED' | 'CASH_ON_DELIVERY';
-  deliveryStatus: 'PENDING' | 'SHIPPED' | 'DELIVERED';
+  deliveryStatus: 'PENDING' | 'PREPARING' | 'DISPATCHED' | 'DELIVERED' | 'CANCELLED';
   time: string;
   items: OrderItem[];
   address: Omit<Address, '_id'> & { _id: string };
