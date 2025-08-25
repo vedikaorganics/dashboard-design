@@ -136,14 +136,29 @@ export function useUsers(
 }
 
 // Reviews with moderation
-export function useReviews(page = 1, limit = 50, approved?: boolean) {
+export function useReviews(
+  page = 1, 
+  limit = 50, 
+  approved?: boolean,
+  search?: string,
+  rating?: string[]
+) {
   const params = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
-    ...(approved !== undefined && { approved: approved.toString() })
+    ...(approved !== undefined && { approved: approved.toString() }),
+    ...(search && search.trim() && { search: search.trim() }),
+    ...(rating && rating.length > 0 && { rating: rating.join(',') })
   })
   
-  const cacheKey = `reviews-${page}-${limit}-${approved || 'all'}`
+  // Create cache key that includes all filter parameters
+  const filterParams = {
+    approved: approved !== undefined ? approved.toString() : 'all',
+    search: search || '',
+    rating: rating?.sort().join(',') || ''
+  }
+  const cacheKey = `reviews-${page}-${limit}-${JSON.stringify(filterParams)}`
+  
   return useData(`/api/reviews?${params}`, cacheKey, 120) // 2 minutes refresh
 }
 

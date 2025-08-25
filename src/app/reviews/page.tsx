@@ -12,7 +12,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Star, Eye, Check, X, Flag } from "lucide-react"
+import { MoreHorizontal, Star, Eye, Check, X, Flag, Clock } from "lucide-react"
 import { useReviews } from "@/hooks/use-data"
 import { StarRating } from "@/components/ui/star-rating"
 import { DataTable } from "@/components/ui/data-table"
@@ -27,16 +27,62 @@ const getStatusBadge = (isApproved: boolean) => {
   )
 }
 
+// Approval status filter options
+const approvalStatusOptions = [
+  { value: 'true', label: 'Approved', icon: Check },
+  { value: 'false', label: 'Pending', icon: Clock }
+]
+
+// Rating filter options
+const ratingOptions = [
+  { value: '5', label: '5 Stars', icon: Star },
+  { value: '4', label: '4 Stars', icon: Star },
+  { value: '3', label: '3 Stars', icon: Star },
+  { value: '2', label: '2 Stars', icon: Star },
+  { value: '1', label: '1 Star', icon: Star }
+]
+
 export default function ReviewsPage() {
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
   const [approvedFilter, setApprovedFilter] = useState<boolean | undefined>(undefined)
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [approvalStatusFilter, setApprovalStatusFilter] = useState<string[]>([])
+  const [ratingFilter, setRatingFilter] = useState<string[]>([])
   
-  const { data: reviewsData } = useReviews(currentPage, pageSize, approvedFilter)
+  const { data: reviewsData } = useReviews(
+    currentPage, 
+    pageSize, 
+    approvedFilter,
+    searchQuery,
+    ratingFilter
+  )
   
   const handlePaginationChange = ({ pageIndex, pageSize: newPageSize }: { pageIndex: number; pageSize: number }) => {
     setCurrentPage(pageIndex + 1) // Convert 0-based to 1-based
     setPageSize(newPageSize)
+  }
+  
+  // Handle filter changes - reset to page 1 when filters change
+  const handleSearchChange = (search: string) => {
+    setSearchQuery(search)
+    setCurrentPage(1)
+  }
+  
+  const handleApprovalStatusChange = (status: string[]) => {
+    setApprovalStatusFilter(status)
+    // Convert to boolean filter for backwards compatibility
+    if (status.length === 1) {
+      setApprovedFilter(status[0] === 'true')
+    } else {
+      setApprovedFilter(undefined)
+    }
+    setCurrentPage(1)
+  }
+  
+  const handleRatingChange = (ratings: string[]) => {
+    setRatingFilter(ratings)
+    setCurrentPage(1)
   }
   
   const columns: ColumnDef<any>[] = [
@@ -191,8 +237,27 @@ export default function ReviewsPage() {
           columns={columns} 
           data={reviews}
           searchKey="author"
-          searchPlaceholder="Search reviews..."
+          searchPlaceholder="Search by author, review text, product, or review ID..."
+          searchValue={searchQuery}
+          onSearchChange={handleSearchChange}
+          filterableColumns={[
+            {
+              id: "isApproved",
+              title: "Approval Status",
+              options: approvalStatusOptions,
+              value: approvalStatusFilter,
+              onChange: handleApprovalStatusChange
+            },
+            {
+              id: "rating",
+              title: "Rating",
+              options: ratingOptions,
+              value: ratingFilter,
+              onChange: handleRatingChange
+            }
+          ]}
           manualPagination={true}
+          manualFiltering={true}
           pageCount={pagination.totalPages || 0}
           pageIndex={(currentPage - 1) || 0}
           pageSize={pageSize}

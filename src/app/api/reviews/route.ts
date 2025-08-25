@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
-import { cache, cacheKeys } from '@/lib/cache'
+import { cache } from '@/lib/cache'
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,9 +8,18 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
     const approved = searchParams.get('approved')
+    const search = searchParams.get('search') || undefined
+    const rating = searchParams.get('rating')?.split(',') || undefined
 
+    // Create cache key that includes all filter parameters
+    const filterParams = {
+      approved: approved || 'all',
+      search,
+      rating: rating?.sort().join(',')
+    }
+    const cacheKey = `reviews-${page}-${limit}-${JSON.stringify(filterParams)}`
+    
     // Check cache first
-    const cacheKey = cacheKeys.reviews(page, limit, approved === 'true' ? true : approved === 'false' ? false : undefined)
     const cached = cache.get(cacheKey)
     if (cached) {
       return NextResponse.json(cached)
@@ -23,8 +32,34 @@ export async function GET(request: NextRequest) {
 
     // Build filter
     const filter: any = {}
+    
+    // Approval status filter (existing)
     if (approved !== null && approved !== undefined && approved !== 'all') {
       filter.isApproved = approved === 'true'
+    }
+    
+    // Rating filter
+    if (rating && rating.length > 0) {
+      const ratingNumbers = rating.map(r => parseInt(r)).filter(r => !isNaN(r))
+      if (ratingNumbers.length > 0) {
+        filter.rating = { $in: ratingNumbers }
+      }
+    }
+    
+    // Search filter - search across multiple fields
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), 'i')
+      
+      filter.$or = [
+        // Search in author name
+        { author: searchRegex },
+        
+        // Search in review text
+        { text: searchRegex },
+        
+        // Search in review ID
+        { _id: searchRegex }
+      ]
     }
 
     // Execute queries in parallel
@@ -50,19 +85,41 @@ export async function GET(request: NextRequest) {
     }, {} as Record<string, any>)
 
     // Enrich reviews with product data
-    const enrichedReviews = reviews.map(review => ({
+    let enrichedReviews = reviews.map(review => ({
       ...review,
       product: productMap[review.productId]
     }))
 
+    // Apply post-processing search filter for product names
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), 'i')
+      enrichedReviews = enrichedReviews.filter((review: any) => {
+        // If already matched by MongoDB query, keep it
+        const authorMatch = review.author?.toLowerCase?.().includes(search.trim().toLowerCase())
+        const textMatch = review.text?.toLowerCase?.().includes(search.trim().toLowerCase())
+        const idMatch = review._id?.toString?.().toLowerCase().includes(search.trim().toLowerCase())
+        
+        if (authorMatch || textMatch || idMatch) {
+          return true
+        }
+        
+        // Additional check for product name
+        const productTitle = review.product?.title || review.product || ''
+        return searchRegex.test(productTitle)
+      })
+    }
+
+    // Adjust pagination for post-processed filtering
+    const finalCount = enrichedReviews.length
+    
     const result = {
       reviews: enrichedReviews,
       pagination: {
         page,
         limit,
-        total: totalCount,
-        totalPages: Math.ceil(totalCount / limit),
-        hasNext: page < Math.ceil(totalCount / limit),
+        total: (search && search.trim()) ? finalCount : totalCount,
+        totalPages: (search && search.trim()) ? 1 : Math.ceil(totalCount / limit),
+        hasNext: (search && search.trim()) ? false : page < Math.ceil(totalCount / limit),
         hasPrev: page > 1
       }
     }
@@ -104,10 +161,14 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    // Clear related caches
-    cache.delete(cacheKeys.reviews(1, 50, true))
-    cache.delete(cacheKeys.reviews(1, 50, false))
-    cache.delete(cacheKeys.dashboard)
+    // Clear related caches - clear all review caches since we now have complex filtering
+    const cacheStats = cache.getStats()
+    cacheStats.keys.forEach(key => {
+      if (key.startsWith('reviews-')) {
+        cache.delete(key)
+      }
+    })
+    cache.delete('dashboard-overview')
 
     return NextResponse.json({ success: true })
   } catch (error) {
