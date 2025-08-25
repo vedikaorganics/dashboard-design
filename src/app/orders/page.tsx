@@ -159,7 +159,7 @@ export default function OrdersPage() {
     )
     
     // Quick refresh from server for consistency
-    setTimeout(() => mutate(), 1000)
+    setTimeout(() => mutate(), 100)
   }
   
   const handlePaginationChange = ({ pageIndex, pageSize: newPageSize }: { pageIndex: number; pageSize: number }) => {
