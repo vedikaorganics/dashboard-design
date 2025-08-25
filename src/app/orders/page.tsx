@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { toast } from "sonner"
 import { ColumnDef } from "@tanstack/react-table"
 import Link from "next/link"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Tooltip,
@@ -14,6 +14,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { CheckCircle, Clock, Truck, Package } from "lucide-react"
 import { useOrders } from "@/hooks/use-data"
 import { DataTable } from "@/components/ui/data-table"
@@ -22,26 +28,85 @@ import type { Order } from "@/types"
 
 
 
-const getDeliveryStatusBadge = (order: Order) => {
+const deliveryStatusOptions = [
+  { value: 'PENDING', label: 'Pending', icon: Package, className: 'border-gray-200 text-gray-700' },
+  { value: 'PREPARING', label: 'Preparing', icon: Package, className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+  { value: 'DISPATCHED', label: 'Dispatched', icon: Truck, className: 'bg-blue-100 text-blue-800 border-blue-200' },
+  { value: 'DELIVERED', label: 'Delivered', icon: CheckCircle, className: 'bg-green-100 text-green-800 border-green-200' },
+  { value: 'CANCELLED', label: 'Cancelled', icon: Package, className: 'bg-red-100 text-red-800 border-red-200' }
+]
+
+const DeliveryStatusDropdown = ({ order, onStatusUpdate }: { 
+  order: Order, 
+  onStatusUpdate: (orderId: string, newStatus: string) => void 
+}) => {
+  const [isUpdating, setIsUpdating] = useState(false)
+  
   // Only show delivery status for confirmed orders (COD or PAID)
   if (order.paymentStatus !== 'CASH_ON_DELIVERY' && order.paymentStatus !== 'PAID') {
     return <span className="text-muted-foreground">-</span>
   }
 
-  switch (order.deliveryStatus) {
-    case 'PENDING':
-      return <Badge variant="outline"><Package className="w-3 h-3 mr-1" />Pending</Badge>
-    case 'PREPARING':
-      return <Badge className="bg-yellow-100 text-yellow-800"><Package className="w-3 h-3 mr-1" />Preparing</Badge>
-    case 'DISPATCHED':
-      return <Badge className="bg-info/20 text-info"><Truck className="w-3 h-3 mr-1" />Dispatched</Badge>
-    case 'DELIVERED':
-      return <Badge className="bg-success/20 text-success"><CheckCircle className="w-3 h-3 mr-1" />Delivered</Badge>
-    case 'CANCELLED':
-      return <Badge className="bg-destructive/20 text-destructive">Cancelled</Badge>
-    default:
-      return <Badge variant="outline">{order.deliveryStatus}</Badge>
+  const currentStatus = deliveryStatusOptions.find(option => option.value === order.deliveryStatus)
+  const CurrentIcon = currentStatus?.icon || Package
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (newStatus === order.deliveryStatus) return
+    
+    setIsUpdating(true)
+    try {
+      const response = await fetch(`/api/orders/${order.orderId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ deliveryStatus: newStatus }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update delivery status')
+      }
+
+      onStatusUpdate(order.orderId, newStatus)
+      toast.success('Delivery status updated successfully')
+    } catch (error) {
+      toast.error('Failed to update delivery status')
+      console.error('Status update error:', error)
+    } finally {
+      setIsUpdating(false)
+    }
   }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button 
+          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border cursor-pointer hover:opacity-80 transition-opacity ${
+            currentStatus?.className || 'border-gray-200 text-gray-700'
+          } ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={isUpdating}
+        >
+          <CurrentIcon className="w-3 h-3 mr-1" />
+          {currentStatus?.label || order.deliveryStatus}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-40">
+        {deliveryStatusOptions.map((option) => {
+          const OptionIcon = option.icon
+          return (
+            <DropdownMenuItem
+              key={option.value}
+              onClick={() => handleStatusChange(option.value)}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <OptionIcon className="w-3 h-3" />
+              {option.label}
+            </DropdownMenuItem>
+          )
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
 }
 
 const getPaymentStatusBadge = (paymentStatus: string) => {
@@ -67,11 +132,35 @@ export default function OrdersPage() {
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
   
-  const { data: ordersData } = useOrders(currentPage, pageSize)
+  const { data: ordersData, mutate } = useOrders(currentPage, pageSize)
+  const [localOrders, setLocalOrders] = useState<any[]>([])
   
-  const orders = (ordersData as any)?.orders || []
+  // Use local orders with optimistic updates, fallback to API data
+  const orders = localOrders.length > 0 ? localOrders : (ordersData as any)?.orders || []
   const pagination = (ordersData as any)?.pagination || {}
   const summary = (ordersData as any)?.summary || {}
+  
+  // Update local state when API data changes
+  useEffect(() => {
+    if (ordersData && (ordersData as any)?.orders) {
+      setLocalOrders((ordersData as any).orders)
+    }
+  }, [ordersData])
+  
+  // Handle delivery status updates with optimistic updates
+  const handleStatusUpdate = (orderId: string, newStatus: string) => {
+    // Optimistic update to local state
+    setLocalOrders(prev => 
+      prev.map(order => 
+        order.orderId === orderId 
+          ? { ...order, deliveryStatus: newStatus, updatedAt: new Date().toISOString() }
+          : order
+      )
+    )
+    
+    // Quick refresh from server for consistency
+    setTimeout(() => mutate(), 1000)
+  }
   
   const handlePaginationChange = ({ pageIndex, pageSize: newPageSize }: { pageIndex: number; pageSize: number }) => {
     setCurrentPage(pageIndex + 1) // Convert 0-based to 1-based
@@ -188,7 +277,12 @@ export default function OrdersPage() {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Delivery" />
       ),
-      cell: ({ row }) => getDeliveryStatusBadge(row.original),
+      cell: ({ row }) => (
+        <DeliveryStatusDropdown 
+          order={row.original} 
+          onStatusUpdate={handleStatusUpdate}
+        />
+      ),
     },
     {
       id: "utmParams",

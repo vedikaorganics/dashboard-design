@@ -18,7 +18,7 @@ export async function GET(
     }
 
     // Check cache first
-    const cacheKey = `order:${orderId}`
+    const cacheKey = `order-${orderId}`
     const cached = cache.get(cacheKey)
     if (cached) {
       return NextResponse.json(cached)
@@ -95,6 +95,85 @@ export async function GET(
     console.error('Order detail API error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch order details' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ orderId: string }> }
+) {
+  try {
+    const { orderId } = await params
+    const body = await request.json()
+    const { deliveryStatus } = body
+
+    if (!orderId) {
+      return NextResponse.json(
+        { error: 'Order ID is required' },
+        { status: 400 }
+      )
+    }
+
+    if (!deliveryStatus) {
+      return NextResponse.json(
+        { error: 'Delivery status is required' },
+        { status: 400 }
+      )
+    }
+
+    // Validate delivery status
+    const validStatuses = ['PENDING', 'PREPARING', 'DISPATCHED', 'DELIVERED', 'CANCELLED']
+    if (!validStatuses.includes(deliveryStatus)) {
+      return NextResponse.json(
+        { error: 'Invalid delivery status' },
+        { status: 400 }
+      )
+    }
+
+    const ordersCollection = await getCollection('orders')
+
+    // Update the order
+    const result = await ordersCollection.updateOne(
+      { orderId },
+      { 
+        $set: { 
+          deliveryStatus,
+          updatedAt: new Date().toISOString()
+        }
+      }
+    )
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json(
+        { error: 'Order not found' },
+        { status: 404 }
+      )
+    }
+
+    // Clear related caches
+    cache.delete(`order-${orderId}`)
+    // Clear orders list cache
+    const cacheKeys = ['orders-', 'dashboard-overview']
+    cacheKeys.forEach(keyPrefix => {
+      const allKeys = cache.getStats?.()?.keys || []
+      allKeys.forEach(key => {
+        if (key.startsWith(keyPrefix)) {
+          cache.delete(key)
+        }
+      })
+    })
+
+    return NextResponse.json({ 
+      success: true, 
+      deliveryStatus,
+      message: 'Delivery status updated successfully'
+    })
+  } catch (error) {
+    console.error('Order update API error:', error)
+    return NextResponse.json(
+      { error: 'Failed to update delivery status' },
       { status: 500 }
     )
   }
