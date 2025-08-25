@@ -341,25 +341,25 @@ export default function DashboardPage() {
                 />
                 <ChartTooltip 
                   cursor={false}
-                  content={<ChartTooltipContent 
-                    indicator="dot" 
-                    labelFormatter={(label) => {
-                      // Show x-axis value in tooltip
-                      try {
-                        const date = new Date(label);
-                        if (!isNaN(date.getTime())) {
-                          return date.toLocaleDateString('en-US', { month: '2-digit', year: '2-digit' });
-                        }
-                        return label;
-                      } catch {
-                        return label;
-                      }
-                    }}
-                    formatter={(value, name) => {
-                      const formattedValue = `₹${((Number(value) * 30) / 100000).toFixed(2)}L`
-                      return [formattedValue, name]
-                    }}
-                  />}
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload || !payload.length) return null
+                    
+                    const data = payload[0].payload
+                    const totalMrr = ((data.mrr * 30) / 100000).toFixed(2)
+                    const newMrr = ((data.newCustomerMrr * 30) / 100000).toFixed(2)
+                    const repeatMrr = ((data.repeatCustomerMrr * 30) / 100000).toFixed(2)
+                    
+                    return (
+                      <div className="rounded-lg border bg-background p-3 shadow-sm">
+                        <p className="text-sm font-medium mb-2">{label}</p>
+                        <div className="space-y-1">
+                          <p className="text-sm">₹{totalMrr}L Mrr</p>
+                          <p className="text-sm">₹{repeatMrr}L Repeat</p>
+                          <p className="text-sm">₹{newMrr}L New</p>
+                        </div>
+                      </div>
+                    )
+                  }}
                 />
                 <Area 
                   dataKey="mrr"
