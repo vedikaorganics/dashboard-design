@@ -110,7 +110,7 @@ export default function CampaignsPage() {
         const campaign = row.original
         return (
           <div>
-            <div className="font-medium">{campaign.campaign}</div>
+            <div>{campaign.campaign}</div>
             <div className="text-sm text-muted-foreground">
               {campaign.source} • {campaign.medium}
             </div>
@@ -138,7 +138,7 @@ export default function CampaignsPage() {
         const orders = row.getValue("orders") as number
         return (
           <div>
-            <div className="font-medium">{orders}</div>
+            <div>{orders}</div>
             <div className="text-xs text-muted-foreground">total orders</div>
           </div>
         )
@@ -151,7 +151,7 @@ export default function CampaignsPage() {
         const revenue = row.getValue("revenue") as number
         return (
           <div>
-            <div className="font-medium">₹{revenue.toLocaleString()}</div>
+            <div>₹{revenue.toLocaleString()}</div>
             <div className="text-xs text-muted-foreground">total revenue</div>
           </div>
         )
@@ -164,7 +164,7 @@ export default function CampaignsPage() {
         const customers = row.getValue("customers") as number
         return (
           <div>
-            <div className="font-medium">{customers}</div>
+            <div>{customers}</div>
             <div className="text-xs text-muted-foreground">unique customers</div>
           </div>
         )
@@ -178,7 +178,7 @@ export default function CampaignsPage() {
         const aov = campaign.orders > 0 ? campaign.revenue / campaign.orders : 0
         return (
           <div>
-            <div className="font-medium">₹{Math.round(aov).toLocaleString()}</div>
+            <div>₹{Math.round(aov).toLocaleString()}</div>
             <div className="text-xs text-muted-foreground">avg order value</div>
           </div>
         )
@@ -192,7 +192,7 @@ export default function CampaignsPage() {
         const conversionRate = campaign.customers > 0 ? (campaign.orders / campaign.customers) * 100 : 0
         return (
           <div>
-            <div className="font-medium">{conversionRate.toFixed(1)}%</div>
+            <div>{conversionRate.toFixed(1)}%</div>
             <div className="text-xs text-muted-foreground">conversion rate</div>
           </div>
         )

@@ -73,7 +73,7 @@ export default function StaffPage() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <div className="font-medium">{staff.fullName || staff.name || '-'}</div>
+              <div>{staff.fullName || staff.name || '-'}</div>
               <div className="text-sm text-muted-foreground">{staff.email || '-'}</div>
             </div>
           </div>

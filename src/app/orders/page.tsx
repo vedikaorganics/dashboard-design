@@ -22,16 +22,25 @@ import type { Order } from "@/types"
 
 
 
-const getDeliveryStatusBadge = (deliveryStatus: string) => {
-  switch (deliveryStatus) {
+const getDeliveryStatusBadge = (order: Order) => {
+  // Only show delivery status for confirmed orders (COD or PAID)
+  if (order.paymentStatus !== 'CASH_ON_DELIVERY' && order.paymentStatus !== 'PAID') {
+    return <span className="text-muted-foreground">-</span>
+  }
+
+  switch (order.deliveryStatus) {
     case 'PENDING':
       return <Badge variant="outline"><Package className="w-3 h-3 mr-1" />Pending</Badge>
-    case 'SHIPPED':
-      return <Badge className="bg-info/20 text-info"><Truck className="w-3 h-3 mr-1" />Shipped</Badge>
+    case 'PREPARING':
+      return <Badge className="bg-yellow-100 text-yellow-800"><Package className="w-3 h-3 mr-1" />Preparing</Badge>
+    case 'DISPATCHED':
+      return <Badge className="bg-info/20 text-info"><Truck className="w-3 h-3 mr-1" />Dispatched</Badge>
     case 'DELIVERED':
       return <Badge className="bg-success/20 text-success"><CheckCircle className="w-3 h-3 mr-1" />Delivered</Badge>
+    case 'CANCELLED':
+      return <Badge className="bg-destructive/20 text-destructive">Cancelled</Badge>
     default:
-      return <Badge variant="outline">{deliveryStatus}</Badge>
+      return <Badge variant="outline">{order.deliveryStatus}</Badge>
   }
 }
 
@@ -97,7 +106,7 @@ export default function OrdersPage() {
       cell: ({ row }) => (
         <Link 
           href={`/orders/${row.getValue("orderId")}`}
-          className="font-medium hover:underline"
+          className="hover:underline"
         >
           #{row.getValue("orderId")}
         </Link>
@@ -112,7 +121,7 @@ export default function OrdersPage() {
       cell: ({ row }) => {
         const order = row.original
         return (
-          <div className="font-medium">{getCustomerName(order)}</div>
+          <div>{getCustomerName(order)}</div>
         )
       },
     },
@@ -125,7 +134,7 @@ export default function OrdersPage() {
         const order = row.original
         const amount = (row.getValue("totalAmount") as number) || order.amount || 0
         return (
-          <div className="font-medium">₹{amount.toLocaleString()}</div>
+          <div>₹{amount.toLocaleString()}</div>
         )
       },
     },
@@ -179,7 +188,7 @@ export default function OrdersPage() {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Delivery" />
       ),
-      cell: ({ row }) => getDeliveryStatusBadge(row.getValue("deliveryStatus")),
+      cell: ({ row }) => getDeliveryStatusBadge(row.original),
     },
     {
       id: "utmParams",
@@ -201,7 +210,7 @@ export default function OrdersPage() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="cursor-help">
-                  <span className="text-sm font-medium">{utmParams.utm_source}</span>
+                  <span className="text-sm">{utmParams.utm_source}</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-80">

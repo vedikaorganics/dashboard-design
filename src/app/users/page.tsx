@@ -90,7 +90,7 @@ export default function CustomersPage() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <div className="font-medium">
+              <div>
                 {customer.name || '-'}
               </div>
               <div className="text-sm text-muted-foreground flex items-center">
@@ -120,7 +120,7 @@ export default function CustomersPage() {
         const orderCount = row.getValue("orderCount") as number || 0
         return (
           <div>
-            <div className="font-medium">{orderCount}</div>
+            <div>{orderCount}</div>
           </div>
         )
       },
@@ -133,7 +133,7 @@ export default function CustomersPage() {
         const orderCount = row.original.orderCount || 1
         return (
           <div>
-            <div className="font-medium">₹{totalSpent.toLocaleString()}</div>
+            <div>₹{totalSpent.toLocaleString()}</div>
             {totalSpent > 0 && (
               <div className="text-xs text-muted-foreground">
                 Avg: ₹{Math.round(totalSpent / Math.max(orderCount, 1)).toLocaleString()}

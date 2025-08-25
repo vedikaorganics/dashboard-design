@@ -97,7 +97,7 @@ export default function OffersPage() {
         const offer = row.original
         return (
           <div>
-            <div className="font-medium">{offer.title}</div>
+            <div>{offer.title}</div>
             <div className="text-sm text-muted-foreground">#{offer.id}</div>
           </div>
         )
@@ -109,7 +109,7 @@ export default function OffersPage() {
       cell: ({ row }) => {
         const offer = row.original
         return (
-          <div className="font-medium">₹{offer.discount.toLocaleString()}</div>
+          <div>₹{offer.discount.toLocaleString()}</div>
         )
       },
     },

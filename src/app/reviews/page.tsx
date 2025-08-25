@@ -74,7 +74,7 @@ export default function ReviewsPage() {
             </AvatarFallback>
           </Avatar>
           <div>
-            <div className="font-medium text-sm">{authorName}</div>
+            <div className="text-sm">{authorName}</div>
             <div className="text-xs text-muted-foreground">{review.createdAt ? new Date(review.createdAt).toLocaleDateString() : '-'}</div>
           </div>
         </div>
@@ -89,7 +89,7 @@ export default function ReviewsPage() {
       const productName = review.product?.title || review.product || 'Unknown Product'
       return (
         <div>
-          <div className="font-medium text-sm">{productName}</div>
+          <div className="text-sm">{productName}</div>
           <div className="text-xs text-muted-foreground">#{review._id}</div>
         </div>
       )
@@ -103,7 +103,7 @@ export default function ReviewsPage() {
       return (
         <div className="flex items-center space-x-2">
           <StarRating rating={rating} />
-          <span className="text-sm font-medium">{rating}/5</span>
+          <span className="text-sm">{rating}/5</span>
         </div>
       )
     },
@@ -134,7 +134,7 @@ export default function ReviewsPage() {
       const helpful = row.getValue("helpful") as number
       return (
         <div className="text-center">
-          <div className="font-medium text-sm">{helpful}</div>
+          <div className="text-sm">{helpful}</div>
           <div className="text-xs text-muted-foreground">votes</div>
         </div>
       )
