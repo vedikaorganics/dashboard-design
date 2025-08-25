@@ -134,6 +134,12 @@ export function useProducts() {
   return useData('/api/products', 'products-all', 600) // 10 minutes refresh
 }
 
+// Individual product details with variants and reviews
+export function useProductDetails(productId: string) {
+  const cacheKey = `product-details-${productId}`
+  return useData(`/api/products/${productId}`, cacheKey, 300) // 5 minutes refresh
+}
+
 // Users/customers with analytics
 export function useUsers(
   page = 1, 

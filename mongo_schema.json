@@ -127,7 +127,6 @@
     "__v": 1
   },
 
-
   "products": {
     "_id": {
       "$oid": "6718e11acc6e509af4f5624f"
@@ -247,7 +246,6 @@
     ]
   },
 
-
   "productvariants": {
     "_id": {
       "$oid": "6717ba1bbbe103a1a5672d8b"
@@ -304,7 +302,6 @@
     "__v": 0
   },
 
-
   "rewards": {
     "_id": {
       "$oid": "68a3372d416a99828b8dae61"
@@ -326,7 +323,6 @@
     "__v": 0
   },
 
-
   "session": {
     "_id": {
       "$oid": "68a69f9964b62c7207060ffc"
@@ -346,8 +342,7 @@
     "userId": {
       "$oid": "6631d16c1e18707ed698107f"
     }
-  }
-
+  },
 
   "staffs": {
     "_id": {
@@ -365,7 +360,6 @@
     "fullName": "Kabir Sihag",
     "createdAt": "2025-01-18T19:45:48.124+00:00"
   },
-
 
   "users": {
     "_id": {

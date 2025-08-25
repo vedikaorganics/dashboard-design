@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -69,39 +70,41 @@ export default function ProductsPage() {
             const mainVariant = variants.find((v: any) => v.id === product.mainVariant) || variants[0]
             
             return (
-              <Card key={product._id} className="p-3 hover:shadow-md transition-shadow">
-                <div className="space-y-3">
-                  {mainVariant?.coverImage && (
-                    <div className="w-full h-40 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-                      <Image 
-                        src={mainVariant.coverImage} 
-                        alt={product.title} 
-                        width={160} 
-                        height={160}
-                        className="object-cover w-full h-full"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement
-                          target.style.display = 'none'
-                        }}
-                      />
+              <Link href={`/products/${product.id}`} key={product._id}>
+                <Card className="p-3 hover:shadow-md transition-shadow cursor-pointer">
+                  <div className="space-y-3">
+                    {mainVariant?.coverImage && (
+                      <div className="w-full h-40 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                        <Image 
+                          src={mainVariant.coverImage} 
+                          alt={product.title} 
+                          width={160} 
+                          height={160}
+                          className="object-cover w-full h-full"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.style.display = 'none'
+                          }}
+                        />
+                      </div>
+                    )}
+                    
+                    <h3 className="font-medium text-sm leading-tight">{product.title}</h3>
+                    
+                    <div className="text-xs text-muted-foreground">
+                      ID: <code className="text-xs">{product.id}</code>
                     </div>
-                  )}
-                  
-                  <h3 className="font-medium text-sm leading-tight">{product.title}</h3>
-                  
-                  <div className="text-xs text-muted-foreground">
-                    ID: <code className="text-xs">{product.id}</code>
+                    
+                    <div className="flex flex-wrap gap-1">
+                      {variants.map((variant: any) => (
+                        <Badge key={variant.id} variant="outline" className="text-xs">
+                          {variant.id}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                  
-                  <div className="flex flex-wrap gap-1">
-                    {variants.map((variant: any) => (
-                      <Badge key={variant.id} variant="outline" className="text-xs">
-                        {variant.id}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              </Link>
             )
           })}
         </div>
