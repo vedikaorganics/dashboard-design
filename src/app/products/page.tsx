@@ -2,9 +2,8 @@
 
 import { useState } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   Dialog,
@@ -19,32 +18,12 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Search, Filter, Package, TrendingUp, TrendingDown, AlertTriangle, Eye, Star, Palette, Image as ImageIcon } from "lucide-react"
+import { Search, Package, Image as ImageIcon } from "lucide-react"
 import { useProducts } from "@/hooks/use-data"
 import type { Product, ProductVariant } from "@/types"
 import Image from "next/image"
-import { AspectRatio } from "@/components/ui/aspect-ratio"
-import { StarRating } from "@/components/ui/star-rating"
 
 
-const getBadge = (text: string, variant?: "default" | "secondary" | "destructive" | "outline") => {
-  return <Badge variant={variant || "outline"}>{text}</Badge>
-}
 
 
 export default function ProductsPage() {
@@ -54,9 +33,6 @@ export default function ProductsPage() {
   const { data: productsData, isLoading } = useProducts()
   
   const products = (productsData as any)?.products || []
-  const totalProducts = (productsData as any)?.totalProducts || 0
-  const totalVariants = (productsData as any)?.totalVariants || 0
-  const avgRating = (productsData as any)?.avgRating || 0
   
   const filteredProducts = products.filter((product: any) =>
     product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -72,165 +48,63 @@ export default function ProductsPage() {
     <DashboardLayout title="Products Catalog">
       <div className="flex-1 space-y-6">
         
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalProducts}</div>
-              <p className="text-xs text-muted-foreground">Oil varieties available</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Product Variants</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalVariants}</div>
-              <p className="text-xs text-muted-foreground">Size & packaging options</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Rating</CardTitle>
-              <Star className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{avgRating.toFixed(1)}</div>
-              <p className="text-xs text-muted-foreground">Across all products</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Top Seller</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg font-bold">Mustard Oil</div>
-              <p className="text-xs text-muted-foreground">Most popular variety</p>
-            </CardContent>
-          </Card>
-        </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Wood-Pressed Oil Collection</CardTitle>
-            <CardDescription>
-              Manage your premium oil products and variants with detailed information.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-2 py-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search products by name or ID..." 
-                    className="pl-8" 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
+        <div className="flex items-center space-x-2 py-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search products by name or ID..." 
+                className="pl-8" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
+          </div>
+        </div>
             
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredProducts.map((product: any) => {
-                const variants = getProductVariants(product.id)
-                const minPrice = product.minPrice || 0
-                const maxPrice = product.maxPrice || 0
-                const rating = product.avgRating || 0
-                const reviewCount = product.reviewCount || 0
-                
-                return (
-                  <Card key={product._id} className="overflow-hidden hover:shadow-md transition-shadow">
-                    <AspectRatio ratio={16 / 9}>
-                      <div className="bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center relative h-full">
-                        <div 
-                          className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white"
-                          style={{ backgroundColor: product.colorHex }}
-                        >
-                          <Package className="w-8 h-8" />
-                        </div>
-                        {product.tags.length > 0 && (
-                          <div className="absolute top-2 right-2">
-                            {getBadge(product.tags[0], "default")}
-                          </div>
-                        )}
-                      </div>
-                    </AspectRatio>
-                    
-                    <CardContent className="p-4">
-                      <div className="space-y-3">
-                        <div>
-                          <h3 className="font-semibold text-lg leading-none">{product.title}</h3>
-                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                            {product.description}
-                          </p>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm">
-                            <span className="font-medium">
-                              ₹{minPrice.toLocaleString()}
-                              {maxPrice !== minPrice && ` - ₹${maxPrice.toLocaleString()}`}
-                            </span>
-                            <div className="text-xs text-muted-foreground">
-                              {variants.length} variant{variants.length > 1 ? 's' : ''}
-                            </div>
-                          </div>
-                          
-                          {rating > 0 && (
-                            <StarRating rating={rating} size="sm" />
-                          )}
-                        </div>
-                        
-                        <div className="flex flex-wrap gap-1">
-                          {product.badges.map((badge: any, index: number) => (
-                            <Badge key={index} variant="secondary" className="text-xs">
-                              {badge}
-                            </Badge>
-                          ))}
-                        </div>
-                        
-                        <div className="flex space-x-2">
-                          <Button 
-                            onClick={() => setSelectedProduct(product)}
-                            className="flex-1" 
-                            size="sm"
-                          >
-                            <Eye className="mr-2 h-4 w-4" />
-                            View Details
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem>Edit product</DropdownMenuItem>
-                              <DropdownMenuItem>Manage variants</DropdownMenuItem>
-                              <DropdownMenuItem>Update pricing</DropdownMenuItem>
-                              <DropdownMenuItem>View analytics</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {filteredProducts.map((product: any) => {
+            const variants = getProductVariants(product.id)
+            const mainVariant = variants.find((v: any) => v.id === product.mainVariant) || variants[0]
+            
+            return (
+              <Card key={product._id} className="p-3 hover:shadow-md transition-shadow">
+                <div className="space-y-3">
+                  {mainVariant?.coverImage && (
+                    <div className="w-full h-40 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                      <Image 
+                        src={mainVariant.coverImage} 
+                        alt={product.title} 
+                        width={160} 
+                        height={160}
+                        className="object-cover w-full h-full"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.style.display = 'none'
+                        }}
+                      />
+                    </div>
+                  )}
+                  
+                  <h3 className="font-medium text-sm leading-tight">{product.title}</h3>
+                  
+                  <div className="text-xs text-muted-foreground">
+                    ID: <code className="text-xs">{product.id}</code>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-1">
+                    {variants.map((variant: any) => (
+                      <Badge key={variant.id} variant="outline" className="text-xs">
+                        {variant.id}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            )
+          })}
+        </div>
         
         <Dialog open={selectedProduct !== null} onOpenChange={() => setSelectedProduct(null)}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
