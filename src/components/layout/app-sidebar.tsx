@@ -26,22 +26,22 @@ const navigationItems = [
     icon: ShoppingCart,
   },
   {
-    title: "Products",
-    url: "/products",
-    icon: Package,
-  },
-  {
     title: "Customers",
     url: "/users",
     icon: Users,
+  },
+  {
+    title: "Reviews",
+    url: "/reviews",
+    icon: Star,
   },
 ]
 
 const managementItems = [
   {
-    title: "Reviews",
-    url: "/reviews",
-    icon: Star,
+    title: "Products",
+    url: "/products",
+    icon: Package,
   },
   {
     title: "Offers",
