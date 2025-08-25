@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ObjectId } from 'mongodb'
 import { getCollection } from '@/lib/mongodb'
-import { cache, cacheKeys } from '@/lib/cache'
+import { cache } from '@/lib/cache'
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,9 +9,20 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
     const status = searchParams.get('status') || undefined
+    const search = searchParams.get('search') || undefined
+    const paymentStatus = searchParams.get('paymentStatus')?.split(',') || undefined
+    const deliveryStatus = searchParams.get('deliveryStatus')?.split(',') || undefined
 
+    // Create cache key that includes all filter parameters
+    const filterParams = {
+      status,
+      search,
+      paymentStatus: paymentStatus?.sort().join(','),
+      deliveryStatus: deliveryStatus?.sort().join(',')
+    }
+    const cacheKey = `orders-${page}-${limit}-${JSON.stringify(filterParams)}`
+    
     // Check cache first
-    const cacheKey = cacheKeys.orders(page, limit, status)
     const cached = cache.get(cacheKey)
     if (cached) {
       return NextResponse.json(cached)
@@ -22,8 +33,48 @@ export async function GET(request: NextRequest) {
 
     // Build filter
     const filter: Record<string, unknown> = {}
+    
+    // Status filter (existing)
     if (status && status !== 'all') {
       filter.orderStatus = status
+    }
+    
+    // Payment status filter
+    if (paymentStatus && paymentStatus.length > 0) {
+      filter.paymentStatus = { $in: paymentStatus }
+    }
+    
+    // Delivery status filter
+    if (deliveryStatus && deliveryStatus.length > 0) {
+      filter.deliveryStatus = { $in: deliveryStatus }
+    }
+    
+    // Search filter - search across multiple fields
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), 'i')
+      const searchNumber = parseFloat(search.trim())
+      
+      filter.$or = [
+        // Search in Order ID
+        { orderId: searchRegex },
+        
+        // Search in address fields (customer name)
+        { 'address.firstName': searchRegex },
+        { 'address.lastName': searchRegex },
+        
+        // Search in UTM parameters
+        { 'utmParams.utm_source': searchRegex },
+        { 'utmParams.utm_medium': searchRegex },
+        { 'utmParams.utm_campaign': searchRegex },
+        { 'utmParams.utm_term': searchRegex },
+        { 'utmParams.utm_content': searchRegex },
+        
+        // Search in amount (if search term is numeric)
+        ...(isNaN(searchNumber) ? [] : [
+          { totalAmount: searchNumber },
+          { amount: searchNumber }
+        ])
+      ]
     }
 
     // Execute queries in parallel

@@ -20,7 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CheckCircle, Clock, Truck, Package } from "lucide-react"
+import { CheckCircle, Clock, Truck, Package, CreditCard, Ban } from "lucide-react"
 import { useOrders } from "@/hooks/use-data"
 import { DataTable } from "@/components/ui/data-table"
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
@@ -128,11 +128,77 @@ const getCustomerName = (order: Order) => {
   return order.address.firstName + (order.address.lastName ? ` ${order.address.lastName}` : '')
 }
 
+// Payment status filter options
+const paymentStatusOptions = [
+  { value: 'PAID', label: 'Paid', icon: CheckCircle },
+  { value: 'CASH_ON_DELIVERY', label: 'COD', icon: CheckCircle },
+  { value: 'PENDING', label: 'Pending', icon: Clock },
+  { value: 'FAILED', label: 'Failed', icon: Ban }
+]
+
+// Delivery status filter options (reusing existing options)
+const deliveryStatusFilterOptions = deliveryStatusOptions.map(option => ({
+  value: option.value,
+  label: option.label,
+  icon: option.icon
+}))
+
+// Global search function for orders
+const globalOrderFilter = (order: any, searchQuery: string): boolean => {
+  if (!searchQuery) return true
+  
+  const query = searchQuery.toLowerCase()
+  
+  // Search in Order ID
+  if (order.orderId?.toString().toLowerCase().includes(query)) {
+    return true
+  }
+  
+  // Search in Customer Name
+  const customerName = getCustomerName(order).toLowerCase()
+  if (customerName.includes(query)) {
+    return true
+  }
+  
+  // Search in Amount
+  const amount = (order.totalAmount || order.amount || 0).toString()
+  if (amount.includes(query)) {
+    return true
+  }
+  
+  // Search in UTM parameters
+  if (order.utmParams) {
+    const utmValues = [
+      order.utmParams.utm_source,
+      order.utmParams.utm_medium,
+      order.utmParams.utm_campaign,
+      order.utmParams.utm_term,
+      order.utmParams.utm_content
+    ].filter(Boolean).map(val => val.toLowerCase())
+    
+    if (utmValues.some(val => val.includes(query))) {
+      return true
+    }
+  }
+  
+  return false
+}
+
 export default function OrdersPage() {
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string[]>([])
+  const [deliveryStatusFilter, setDeliveryStatusFilter] = useState<string[]>([])
   
-  const { data: ordersData, mutate } = useOrders(currentPage, pageSize)
+  const { data: ordersData, mutate } = useOrders(
+    currentPage, 
+    pageSize, 
+    undefined, // status
+    searchQuery,
+    paymentStatusFilter,
+    deliveryStatusFilter
+  )
   const [localOrders, setLocalOrders] = useState<any[]>([])
   
   // Use local orders with optimistic updates, fallback to API data
@@ -165,6 +231,22 @@ export default function OrdersPage() {
   const handlePaginationChange = ({ pageIndex, pageSize: newPageSize }: { pageIndex: number; pageSize: number }) => {
     setCurrentPage(pageIndex + 1) // Convert 0-based to 1-based
     setPageSize(newPageSize)
+  }
+  
+  // Handle filter changes - reset to page 1 when filters change
+  const handleSearchChange = (search: string) => {
+    setSearchQuery(search)
+    setCurrentPage(1)
+  }
+  
+  const handlePaymentStatusChange = (status: string[]) => {
+    setPaymentStatusFilter(status)
+    setCurrentPage(1)
+  }
+  
+  const handleDeliveryStatusChange = (status: string[]) => {
+    setDeliveryStatusFilter(status)
+    setCurrentPage(1)
   }
 
   const columns: ColumnDef<Order>[] = [
@@ -374,8 +456,27 @@ export default function OrdersPage() {
           columns={columns} 
           data={orders}
           searchKey="orderId"
-          searchPlaceholder="Search by order ID, customer name, or phone..."
+          searchPlaceholder="Search by order ID, customer name, amount, or UTM..."
+          searchValue={searchQuery}
+          onSearchChange={handleSearchChange}
+          filterableColumns={[
+            {
+              id: "paymentStatus",
+              title: "Payment Status",
+              options: paymentStatusOptions,
+              value: paymentStatusFilter,
+              onChange: handlePaymentStatusChange
+            },
+            {
+              id: "deliveryStatus",
+              title: "Delivery Status",
+              options: deliveryStatusFilterOptions,
+              value: deliveryStatusFilter,
+              onChange: handleDeliveryStatusChange
+            }
+          ]}
           manualPagination={true}
+          manualFiltering={true}
           pageCount={pagination.totalPages || 0}
           pageIndex={(currentPage - 1) || 0} // Convert 1-based to 0-based
           pageSize={pageSize}

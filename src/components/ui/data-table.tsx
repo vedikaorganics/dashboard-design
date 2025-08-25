@@ -30,12 +30,27 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
   searchKey?: string
   searchPlaceholder?: string
-  // Server-side pagination props
+  searchValue?: string
+  onSearchChange?: (search: string) => void
+  filterableColumns?: Array<{
+    id: string
+    title: string
+    options: Array<{
+      label: string
+      value: string
+      icon?: React.ComponentType<{ className?: string }>
+    }>
+    value?: string[]
+    onChange?: (value: string[]) => void
+  }>
+  globalFilterFn?: (row: TData, searchQuery: string) => boolean
+  // Server-side pagination and filtering props
   pageCount?: number
   pageIndex?: number
   pageSize?: number
   onPaginationChange?: (pagination: { pageIndex: number; pageSize: number }) => void
   manualPagination?: boolean
+  manualFiltering?: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -43,16 +58,22 @@ export function DataTable<TData, TValue>({
   data,
   searchKey = "name",
   searchPlaceholder = "Search...",
+  searchValue,
+  onSearchChange,
+  filterableColumns = [],
+  globalFilterFn,
   pageCount,
   pageIndex = 0,
   pageSize = 10,
   onPaginationChange,
   manualPagination = false,
+  manualFiltering = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+  const [globalFilter, setGlobalFilter] = React.useState("")
 
   const [pagination, setPagination] = React.useState({
     pageIndex: pageIndex || 0,
@@ -65,20 +86,39 @@ export function DataTable<TData, TValue>({
     }
   }, [pagination, onPaginationChange, manualPagination])
 
+  // Custom global filter function
+  const customGlobalFilter = React.useCallback(
+    (row: any, columnId: string, value: string) => {
+      if (globalFilterFn) {
+        return globalFilterFn(row.original, value)
+      }
+      // Default global filter behavior (search in specified column)
+      const cellValue = row.getValue(columnId)
+      return cellValue
+        ?.toString()
+        ?.toLowerCase()
+        ?.includes(value?.toLowerCase() ?? "")
+    },
+    [globalFilterFn]
+  )
+
   const table = useReactTable({
     data,
     columns,
     pageCount: manualPagination ? pageCount : undefined,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: manualFiltering ? undefined : setGlobalFilter,
+    globalFilterFn: manualFiltering ? undefined : customGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: manualPagination ? undefined : getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
+    getFilteredRowModel: manualFiltering ? undefined : getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     onPaginationChange: manualPagination ? setPagination : undefined,
     manualPagination,
+    manualFiltering,
     ...(!manualPagination && {
       initialState: {
         pagination: {
@@ -91,13 +131,22 @@ export function DataTable<TData, TValue>({
       columnFilters,
       columnVisibility,
       rowSelection,
+      ...(!manualFiltering && { globalFilter }),
       ...(manualPagination ? { pagination } : {}),
     },
   })
 
   return (
     <div className="w-full space-y-4">
-      <DataTableToolbar table={table} searchKey={searchKey} searchPlaceholder={searchPlaceholder} />
+      <DataTableToolbar 
+        table={table} 
+        searchKey={searchKey} 
+        searchPlaceholder={searchPlaceholder} 
+        searchValue={searchValue}
+        onSearchChange={onSearchChange}
+        filterableColumns={filterableColumns}
+        manualFiltering={manualFiltering}
+      />
       <div className="rounded-md border">
         <Table>
           <TableHeader>

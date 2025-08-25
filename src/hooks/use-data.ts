@@ -71,14 +71,32 @@ export function useDashboard() {
 }
 
 // Orders with pagination and filtering
-export function useOrders(page = 1, limit = 50, status?: string) {
+export function useOrders(
+  page = 1, 
+  limit = 50, 
+  status?: string,
+  search?: string,
+  paymentStatus?: string[],
+  deliveryStatus?: string[]
+) {
   const params = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
-    ...(status && { status })
+    ...(status && { status }),
+    ...(search && search.trim() && { search: search.trim() }),
+    ...(paymentStatus && paymentStatus.length > 0 && { paymentStatus: paymentStatus.join(',') }),
+    ...(deliveryStatus && deliveryStatus.length > 0 && { deliveryStatus: deliveryStatus.join(',') })
   })
   
-  const cacheKey = `orders-${page}-${limit}-${status || 'all'}`
+  // Create cache key that includes all filter parameters
+  const filterParams = {
+    status: status || 'all',
+    search: search || '',
+    paymentStatus: paymentStatus?.sort().join(',') || '',
+    deliveryStatus: deliveryStatus?.sort().join(',') || ''
+  }
+  const cacheKey = `orders-${page}-${limit}-${JSON.stringify(filterParams)}`
+  
   return useData(`/api/orders?${params}`, cacheKey, 30) // 30 seconds refresh
 }
 
