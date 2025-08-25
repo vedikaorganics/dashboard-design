@@ -70,31 +70,31 @@ const AlertMetric = ({ title, count, description, icon: Icon, variant, onClick }
   return (
     <div
       className={cn(
-        "flex items-center justify-between px-4 py-3 rounded-lg border transition-all duration-200 cursor-pointer group",
+        "flex items-center justify-between px-3 py-2 rounded-md border transition-all duration-200 cursor-pointer group",
         classes.container,
         onClick && "hover:shadow-sm"
       )}
       onClick={onClick}
     >
-      <div className="flex items-center space-x-3">
-        <div className={cn("p-2 rounded-full", classes.pulse)}>
-          <Icon className={cn("h-5 w-5", classes.icon)} />
+      <div className="flex items-center space-x-2">
+        <div className={cn("p-1 rounded-full", classes.pulse)}>
+          <Icon className={cn("h-4 w-4", classes.icon)} />
         </div>
         <div>
-          <div className="flex items-center space-x-2">
-            <h3 className="font-medium text-sm">{title}</h3>
-            <span className={cn("text-lg font-bold", classes.count)}>
+          <div className="flex items-center space-x-1.5">
+            <h3 className="font-medium text-xs">{title}</h3>
+            <span className={cn("text-sm font-bold", classes.count)}>
               {count}
             </span>
           </div>
-          <p className="text-xs text-muted-foreground">{description}</p>
+          <p className="text-xs text-muted-foreground/80">{description}</p>
         </div>
       </div>
       
       {onClick && isActive && (
         <div className="flex items-center space-x-1 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-          <span>View</span>
-          <ChevronRight className="h-3 w-3" />
+          <span className="text-xs">View</span>
+          <ChevronRight className="h-2.5 w-2.5" />
         </div>
       )}
     </div>
