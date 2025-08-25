@@ -150,7 +150,7 @@ export default function OrdersPage() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="cursor-help w-24">
-                  <span className="text-sm block truncate">
+                  <span className="text-sm block truncate text-blue-600 dark:text-blue-400">
                     {notes}
                   </span>
                 </div>
