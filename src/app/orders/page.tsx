@@ -38,34 +38,14 @@ interface AlertMetricProps {
 const AlertMetric = ({ title, count, description, icon: Icon, variant, onClick }: AlertMetricProps) => {
   const isActive = count > 0
   
-  const variantClasses = {
-    warning: {
-      container: isActive 
-        ? "bg-yellow-50 border-yellow-200 hover:bg-yellow-100 dark:bg-yellow-950/50 dark:border-yellow-800 dark:hover:bg-yellow-900/50" 
-        : "bg-muted/30 border-border",
-      icon: isActive ? "text-yellow-600 dark:text-yellow-400" : "text-muted-foreground",
-      count: isActive ? "text-yellow-900 dark:text-yellow-100" : "text-muted-foreground",
-      pulse: isActive ? "animate-pulse" : ""
-    },
-    action: {
-      container: isActive 
-        ? "bg-orange-50 border-orange-200 hover:bg-orange-100 dark:bg-orange-950/50 dark:border-orange-800 dark:hover:bg-orange-900/50" 
-        : "bg-muted/30 border-border",
-      icon: isActive ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground",
-      count: isActive ? "text-orange-900 dark:text-orange-100" : "text-muted-foreground",
-      pulse: isActive ? "animate-pulse" : ""
-    },
-    info: {
-      container: isActive 
-        ? "bg-blue-50 border-blue-200 hover:bg-blue-100 dark:bg-blue-950/50 dark:border-blue-800 dark:hover:bg-blue-900/50" 
-        : "bg-muted/30 border-border",
-      icon: isActive ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground",
-      count: isActive ? "text-blue-900 dark:text-blue-100" : "text-muted-foreground",
-      pulse: isActive ? "animate-pulse" : ""
-    }
+  const classes = {
+    container: isActive 
+      ? "bg-destructive/5 border-destructive/20 hover:bg-destructive/10" 
+      : "bg-muted/30 border-border",
+    icon: isActive ? "text-destructive" : "text-muted-foreground",
+    count: isActive ? "text-destructive" : "text-muted-foreground",
+    pulse: isActive ? "animate-pulse" : ""
   }
-
-  const classes = variantClasses[variant]
 
   return (
     <div
