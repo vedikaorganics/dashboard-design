@@ -107,28 +107,46 @@ export default function CustomersPage() {
       cell: ({ row }) => {
         const customer = row.original
         return (
-          <div className="flex items-center space-x-3">
-            <Avatar className="h-10 w-10">
+          <div className="flex items-center space-x-2">
+            <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-primary/10 text-primary">
                 {customer.name ? customer.name.split(' ').map((n: string) => n[0]).join('') : 
                  customer.phoneNumber.slice(-2)}
               </AvatarFallback>
             </Avatar>
             <div>
-              <div>
-                {customer.name || '-'}
+              <div className="font-medium">
+                {customer.name || <span className="text-muted-foreground">-</span>}
               </div>
-              <div className="text-sm text-muted-foreground flex items-center">
-                <Phone className="w-3 h-3 mr-1" />
-                {customer.phoneNumber}
-              </div>
-              {customer.email && !customer.email.includes('@temp.local') && (
-                <div className="text-sm text-muted-foreground flex items-center">
-                  <Mail className="w-3 h-3 mr-1" />
-                  {customer.email}
-                </div>
-              )}
             </div>
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "phoneNumber",
+      header: "Phone",
+      cell: ({ row }) => {
+        const customer = row.original
+        return (
+          <div className="flex items-center">
+            <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
+            {customer.phoneNumber}
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "email",
+      header: "Email",
+      cell: ({ row }) => {
+        const customer = row.original
+        const hasValidEmail = customer.email && !customer.email.includes('@temp.local')
+        return (
+          <div>
+            {hasValidEmail ? customer.email : (
+              <span className="text-muted-foreground">-</span>
+            )}
           </div>
         )
       },
