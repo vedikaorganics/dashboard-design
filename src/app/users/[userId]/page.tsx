@@ -206,8 +206,9 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                   </AvatarFallback>
                 </Avatar>
                 <div className="space-y-2">
-                  <div>
+                  <div className="flex items-center space-x-2">
                     <h1 className="text-2xl font-bold">{user.name || 'Unnamed Customer'}</h1>
+                    {getVerificationBadge(user.phoneNumberVerified)}
                   </div>
                   <div className="flex items-center space-x-4 text-muted-foreground">
                     <div className="flex items-center space-x-1">
@@ -218,7 +219,6 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                       <Mail className="h-4 w-4" />
                       <span>{user.email && !user.email.includes('@temp.local') ? user.email : '-'}</span>
                     </div>
-                    {getVerificationBadge(user.phoneNumberVerified)}
                   </div>
                   <div className="flex items-center space-x-1 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
