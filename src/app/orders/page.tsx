@@ -102,11 +102,11 @@ const AlertMetric = ({ title, count, description, icon: Icon, variant, onClick }
 }
 
 const deliveryStatusOptions = [
-  { value: 'PENDING', label: 'Pending', icon: Package, className: 'border-gray-200 text-gray-700' },
-  { value: 'PREPARING', label: 'Preparing', icon: Package, className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-  { value: 'DISPATCHED', label: 'Dispatched', icon: Truck, className: 'bg-blue-100 text-blue-800 border-blue-200' },
-  { value: 'DELIVERED', label: 'Delivered', icon: CheckCircle, className: 'bg-green-100 text-green-800 border-green-200' },
-  { value: 'CANCELLED', label: 'Cancelled', icon: Package, className: 'bg-red-100 text-red-800 border-red-200' }
+  { value: 'PENDING', label: 'Pending', icon: Package, className: 'border-border text-muted-foreground bg-muted/10' },
+  { value: 'PREPARING', label: 'Preparing', icon: Package, className: 'bg-warning/20 text-warning border-warning/30' },
+  { value: 'DISPATCHED', label: 'Dispatched', icon: Truck, className: 'bg-info/20 text-info border-info/30' },
+  { value: 'DELIVERED', label: 'Delivered', icon: CheckCircle, className: 'bg-success/20 text-success border-success/30' },
+  { value: 'CANCELLED', label: 'Cancelled', icon: Package, className: 'bg-destructive/20 text-destructive border-destructive/30' }
 ]
 
 const DeliveryStatusDropdown = ({ order, onStatusUpdate }: { 
@@ -155,7 +155,7 @@ const DeliveryStatusDropdown = ({ order, onStatusUpdate }: {
       <DropdownMenuTrigger asChild>
         <button 
           className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border cursor-pointer hover:opacity-80 transition-opacity ${
-            currentStatus?.className || 'border-gray-200 text-gray-700'
+            currentStatus?.className || 'border-border text-muted-foreground bg-muted/10'
           } ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
           disabled={isUpdating}
         >
@@ -189,7 +189,7 @@ const getPaymentStatusBadge = (paymentStatus: string) => {
     case 'CASH_ON_DELIVERY':
       return <Badge className="bg-success/20 text-success"><CheckCircle className="w-3 h-3 mr-1" />COD</Badge>
     case 'PENDING':
-      return <Badge className="bg-yellow-100 text-yellow-800"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
+      return <Badge className="bg-warning/20 text-warning"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
     case 'FAILED':
       return <Badge className="bg-destructive/20 text-destructive">Failed</Badge>
     default:
