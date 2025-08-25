@@ -13,7 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { CheckCircle, Clock, Truck, Package } from "lucide-react"
+import { CheckCircle, Clock, Truck, Package, MessageCircle } from "lucide-react"
 import { useOrders } from "@/hooks/use-data"
 import { DataTable } from "@/components/ui/data-table"
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
@@ -173,6 +173,44 @@ export default function OrdersPage() {
                   {utmParams.utm_content && (
                     <div><strong>Content:</strong> {utmParams.utm_content}</div>
                   )}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )
+      },
+    },
+    {
+      id: "notes",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Notes" />
+      ),
+      cell: ({ row }) => {
+        const order = row.original
+        const user = (order as any).user
+        const notes = user?.notes
+        
+        if (!notes) {
+          return (
+            <div className="text-sm text-muted-foreground">-</div>
+          )
+        }
+        
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center space-x-1 cursor-help">
+                  <MessageCircle className="h-3 w-3 text-blue-500" />
+                  <span className="text-sm truncate max-w-20">
+                    {notes}
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-80">
+                <div>
+                  <strong>Customer Notes:</strong><br />
+                  {notes}
                 </div>
               </TooltipContent>
             </Tooltip>

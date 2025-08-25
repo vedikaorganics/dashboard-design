@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { ObjectId } from 'mongodb'
 import { getCollection } from '@/lib/mongodb'
 import { cache, cacheKeys } from '@/lib/cache'
 
@@ -67,11 +68,26 @@ export async function GET(request: NextRequest) {
     // Get user data for orders (batch fetch for performance)
     const userIds = [...new Set(orders.map(order => order.userId))]
     const users = await usersCollection
-      .find({ _id: { $in: userIds } })
+      .find({ 
+        $or: [
+          { _id: { $in: userIds.map(id => {
+            try {
+              return new ObjectId(id)
+            } catch {
+              return id
+            }
+          }) } },
+          { userId: { $in: userIds } }
+        ]
+      })
       .toArray()
     
     const userMap = users.reduce((acc, user) => {
+      // Map by both _id and userId for compatibility
       acc[user._id.toString()] = user
+      if (user.userId) {
+        acc[user.userId] = user
+      }
       return acc
     }, {} as Record<string, unknown>)
 
