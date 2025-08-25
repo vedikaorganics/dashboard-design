@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb'
 import { getCollection } from '@/lib/mongodb'
 import { cache } from '@/lib/cache'
 import { limechatService } from '@/lib/limechat'
+import { after } from 'next/server'
 
 export async function GET(
   request: NextRequest,
@@ -153,16 +154,28 @@ export async function PATCH(
       )
     }
 
-    // Get the updated order and user data for LimeChat events
-    const [updatedOrder, usersCollection] = await Promise.all([
-      ordersCollection.findOne({ orderId }),
-      getCollection('users')
-    ])
+    // Clear related caches
+    cache.delete(`order-${orderId}`)
+    // Clear orders list cache
+    const cacheKeys = ['orders-', 'dashboard-overview']
+    cacheKeys.forEach(keyPrefix => {
+      const allKeys = cache.getStats?.()?.keys || []
+      allKeys.forEach(key => {
+        if (key.startsWith(keyPrefix)) {
+          cache.delete(key)
+        }
+      })
+    })
 
-    // Send LimeChat event asynchronously if order is dispatched or delivered (non-blocking)
+    // Send LimeChat event after API response if order is dispatched or delivered
     if (deliveryStatus === 'DISPATCHED' || deliveryStatus === 'DELIVERED') {
-      setImmediate(async () => {
+      after(async () => {
         try {
+          const [updatedOrder, usersCollection] = await Promise.all([
+            ordersCollection.findOne({ orderId }),
+            getCollection('users')
+          ])
+
           if (updatedOrder && updatedOrder.userId) {
             const user = await usersCollection.findOne({ 
               $or: [
@@ -202,19 +215,6 @@ export async function PATCH(
         }
       });
     }
-
-    // Clear related caches
-    cache.delete(`order-${orderId}`)
-    // Clear orders list cache
-    const cacheKeys = ['orders-', 'dashboard-overview']
-    cacheKeys.forEach(keyPrefix => {
-      const allKeys = cache.getStats?.()?.keys || []
-      allKeys.forEach(key => {
-        if (key.startsWith(keyPrefix)) {
-          cache.delete(key)
-        }
-      })
-    })
 
     return NextResponse.json({ 
       success: true, 

@@ -11,18 +11,25 @@ interface LimeChatEventData {
 
 class LimeChatService {
   private readonly LIMECHAT_API_ENDPOINT = 'https://flow-builder.limechat.ai/api/v1/cvf-events';
-  private readonly LIMECHAT_ACCESS_TOKEN = process.env.LIMECHAT_ACCESS_TOKEN;
-  private readonly LIMECHAT_ACCOUNT_ID = process.env.LIMECHAT_ACCOUNT_ID;
+  private readonly LIMECHAT_ACCESS_TOKEN: string;
+  private readonly LIMECHAT_ACCOUNT_ID: string;
+
+  constructor() {
+    // Enforce that environment variables must exist at build time
+    if (!process.env.LIMECHAT_ACCESS_TOKEN) {
+      throw new Error('LIMECHAT_ACCESS_TOKEN environment variable is required');
+    }
+    if (!process.env.LIMECHAT_ACCOUNT_ID) {
+      throw new Error('LIMECHAT_ACCOUNT_ID environment variable is required');
+    }
+
+    this.LIMECHAT_ACCESS_TOKEN = process.env.LIMECHAT_ACCESS_TOKEN;
+    this.LIMECHAT_ACCOUNT_ID = process.env.LIMECHAT_ACCOUNT_ID;
+  }
 
   private async sendEvent(eventName: string, data: LimeChatEventData, phone: string, distinct_id: string) {
     const maskedPhone = phone.replace(/\d(?=\d{4})/g, '*');
     console.info(`Sending LimeChat event: ${eventName} for phone: ${maskedPhone} with distinct_id: ${distinct_id}`);
-
-    if (!this.LIMECHAT_ACCESS_TOKEN || !this.LIMECHAT_ACCOUNT_ID) {
-      console.warn(`LimeChat credentials not configured. Skipping event: ${eventName}`);
-      return;
-    }
-    console.log("LIMECHAT ACCESS TOKEN: ", this.LIMECHAT_ACCESS_TOKEN);
 
     // Skip if no phone/distinct_id is provided
     if (!distinct_id || !phone) {
@@ -66,8 +73,8 @@ class LimeChatService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-limechat-uat': this.LIMECHAT_ACCESS_TOKEN!,
-          'x-fb-account-id': this.LIMECHAT_ACCOUNT_ID!,
+          'x-limechat-uat': this.LIMECHAT_ACCESS_TOKEN,
+          'x-fb-account-id': this.LIMECHAT_ACCOUNT_ID,
         },
         body: JSON.stringify(body),
       });
