@@ -58,22 +58,22 @@ function VerifyContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="min-h-screen flex items-center justify-center  p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 h-12 w-12 rounded-full flex items-center justify-center">
             {status === "loading" && (
-              <div className="bg-blue-600 rounded-full p-3">
+              <div className="bg-primary rounded-full p-3">
                 <Loader2 className="h-6 w-6 text-white animate-spin" />
               </div>
             )}
             {status === "success" && (
-              <div className="bg-green-600 rounded-full p-3">
+              <div className="bg-success rounded-full p-3">
                 <CheckCircle className="h-6 w-6 text-white" />
               </div>
             )}
             {status === "error" && (
-              <div className="bg-red-600 rounded-full p-3">
+              <div className="bg-destructive rounded-full p-3">
                 <XCircle className="h-6 w-6 text-white" />
               </div>
             )}
@@ -126,10 +126,10 @@ function VerifyContent() {
 export default function VerifyPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+      <div className="min-h-screen flex items-center justify-center  p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 h-12 w-12 bg-blue-600 rounded-full flex items-center justify-center">
+            <div className="mx-auto mb-4 h-12 w-12 bg-primary rounded-full flex items-center justify-center">
               <Loader2 className="h-6 w-6 text-white animate-spin" />
             </div>
             <CardTitle className="text-2xl font-bold">Loading...</CardTitle>

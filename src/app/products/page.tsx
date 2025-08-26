@@ -223,7 +223,7 @@ export default function ProductsPage() {
                                   ₹{variant.mrp.toLocaleString()}
                                 </div>
                               )}
-                              <div className="text-xs text-green-600">
+                              <div className="text-xs text-success">
                                 {Math.round(((variant.mrp - variant.price) / variant.mrp) * 100)}% off
                               </div>
                             </div>

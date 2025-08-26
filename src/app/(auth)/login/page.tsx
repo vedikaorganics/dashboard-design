@@ -26,10 +26,10 @@ export default function LoginPage() {
 
   if (session) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+      <div className="min-h-screen flex items-center justify-center  p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 h-12 w-12 bg-green-600 rounded-full flex items-center justify-center">
+            <div className="mx-auto mb-4 h-12 w-12 bg-success rounded-full flex items-center justify-center">
               <Loader2 className="h-6 w-6 text-white animate-spin" />
             </div>
             <CardTitle className="text-2xl font-bold">Redirecting...</CardTitle>
@@ -75,10 +75,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="min-h-screen flex items-center justify-center  p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 h-12 w-12 bg-blue-600 rounded-full flex items-center justify-center">
+          <div className="mx-auto mb-4 h-12 w-12 bg-primary rounded-full flex items-center justify-center">
             <Mail className="h-6 w-6 text-white" />
           </div>
           <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>

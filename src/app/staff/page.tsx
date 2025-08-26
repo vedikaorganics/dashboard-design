@@ -68,7 +68,7 @@ export default function StaffPage() {
         return (
           <div className="flex items-center space-x-3">
             <Avatar className="h-9 w-9">
-              <AvatarFallback className="bg-blue-100 text-blue-800">
+              <AvatarFallback className="bg-primary/10 text-primary">
                 {(staff.fullName || staff.name || '').split(' ').map((n: string) => n[0] || '').join('') || 'U'}
               </AvatarFallback>
             </Avatar>
