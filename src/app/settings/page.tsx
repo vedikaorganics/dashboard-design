@@ -57,9 +57,6 @@ export default function SettingsPage() {
     return user?.email?.slice(0, 2).toUpperCase() || "U"
   }
 
-  const getRoleBadgeVariant = () => {
-    return isAdmin ? "default" : "secondary"
-  }
 
   const getRoleLabel = () => {
     return isAdmin ? "Admin" : "Member"
@@ -114,7 +111,14 @@ export default function SettingsPage() {
                 </Avatar>
                 <div className="text-center space-y-2">
                   <h3 className="font-medium">{user?.fullName || user?.email || "User"}</h3>
-                  <Badge variant={getRoleBadgeVariant()} className="text-xs">
+                  <Badge 
+                    variant={isAdmin ? "default" : "secondary"} 
+                    className={`text-xs ${
+                      isAdmin 
+                        ? "bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600" 
+                        : ""
+                    }`}
+                  >
                     <Shield className="mr-1 h-3 w-3" />
                     {getRoleLabel()}
                   </Badge>

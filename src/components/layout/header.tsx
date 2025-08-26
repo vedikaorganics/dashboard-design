@@ -55,10 +55,6 @@ export function Header({ title }: HeaderProps) {
     return user?.email?.slice(0, 2).toUpperCase() || "U"
   }
 
-  const getRoleBadgeVariant = () => {
-    return isAdmin ? "default" : "secondary"
-  }
-
   const getRoleLabel = () => {
     return isAdmin ? "Admin" : "Member"
   }
@@ -126,7 +122,14 @@ export function Header({ title }: HeaderProps) {
                       {user?.email}
                     </p>
                     <div className="mt-2">
-                      <Badge variant={getRoleBadgeVariant()} className="text-xs">
+                      <Badge 
+                        variant={isAdmin ? "default" : "secondary"} 
+                        className={`text-xs ${
+                          isAdmin 
+                            ? "bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600" 
+                            : ""
+                        }`}
+                      >
                         <Shield className="mr-1 h-3 w-3" />
                         {getRoleLabel()}
                       </Badge>
@@ -134,10 +137,6 @@ export function Header({ title }: HeaderProps) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.push("/settings")}>
                   Settings
                 </DropdownMenuItem>
