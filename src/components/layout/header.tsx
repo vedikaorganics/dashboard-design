@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect, useRef } from "react"
 import { Search, Sun, Moon, User, LogOut, Shield } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useRouter } from "next/navigation"
@@ -20,6 +21,13 @@ import { Badge } from "@/components/ui/badge"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { useAuth } from "@/components/auth-provider"
 import { signOut } from "@/lib/auth-client"
+import { SearchDropdown } from "@/components/search/search-dropdown"
+import { useGlobalSearch } from "@/hooks/use-data"
+import { 
+  SearchResult, 
+  SearchResponse,
+  getSearchResultUrl 
+} from "@/lib/search-utils"
 
 interface HeaderProps {
   title?: string
@@ -29,6 +37,13 @@ export function Header({ title }: HeaderProps) {
   const { theme, setTheme } = useTheme()
   const { user, isAdmin, isMember, clearSession } = useAuth()
   const router = useRouter()
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchFocused, setSearchFocused] = useState(false)
+  const [showDropdown, setShowDropdown] = useState(false)
+  const { data: searchResults, isLoading: searchLoading } = useGlobalSearch(searchQuery)
+  const searchContainerRef = useRef<HTMLDivElement>(null)
 
   const handleSignOut = async () => {
     try {
@@ -59,6 +74,56 @@ export function Header({ title }: HeaderProps) {
     return isAdmin ? "Admin" : "Member"
   }
 
+  // Search handlers
+  const handleSearchInput = (value: string) => {
+    setSearchQuery(value)
+    setShowDropdown(value.length > 0)
+  }
+
+  const handleSearchFocus = () => {
+    setSearchFocused(true)
+    setShowDropdown(true)
+  }
+
+  const handleSearchBlur = () => {
+    // Delay hiding dropdown to allow clicking on results
+    setTimeout(() => {
+      setSearchFocused(false)
+      setShowDropdown(false)
+    }, 200)
+  }
+
+  const handleResultClick = (result: SearchResult) => {
+    const url = getSearchResultUrl(result)
+    router.push(url)
+    setSearchQuery("")
+    setShowDropdown(false)
+  }
+
+  const handleViewAll = (category: keyof SearchResponse['categories']) => {
+    const routes = {
+      users: '/users',
+      orders: '/orders', 
+      reviews: '/reviews'
+    }
+    
+    router.push(`${routes[category]}?search=${encodeURIComponent(searchQuery)}`)
+    setSearchQuery("")
+    setShowDropdown(false)
+  }
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center px-4">
@@ -74,11 +139,23 @@ export function Header({ title }: HeaderProps) {
           </div>
           
           <div className="hidden w-full flex-1 md:flex md:justify-center md:max-w-md">
-            <div className="relative w-full">
-              <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <div className="relative w-full" ref={searchContainerRef}>
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search..."
-                className="pl-8 w-full"
+                placeholder="Search everything..."
+                value={searchQuery}
+                onChange={(e) => handleSearchInput(e.target.value)}
+                onFocus={handleSearchFocus}
+                onBlur={handleSearchBlur}
+                className="pl-9 w-full"
+              />
+              
+              <SearchDropdown
+                results={searchResults}
+                isLoading={searchLoading}
+                isOpen={showDropdown && (searchFocused || searchQuery.length >= 2)}
+                onResultClick={handleResultClick}
+                onViewAll={handleViewAll}
               />
             </div>
           </div>

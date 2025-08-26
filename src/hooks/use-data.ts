@@ -256,6 +256,79 @@ export function useInvalidateCache() {
   }
 }
 
+// Global search hook with built-in debouncing
+export function useGlobalSearch(query?: string) {
+  const [data, setData] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+  const [debouncedQuery, setDebouncedQuery] = useState(query || '')
+
+  // Debounce the query input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query || '')
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [query])
+
+  const search = useCallback(async (searchQuery: string) => {
+    if (!searchQuery || searchQuery.trim().length < 2) {
+      setData(null)
+      setError(null)
+      setIsLoading(false)
+      return
+    }
+
+    const cacheKey = `search:${searchQuery.toLowerCase().trim()}`
+    
+    try {
+      // Check cache first
+      const cachedData = cache.get(cacheKey)
+      if (cachedData) {
+        setData(cachedData)
+        setError(null)
+        setIsLoading(false)
+        return
+      }
+
+      setIsLoading(true)
+      setError(null)
+      
+      const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery.trim())}`)
+      
+      if (!response.ok) {
+        throw new Error(`Search failed: ${response.status}`)
+      }
+      
+      const result = await response.json()
+      
+      // Cache for 60 seconds
+      cache.set(cacheKey, result, 60)
+      
+      setData(result)
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Search failed'))
+      setData(null)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  // Trigger search when debounced query changes
+  useEffect(() => {
+    if (debouncedQuery && debouncedQuery.trim().length >= 2) {
+      search(debouncedQuery)
+    } else {
+      setData(null)
+      setError(null)
+      setIsLoading(false)
+    }
+  }, [debouncedQuery, search])
+
+  return { data, isLoading, error, search }
+}
+
 // Prefetch utility for hovering and navigation
 export function usePrefetch() {
   return {
