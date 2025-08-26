@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { ColumnDef } from "@tanstack/react-table"
@@ -194,7 +194,7 @@ const deliveryStatusFilterOptions = deliveryStatusOptions.map(option => ({
 }))
 
 
-export default function OrdersPage() {
+function OrdersPageContent() {
   const searchParams = useSearchParams()
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
@@ -497,5 +497,13 @@ export default function OrdersPage() {
         />
       </div>
     </DashboardLayout>
+  )
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <OrdersPageContent />
+    </Suspense>
   )
 }

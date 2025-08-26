@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Badge } from "@/components/ui/badge"
@@ -44,7 +44,7 @@ const ratingOptions = [
   { value: '1', label: '1 Star', icon: Star }
 ]
 
-export default function ReviewsPage() {
+function ReviewsPageContent() {
   const searchParams = useSearchParams()
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
@@ -374,5 +374,13 @@ export default function ReviewsPage() {
         />
       </div>
     </DashboardLayout>
+  )
+}
+
+export default function ReviewsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ReviewsPageContent />
+    </Suspense>
   )
 }
