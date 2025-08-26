@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label"
 import { ColorPicker } from "@/components/ui/color-picker"
 import { SortableVariants, SortableOtherImages } from "@/components/ui/sortable-variants"
 import { SortableReviews } from "@/components/ui/sortable-reviews"
+import { SortableContentSections } from "@/components/ui/sortable-content-sections"
 import { toast } from "sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -645,63 +646,11 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           </TabsContent>
 
           <TabsContent value="content">
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold">Content Sections</h3>
-                <div className="text-sm text-muted-foreground">
-                  Manage product page content sections and images
-                </div>
-              </div>
-                <div className="space-y-4">
-                  {product.sections
-                    ?.sort((a: any, b: any) => a.order - b.order)
-                    .map((section: any) => (
-                      <Card key={section.id} className="p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-2">
-                            {section.type === 'image' ? (
-                              <ImageIcon className="w-4 h-4" />
-                            ) : (
-                              <Package className="w-4 h-4" />
-                            )}
-                            <Badge variant="outline">{section.type}</Badge>
-                            <span className="text-sm text-muted-foreground">Order: {section.order}</span>
-                          </div>
-                          <Button variant="ghost" size="sm">
-                            <Edit3 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        
-                        {section.type === 'text' && (
-                          <div>
-                            {section.heading && (
-                              <h4 className="font-semibold mb-1">{section.heading}</h4>
-                            )}
-                            {section.body && (
-                              <p className="text-sm text-muted-foreground">{section.body}</p>
-                            )}
-                          </div>
-                        )}
-                        
-                        {section.type === 'image' && (
-                          <div>
-                            {section.alt && (
-                              <p className="text-sm font-medium">{section.alt}</p>
-                            )}
-                            {section.caption && (
-                              <p className="text-xs text-muted-foreground mt-1">{section.caption}</p>
-                            )}
-                          </div>
-                        )}
-                      </Card>
-                    ))}
-                  
-                  <Button variant="outline" className="w-full">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Content Section
-                  </Button>
-                </div>
-            </div>
+            <SortableContentSections 
+              sections={product.sections}
+              productId={productId}
+              onUpdate={mutate}
+            />
           </TabsContent>
 
           <TabsContent value="reviews">
