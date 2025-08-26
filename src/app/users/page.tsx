@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -54,7 +54,7 @@ const lastOrderedOptions = [
 ]
 
 
-export default function CustomersPage() {
+function CustomersPageContent() {
   const searchParams = useSearchParams()
   const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null)
   const [noteCustomer, setNoteCustomer] = useState<User | null>(null)
@@ -478,5 +478,13 @@ export default function CustomersPage() {
         </Dialog>
       </div>
     </DashboardLayout>
+  )
+}
+
+export default function CustomersPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CustomersPageContent />
+    </Suspense>
   )
 }
