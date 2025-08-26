@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowLeft, Package, Star, Eye, TrendingUp, Edit3, Save, X, Plus, MoreHorizontal, Palette, ImageIcon, Users, ShoppingCart, Heart } from "lucide-react"
@@ -13,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { ColorPicker } from "@/components/ui/color-picker"
 import { SortableVariants, SortableOtherImages } from "@/components/ui/sortable-variants"
+import { SortableReviews } from "@/components/ui/sortable-reviews"
 import { toast } from "sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -52,7 +54,10 @@ interface ProductDetailPageProps {
 export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const resolvedParams = React.use(params)
   const { productId } = resolvedParams
+  const router = useRouter()
+  const searchParams = useSearchParams()
   
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview')
   const [editingField, setEditingField] = useState<string | null>(null)
   const [editValues, setEditValues] = useState<Record<string, any>>({})
   const [showVariantModal, setShowVariantModal] = useState(false)
@@ -73,6 +78,14 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { data: productData, isLoading, error, mutate } = useProductDetails(productId)
   
   const product = productData as any
+
+  // Handle tab state from URL - must be at top level before any early returns
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab && ['overview', 'variants', 'content', 'reviews'].includes(tab)) {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
 
   if (isLoading) {
     return (
@@ -181,52 +194,28 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     }
   }
 
-  const addOtherImage = (isEdit = false) => {
-    if (isEdit && editVariantData) {
-      setEditVariantData({
-        ...editVariantData,
-        otherImages: [...(editVariantData.otherImages || []), '']
-      })
-    } else {
-      setNewVariantData({
-        ...newVariantData,
-        otherImages: [...newVariantData.otherImages, '']
-      })
-    }
+  const addOtherImage = () => {
+    setNewVariantData({
+      ...newVariantData,
+      otherImages: [...newVariantData.otherImages, '']
+    })
   }
 
-  const removeOtherImage = (index: number, isEdit = false) => {
-    if (isEdit && editVariantData) {
-      const updatedImages = editVariantData.otherImages.filter((_: any, i: number) => i !== index)
-      setEditVariantData({
-        ...editVariantData,
-        otherImages: updatedImages.length > 0 ? updatedImages : ['']
-      })
-    } else {
-      const updatedImages = newVariantData.otherImages.filter((_, i) => i !== index)
-      setNewVariantData({
-        ...newVariantData,
-        otherImages: updatedImages.length > 0 ? updatedImages : ['']
-      })
-    }
+  const removeOtherImage = (index: number) => {
+    const updatedImages = newVariantData.otherImages.filter((_, i) => i !== index)
+    setNewVariantData({
+      ...newVariantData,
+      otherImages: updatedImages.length > 0 ? updatedImages : ['']
+    })
   }
 
-  const updateOtherImage = (index: number, value: string, isEdit = false) => {
-    if (isEdit && editVariantData) {
-      const updatedImages = [...editVariantData.otherImages]
-      updatedImages[index] = value
-      setEditVariantData({
-        ...editVariantData,
-        otherImages: updatedImages
-      })
-    } else {
-      const updatedImages = [...newVariantData.otherImages]
-      updatedImages[index] = value
-      setNewVariantData({
-        ...newVariantData,
-        otherImages: updatedImages
-      })
-    }
+  const updateOtherImage = (index: number, value: string) => {
+    const updatedImages = [...newVariantData.otherImages]
+    updatedImages[index] = value
+    setNewVariantData({
+      ...newVariantData,
+      otherImages: updatedImages
+    })
   }
 
   const resetNewVariantForm = () => {
@@ -242,6 +231,13 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       label: '',
       otherImages: ['']
     })
+  }
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab)
+    const url = new URL(window.location.href)
+    url.searchParams.set('tab', tab)
+    router.push(url.pathname + url.search, { scroll: false })
   }
 
   const mainVariant = product.variants?.find((v: any) => v.id === product.mainVariant) || product.variants?.[0]
@@ -420,7 +416,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue="overview" className="space-y-4">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="variants">Variants ({product.variants?.length || 0})</TabsTrigger>
@@ -619,33 +615,19 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
           <TabsContent value="variants">
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">Product Variants</h3>
-                  <div className="text-sm text-muted-foreground">
-                    Manage sizes, pricing, and packaging options
-                  </div>
-                </div>
+              <div className="flex items-center justify-end">
                 <Button onClick={() => setShowVariantModal(true)}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Variant
                 </Button>
               </div>
                 {product.variants && product.variants.length > 0 ? (
-                  <>
-                    <div className="mb-4 p-3 bg-muted/50 rounded-lg">
-                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                        <Package className="w-4 h-4" />
-                        <span>Drag and drop to reorder variants. Order numbers will be automatically updated.</span>
-                      </div>
-                    </div>
-                    <SortableVariants 
-                      variants={product.variants}
-                      productId={productId}
-                      onReorder={handleVariantReorder}
-                      onUpdate={mutate}
-                    />
-                  </>
+                  <SortableVariants 
+                    variants={product.variants}
+                    productId={productId}
+                    onReorder={handleVariantReorder}
+                    onUpdate={mutate}
+                  />
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -723,54 +705,11 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           </TabsContent>
 
           <TabsContent value="reviews">
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold">Customer Reviews</h3>
-                <div className="text-sm text-muted-foreground">
-                  Moderate and respond to customer feedback
-                </div>
-              </div>
-                {product.reviews?.length > 0 ? (
-                  <div className="space-y-4">
-                    {product.reviews.map((review: any) => (
-                      <Card key={review._id} className="p-4">
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <div className="font-medium">{review.author}</div>
-                            <div className="flex items-center space-x-1 mt-1">
-                              {[...Array(5)].map((_, i) => (
-                                <Star 
-                                  key={i} 
-                                  className={`h-4 w-4 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
-                                />
-                              ))}
-                              <span className="text-sm text-muted-foreground ml-2">
-                                {review.rating}/5
-                              </span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <Badge className={review.isApproved ? "bg-success/20 text-success" : "bg-warning/20 text-warning"}>
-                              {review.isApproved ? 'Approved' : 'Pending'}
-                            </Badge>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              {new Date(review.createdAt).toLocaleDateString()}
-                            </div>
-                          </div>
-                        </div>
-                        {review.text && (
-                          <p className="text-sm text-muted-foreground mt-2">{review.text}</p>
-                        )}
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Star className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No reviews yet for this product</p>
-                  </div>
-                )}
-            </div>
+            <SortableReviews 
+              reviews={product.reviews}
+              productId={productId}
+              onUpdate={mutate}
+            />
           </TabsContent>
         </Tabs>
 
@@ -903,7 +842,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               <SortableOtherImages
                 images={newVariantData.otherImages}
                 onImagesChange={(images) => setNewVariantData({ ...newVariantData, otherImages: images })}
-                onAdd={() => addOtherImage(false)}
+                onAdd={addOtherImage}
               />
               
               {newVariantData.otherImages.some(img => img) && (

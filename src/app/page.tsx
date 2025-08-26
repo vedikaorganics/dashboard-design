@@ -403,66 +403,7 @@ export default function DashboardPage() {
             height={350}
           />
         </div>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Customer Reviews</CardTitle>
-            <CardDescription>Latest feedback from your customers</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {(reviewsData as any)?.reviews?.slice(0, 3).map((review: any) => (
-                <div key={review._id} className="flex items-start space-x-4 pb-4 border-b last:border-0">
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center space-x-2">
-                      <p className="text-sm font-medium">{review.author}</p>
-                      <div className="flex">
-                        {Array.from({ length: review.rating }).map((_, i) => (
-                          <Star key={i} className="w-3 h-3 fill-warning text-warning" />
-                        ))}
-                      </div>
-                      {!review.isApproved && (
-                        <Badge variant="outline" className="text-xs">
-                          <AlertCircle className="w-3 h-3 mr-1" />
-                          Pending
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">{review.product?.title}</p>
-                    <p className="text-sm">{review.text}</p>
-                    {review.photos?.length > 0 && (
-                      <p className="text-xs text-muted-foreground">📸 {review.photos.length} photo{review.photos.length > 1 ? 's' : ''} attached</p>
-                    )}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {new Date(review.createdAt).toLocaleDateString()}
-                  </div>
-                </div>
-              )) || (
-                <div className="space-y-4">
-                  {[...Array(2)].map((_, i) => (
-                    <div key={i} className="flex items-start space-x-4 pb-4 border-b last:border-0">
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <div className="h-4 bg-muted animate-pulse rounded w-24"></div>
-                          <div className="h-4 bg-muted animate-pulse rounded w-16"></div>
-                        </div>
-                        <div className="h-3 bg-muted animate-pulse rounded w-32"></div>
-                        <div className="h-3 bg-muted animate-pulse rounded w-full"></div>
-                      </div>
-                      <div className="h-3 bg-muted animate-pulse rounded w-16"></div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div className="pt-2">
-                <Button asChild variant="outline" size="sm" className="w-full">
-                  <Link href="/reviews">View All Reviews</Link>
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+
       </div>
     </DashboardLayout>
   )

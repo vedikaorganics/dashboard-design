@@ -5,10 +5,10 @@ import { cache } from '@/lib/cache'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const { userId } = params
+    const { userId } = await params
     const { searchParams } = new URL(request.url)
     const includeOrders = searchParams.get('includeOrders') === 'true'
     const includeReviews = searchParams.get('includeReviews') === 'true'
@@ -113,10 +113,10 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const { userId } = params
+    const { userId } = await params
     const { notes } = await request.json()
 
     const usersCollection = await getCollection('users')

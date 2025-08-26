@@ -26,6 +26,14 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { GripVertical, ChevronDown, ChevronUp, Package, Save, X, Plus } from "lucide-react"
 import { toast } from "sonner"
 
@@ -146,18 +154,7 @@ function SortableOtherImages({ images, onImagesChange, onAdd }: SortableOtherIma
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Label>Other Images</Label>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onAdd}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Image
-        </Button>
-      </div>
+      <Label>Other Images</Label>
       
       <DndContext
         sensors={sensors}
@@ -182,6 +179,17 @@ function SortableOtherImages({ images, onImagesChange, onAdd }: SortableOtherIma
           </div>
         </SortableContext>
       </DndContext>
+      
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={onAdd}
+        className="text-xs h-7 px-3"
+      >
+        <Plus className="w-3 h-3 mr-1" />
+        Add Image
+      </Button>
     </div>
   )
 }
@@ -193,7 +201,7 @@ interface SortableVariantItemProps {
 }
 
 function SortableVariantItem({ variant, productId, onUpdate }: SortableVariantItemProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [showEditDialog, setShowEditDialog] = useState(false)
   const [editData, setEditData] = useState({
     title: variant.title || '',
     size: variant.size || '',
@@ -221,22 +229,20 @@ function SortableVariantItem({ variant, productId, onUpdate }: SortableVariantIt
     transition,
   }
 
-  const handleExpand = () => {
-    if (!isExpanded) {
-      // Reset form data when expanding
-      setEditData({
-        title: variant.title || '',
-        size: variant.size || '',
-        unit: variant.unit || '',
-        type: variant.type || 'Bottle',
-        price: variant.price || '',
-        mrp: variant.mrp || '',
-        coverImage: variant.coverImage || '',
-        label: variant.label || '',
-        otherImages: variant.otherImages?.length > 0 ? variant.otherImages : ['']
-      })
-    }
-    setIsExpanded(!isExpanded)
+  const handleEditClick = () => {
+    // Reset form data when opening dialog
+    setEditData({
+      title: variant.title || '',
+      size: variant.size || '',
+      unit: variant.unit || '',
+      type: variant.type || 'Bottle',
+      price: variant.price || '',
+      mrp: variant.mrp || '',
+      coverImage: variant.coverImage || '',
+      label: variant.label || '',
+      otherImages: variant.otherImages?.length > 0 ? variant.otherImages : ['']
+    })
+    setShowEditDialog(true)
   }
 
   const addOtherImage = () => {
@@ -247,7 +253,7 @@ function SortableVariantItem({ variant, productId, onUpdate }: SortableVariantIt
   }
 
   const removeOtherImage = (index: number) => {
-    const updatedImages = editData.otherImages.filter((_, i) => i !== index)
+    const updatedImages = editData.otherImages.filter((_: string, i: number) => i !== index)
     setEditData({
       ...editData,
       otherImages: updatedImages.length > 0 ? updatedImages : ['']
@@ -274,13 +280,13 @@ function SortableVariantItem({ variant, productId, onUpdate }: SortableVariantIt
           size: Number(editData.size),
           price: Number(editData.price),
           mrp: Number(editData.mrp),
-          otherImages: editData.otherImages.filter(img => img.trim() !== '')
+          otherImages: editData.otherImages.filter((img: string) => img.trim() !== '')
         })
       })
 
       if (response.ok) {
         toast.success("Variant updated successfully!")
-        setIsExpanded(false)
+        setShowEditDialog(false)
         onUpdate()
       } else {
         toast.error("Failed to update variant")
@@ -295,256 +301,224 @@ function SortableVariantItem({ variant, productId, onUpdate }: SortableVariantIt
 
   return (
     <>
-      {/* Backdrop */}
-      {isExpanded && (
-        <div 
-          className="fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 animate-in fade-in"
-          onClick={() => setIsExpanded(false)}
-        />
-      )}
-      
       <div
         ref={setNodeRef}
         style={style}
-        className={`${isDragging ? 'opacity-50' : ''} ${isExpanded ? 'relative z-50' : ''}`}
+        className={`${isDragging ? 'opacity-50' : ''}`}
       >
-        <Card className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          isExpanded ? 'shadow-2xl border-2 border-primary/20 bg-background' : 'shadow-sm hover:shadow-md bg-background'
-        }`}>
-        {/* Collapsed View */}
-        <div className="p-3">
-          <div className="flex items-center space-x-3">
-            {/* Drag Handle */}
-            <div
-              {...attributes}
-              {...listeners}
-              className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded"
-            >
-              <GripVertical className="w-3 h-3 text-muted-foreground" />
-            </div>
-
-            {/* Variant Order */}
-            <div className="flex-shrink-0">
-              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-xs font-medium text-primary">
-                  {variant.variantOrder || 0}
-                </span>
+        <Card className="py-3 overflow-hidden shadow-sm hover:shadow-md bg-background transition-shadow">
+          <div 
+            className="px-4 cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={handleEditClick}
+          >
+            <div className="flex items-center space-x-4">
+              {/* Drag Handle */}
+              <div
+                {...attributes}
+                {...listeners}
+                className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <GripVertical className="w-4 h-4 text-muted-foreground" />
               </div>
-            </div>
 
-            {/* Variant Image */}
-            <div className="w-12 h-12 bg-muted rounded-md flex items-center justify-center overflow-hidden">
-              {variant.coverImage ? (
-                <Image 
-                  src={variant.coverImage} 
-                  alt={variant.title} 
-                  width={48} 
-                  height={48}
-                  className="object-cover w-full h-full"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.style.display = 'none'
-                  }}
-                />
-              ) : (
-                <Package className="w-4 h-4 text-muted-foreground" />
-              )}
-            </div>
-            
-            {/* Variant Info */}
-            <div className="flex-1 min-w-0">
-              <div className="font-medium text-sm truncate">{variant.title}</div>
-              <div className="text-xs text-muted-foreground">
-                {variant.id} • {variant.size} {variant.unit}
+              {/* Variant Order */}
+              <div className="flex-shrink-0">
+                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-sm font-medium text-primary">
+                    {variant.variantOrder || 0}
+                  </span>
+                </div>
               </div>
-              {variant.label && (
-                <Badge variant="outline" className="text-xs mt-0.5">{variant.label}</Badge>
-              )}
-            </div>
-            
-            {/* Pricing */}
-            <div className="text-right flex-shrink-0">
-              <div className="font-medium text-sm">₹{variant.price?.toLocaleString()}</div>
-              {variant.mrp && variant.mrp !== variant.price && (
-                <div className="text-xs text-muted-foreground line-through">
-                  ₹{variant.mrp.toLocaleString()}
-                </div>
-              )}
-            </div>
 
-            {/* Expand/Collapse Button */}
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={handleExpand}
-              className="flex-shrink-0 h-8 w-8 p-0"
-            >
-              <ChevronDown className={`w-3 h-3 transition-transform duration-300 ease-in-out ${
-                isExpanded ? 'rotate-180' : 'rotate-0'
-              }`} />
-            </Button>
-          </div>
-        </div>
-
-        {/* Expanded Edit Form */}
-        <div 
-          className={`border-t bg-muted/30 overflow-hidden transition-all duration-300 ease-in-out ${
-            isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
-          }`}
-        >
-          <div className={`p-4 space-y-4 transition-opacity duration-300 ease-in-out ${
-            isExpanded ? 'opacity-100' : 'opacity-0'
-          }`}>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Variant ID</Label>
-                  <Input value={variant.id} disabled />
-                </div>
-                <div className="space-y-2">
-                  <Label>Title</Label>
-                  <Input
-                    value={editData.title}
-                    onChange={(e) => setEditData({...editData, title: e.target.value})}
-                    placeholder="Variant title"
+              {/* Variant Image */}
+              <div className="w-14 h-14 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                {variant.coverImage ? (
+                  <Image 
+                    src={variant.coverImage} 
+                    alt={variant.title} 
+                    width={56} 
+                    height={56}
+                    className="object-cover w-full h-full"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                    }}
                   />
-                </div>
+                ) : (
+                  <Package className="w-4 h-4 text-muted-foreground" />
+                )}
               </div>
-
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="space-y-2">
-                  <Label>Size</Label>
-                  <Input
-                    type="number"
-                    value={editData.size}
-                    onChange={(e) => setEditData({...editData, size: e.target.value})}
-                    placeholder="1"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Unit</Label>
-                  <select 
-                    value={editData.unit}
-                    onChange={(e) => setEditData({...editData, unit: e.target.value})}
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  >
-                    <option value="litre">Litre</option>
-                    <option value="ml">ML</option>
-                    <option value="kg">KG</option>
-                    <option value="grams">Grams</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Type</Label>
-                  <select 
-                    value={editData.type}
-                    onChange={(e) => setEditData({...editData, type: e.target.value})}
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  >
-                    <option value="Bottle">Bottle</option>
-                    <option value="Pouch">Pouch</option>
-                    <option value="Can">Can</option>
-                    <option value="Jar">Jar</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Price (₹)</Label>
-                  <Input
-                    type="number"
-                    value={editData.price}
-                    onChange={(e) => setEditData({...editData, price: e.target.value})}
-                    placeholder="490"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>MRP (₹)</Label>
-                  <Input
-                    type="number"
-                    value={editData.mrp}
-                    onChange={(e) => setEditData({...editData, mrp: e.target.value})}
-                    placeholder="550"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Cover Image URL</Label>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    value={editData.coverImage}
-                    onChange={(e) => setEditData({...editData, coverImage: e.target.value})}
-                    placeholder="https://example.com/image.jpg"
-                    className="flex-1"
-                  />
-                  {editData.coverImage && (
-                    <div className="w-12 h-12 bg-muted rounded border overflow-hidden flex-shrink-0">
-                      <Image
-                        src={editData.coverImage}
-                        alt="Cover preview"
-                        width={48}
-                        height={48}
-                        className="object-cover w-full h-full"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement
-                          target.style.display = 'none'
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Label</Label>
-                <Input
-                  value={editData.label}
-                  onChange={(e) => setEditData({...editData, label: e.target.value})}
-                  placeholder="e.g., Best Seller, New"
-                />
-              </div>
-
-              {/* Other Images */}
-              <SortableOtherImages
-                images={editData.otherImages}
-                onImagesChange={(images) => setEditData({ ...editData, otherImages: images })}
-                onAdd={addOtherImage}
-              />
               
-              {editData.otherImages.some(img => img.trim() !== '') && (
-                <div className="text-xs text-muted-foreground">
-                  Drag to reorder images. Preview images will appear for valid URLs.
+              {/* Variant Info */}
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-base truncate">{variant.title}</div>
+                <div className="text-sm text-muted-foreground mt-0.5">
+                  {variant.id} • {variant.size} {variant.unit}
                 </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex justify-end space-x-2 pt-4 border-t">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsExpanded(false)}
-                  disabled={isSaving}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleSave}
-                  disabled={isSaving}
-                >
-                  {isSaving ? (
-                    <>Saving...</>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
+                {variant.label && (
+                  <Badge variant="outline" className="text-xs mt-1">{variant.label}</Badge>
+                )}
+              </div>
+              
+              {/* Pricing */}
+              <div className="text-right flex-shrink-0">
+                <div className="font-semibold text-base">₹{variant.price?.toLocaleString()}</div>
+                {variant.mrp && variant.mrp !== variant.price && (
+                  <div className="text-sm text-muted-foreground line-through">
+                    ₹{variant.mrp.toLocaleString()}
+                  </div>
+                )}
               </div>
             </div>
-        </div>
-      </Card>
+          </div>
+        </Card>
       </div>
+
+      {/* Edit Variant Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Variant: <code className="text-base font-mono">{variant.id}</code></DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label>Title</Label>
+              <Input
+                value={editData.title}
+                onChange={(e) => setEditData({...editData, title: e.target.value})}
+                placeholder="Variant title"
+              />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label>Size</Label>
+                <Input
+                  type="number"
+                  value={editData.size}
+                  onChange={(e) => setEditData({...editData, size: e.target.value})}
+                  placeholder="1"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Unit</Label>
+                <select 
+                  value={editData.unit}
+                  onChange={(e) => setEditData({...editData, unit: e.target.value})}
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="litre">Litre</option>
+                  <option value="ml">ML</option>
+                  <option value="kg">KG</option>
+                  <option value="grams">Grams</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Type</Label>
+                <select 
+                  value={editData.type}
+                  onChange={(e) => setEditData({...editData, type: e.target.value})}
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="Bottle">Bottle</option>
+                  <option value="Pouch">Pouch</option>
+                  <option value="Can">Can</option>
+                  <option value="Jar">Jar</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Price (₹)</Label>
+                <Input
+                  type="number"
+                  value={editData.price}
+                  onChange={(e) => setEditData({...editData, price: e.target.value})}
+                  placeholder="490"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>MRP (₹)</Label>
+                <Input
+                  type="number"
+                  value={editData.mrp}
+                  onChange={(e) => setEditData({...editData, mrp: e.target.value})}
+                  placeholder="550"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Cover Image URL</Label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  value={editData.coverImage}
+                  onChange={(e) => setEditData({...editData, coverImage: e.target.value})}
+                  placeholder="https://example.com/image.jpg"
+                  className="flex-1"
+                />
+                {editData.coverImage && (
+                  <div className="w-12 h-12 bg-muted rounded border overflow-hidden flex-shrink-0">
+                    <Image
+                      src={editData.coverImage}
+                      alt="Cover preview"
+                      width={48}
+                      height={48}
+                      className="object-cover w-full h-full"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Label</Label>
+              <Input
+                value={editData.label}
+                onChange={(e) => setEditData({...editData, label: e.target.value})}
+                placeholder="e.g., Best Seller, New"
+              />
+            </div>
+
+            {/* Other Images */}
+            <SortableOtherImages
+              images={editData.otherImages}
+              onImagesChange={(images) => setEditData({ ...editData, otherImages: images })}
+              onAdd={addOtherImage}
+            />
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowEditDialog(false)}
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSave}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>Saving...</>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
@@ -596,7 +570,7 @@ export function SortableVariants({ variants, productId, onReorder, onUpdate }: S
         items={sortedVariants.map(variant => variant._id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="space-y-3">
+        <div className="space-y-1">
           {sortedVariants.map((variant) => (
             <SortableVariantItem
               key={variant._id}

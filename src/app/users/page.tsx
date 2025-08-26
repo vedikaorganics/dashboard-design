@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { CheckCircle, XCircle, Phone, MessageCircle, Calendar, CalendarDays, Edit3, Save, X, ExternalLink } from "lucide-react"
+import { CheckCircle, XCircle, Phone, MessageCircle, Calendar, CalendarDays, Edit3, Save, X, ExternalLink, Mail } from "lucide-react"
 import Link from "next/link"
 import { useUsers, useInvalidateCache } from "@/hooks/use-data"
 import type { User } from "@/types"

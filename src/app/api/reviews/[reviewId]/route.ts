@@ -5,10 +5,10 @@ import { cache } from '@/lib/cache'
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { reviewId: string } }
+  { params }: { params: Promise<{ reviewId: string }> }
 ) {
   try {
-    const { reviewId } = params
+    const { reviewId } = await params
     const { sortOrder } = await request.json()
 
     // Validate sortOrder
