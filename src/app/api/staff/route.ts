@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
 import { cache, cacheKeys } from '@/lib/cache'
+import { auth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
+    // Validate session for security - only admins can view staff
+    const session = await auth.api.getSession({ headers: request.headers })
+    if (!session?.user || session.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')

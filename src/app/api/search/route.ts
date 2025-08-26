@@ -1,25 +1,31 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getCollection } from "@/lib/mongodb"
 import { cache } from "@/lib/cache"
+import { auth } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const query = searchParams.get("q")
-
-  if (!query || query.trim().length < 2) {
-    return NextResponse.json({ error: "Query must be at least 2 characters" }, { status: 400 })
-  }
-
-  const normalizedQuery = query.trim()
-  const cacheKey = `search:${normalizedQuery.toLowerCase()}`
-
-  // Check cache first
-  const cached = cache.get(cacheKey)
-  if (cached) {
-    return NextResponse.json(cached)
-  }
-
   try {
+    // Validate session for security
+    const session = await auth.api.getSession({ headers: request.headers })
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
+    const { searchParams } = new URL(request.url)
+    const query = searchParams.get("q")
+
+    if (!query || query.trim().length < 2) {
+      return NextResponse.json({ error: "Query must be at least 2 characters" }, { status: 400 })
+    }
+
+    const normalizedQuery = query.trim()
+    const cacheKey = `search:${normalizedQuery.toLowerCase()}`
+
+    // Check cache first
+    const cached = cache.get(cacheKey)
+    if (cached) {
+      return NextResponse.json(cached)
+    }
     // Create regex pattern for case-insensitive search
     const searchRegex = new RegExp(normalizedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
     const searchNumber = parseFloat(normalizedQuery)
