@@ -46,7 +46,7 @@ const getPaymentStatusBadge = (paymentStatus: string) => {
     case 'CASH_ON_DELIVERY':
       return <Badge className="bg-success/20 text-success"><CreditCard className="w-3 h-3 mr-1" />COD</Badge>
     case 'PENDING':
-      return <Badge className="bg-yellow-100 text-yellow-800"><CreditCard className="w-3 h-3 mr-1" />Pending</Badge>
+      return <Badge className="bg-warning/10 text-warning border-warning/30"><CreditCard className="w-3 h-3 mr-1" />Pending</Badge>
     case 'FAILED':
       return <Badge className="bg-destructive/20 text-destructive">Failed</Badge>
     default:
@@ -59,7 +59,7 @@ const getOrderStatusBadge = (orderStatus: string) => {
     case 'CONFIRMED':
       return <Badge className="bg-success/20 text-success">Confirmed</Badge>
     case 'PENDING':
-      return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
+      return <Badge className="bg-warning/10 text-warning border-warning/30">Pending</Badge>
     case 'DELIVERED':
       return <Badge className="bg-success/20 text-success">Delivered</Badge>
     case 'CANCELLED':
@@ -346,8 +346,8 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                     <>
                       {order.offers.map((offer: any, index: number) => (
                         <div key={index} className="flex justify-between text-sm">
-                          <span className="text-green-600">Discount: {offer.title}</span>
-                          <span className="text-green-600">-₹{offer.discount.toLocaleString()}</span>
+                          <span className="text-success">Discount: {offer.title}</span>
+                          <span className="text-success">-₹{offer.discount.toLocaleString()}</span>
                         </div>
                       ))}
                       <Separator />

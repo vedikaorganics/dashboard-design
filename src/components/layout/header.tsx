@@ -194,7 +194,7 @@ export function Header({ title }: HeaderProps) {
                         variant={isAdmin ? "default" : "secondary"} 
                         className={`text-xs ${
                           isAdmin 
-                            ? "bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600" 
+                            ? "bg-primary hover:bg-primary/90 text-primary-foreground" 
                             : ""
                         }`}
                       >

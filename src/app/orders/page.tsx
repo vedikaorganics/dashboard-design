@@ -357,7 +357,7 @@ function OrdersPageContent() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="cursor-help w-24">
-                  <span className="text-sm block truncate text-blue-600 dark:text-blue-400">
+                  <span className="text-sm block truncate text-primary">
                     {notes}
                   </span>
                 </div>

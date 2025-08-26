@@ -4,18 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f410f7f3-1755-4fb2-a743-524efb314a1a" name="Changes" comment="Offers table">
-      <change beforePath="$PROJECT_DIR$/src/app/api/campaigns/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/campaigns/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/dashboard/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/dashboard/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/offers/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/offers/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/orders/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/orders/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/products/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/products/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/reviews/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/reviews/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/search/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/search/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/staff/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/staff/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/users/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/users/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/auth-provider.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/auth-provider.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/layout/dashboard-layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/layout/dashboard-layout.tsx" afterDir="false" />
+    <list default="true" id="f410f7f3-1755-4fb2-a743-524efb314a1a" name="Changes" comment="Auth speed fix">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/(auth)/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(auth)/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/(auth)/login/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(auth)/login/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/(auth)/verify/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(auth)/verify/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/orders/[orderId]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/orders/[orderId]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/orders/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/orders/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/products/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/products/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/staff/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/staff/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/layout/header.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/layout/header.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,7 +93,7 @@
       <workItem from="1755994337108" duration="2434000" />
       <workItem from="1756035736949" duration="17901000" />
       <workItem from="1756169218468" duration="1540000" />
-      <workItem from="1756231345941" duration="302000" />
+      <workItem from="1756231345941" duration="4414000" />
     </task>
     <task id="LOCAL-00001" summary="Header redesign">
       <option name="closed" value="true" />
@@ -193,7 +191,15 @@
       <option name="project" value="LOCAL" />
       <updated>1756173403277</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Auth speed fix">
+      <option name="closed" value="true" />
+      <created>1756231893941</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1756231893941</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -210,7 +216,8 @@
     <MESSAGE value="formatting" />
     <MESSAGE value="Product reviews" />
     <MESSAGE value="Offers table" />
-    <option name="LAST_COMMIT_MESSAGE" value="Offers table" />
+    <MESSAGE value="Auth speed fix" />
+    <option name="LAST_COMMIT_MESSAGE" value="Auth speed fix" />
     <option name="NON_MODAL_COMMIT_POSTPONE_SLOW_CHECKS" value="false" />
   </component>
   <component name="XDebuggerManager">
