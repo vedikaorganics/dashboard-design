@@ -38,6 +38,7 @@ const navigationItems = [
   },
 ]
 
+
 const managementItems = [
   {
     title: "Products",
