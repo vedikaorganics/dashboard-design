@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -44,6 +45,7 @@ const ratingOptions = [
 ]
 
 export default function ReviewsPage() {
+  const searchParams = useSearchParams()
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
   const [approvedFilter, setApprovedFilter] = useState<boolean | undefined>(undefined)
@@ -53,6 +55,14 @@ export default function ReviewsPage() {
   const [editingSortOrderId, setEditingSortOrderId] = useState<string | null>(null)
   const [editingSortOrderValue, setEditingSortOrderValue] = useState<string>('')
   const [isSavingSortOrder, setIsSavingSortOrder] = useState<boolean>(false)
+
+  // Initialize search query from URL parameters
+  useEffect(() => {
+    const urlSearchQuery = searchParams.get('search')
+    if (urlSearchQuery) {
+      setSearchQuery(urlSearchQuery)
+    }
+  }, [searchParams])
   
   const { data: reviewsData, mutate } = useReviews(
     currentPage, 

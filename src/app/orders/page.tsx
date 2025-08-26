@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { ColumnDef } from "@tanstack/react-table"
 import Link from "next/link"
@@ -194,11 +195,20 @@ const deliveryStatusFilterOptions = deliveryStatusOptions.map(option => ({
 
 
 export default function OrdersPage() {
+  const searchParams = useSearchParams()
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<string[]>([])
   const [deliveryStatusFilter, setDeliveryStatusFilter] = useState<string[]>([])
+
+  // Initialize search query from URL parameters
+  useEffect(() => {
+    const urlSearchQuery = searchParams.get('search')
+    if (urlSearchQuery) {
+      setSearchQuery(urlSearchQuery)
+    }
+  }, [searchParams])
   
   const { data: ordersData, mutate } = useOrders(
     currentPage, 

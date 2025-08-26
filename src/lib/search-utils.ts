@@ -29,6 +29,13 @@ export function getSearchResultUrl(result: SearchResult): string {
     review: '/reviews'
   }
   
+  // For reviews, go to the reviews page with search filter instead of detail page
+  if (result.type === 'review') {
+    // Use the author name as the search query
+    const searchQuery = result.title.replace('Review by ', '')
+    return `${baseRoutes[result.type]}?search=${encodeURIComponent(searchQuery)}`
+  }
+  
   return `${baseRoutes[result.type]}/${result.id}`
 }
 

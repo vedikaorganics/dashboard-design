@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -54,6 +55,7 @@ const lastOrderedOptions = [
 
 
 export default function CustomersPage() {
+  const searchParams = useSearchParams()
   const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null)
   const [noteCustomer, setNoteCustomer] = useState<User | null>(null)
   const [noteText, setNoteText] = useState<string>('')
@@ -63,6 +65,14 @@ export default function CustomersPage() {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [phoneVerifiedFilter, setPhoneVerifiedFilter] = useState<string[]>([])
   const [lastOrderedFilter, setLastOrderedFilter] = useState<string[]>([])
+
+  // Initialize search query from URL parameters
+  useEffect(() => {
+    const urlSearchQuery = searchParams.get('search')
+    if (urlSearchQuery) {
+      setSearchQuery(urlSearchQuery)
+    }
+  }, [searchParams])
   
   const { data: usersData, mutate } = useUsers(
     currentPage, 
