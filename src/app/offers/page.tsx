@@ -196,6 +196,7 @@ export default function OffersPage() {
         <DataTable 
           columns={columns} 
           data={offers}
+          isLoading={isLoading}
           searchKey="title"
           searchPlaceholder="Search offers by title or code..."
           manualPagination={true}

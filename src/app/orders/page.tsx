@@ -210,7 +210,7 @@ function OrdersPageContent() {
     }
   }, [searchParams])
   
-  const { data: ordersData, mutate } = useOrders(
+  const { data: ordersData, isLoading, mutate } = useOrders(
     currentPage, 
     pageSize, 
     undefined, // status
@@ -468,6 +468,7 @@ function OrdersPageContent() {
         <DataTable 
           columns={columns} 
           data={orders}
+          isLoading={isLoading}
           searchKey="orderId"
           searchPlaceholder="Search by order ID, customer name, amount, or UTM..."
           searchValue={searchQuery}

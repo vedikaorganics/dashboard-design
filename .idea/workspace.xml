@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f410f7f3-1755-4fb2-a743-524efb314a1a" name="Changes" comment="Offers table">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/layout/app-sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/layout/app-sidebar.tsx" afterDir="false" />
-    </list>
+    <list default="true" id="f410f7f3-1755-4fb2-a743-524efb314a1a" name="Changes" comment="Highlight selected tab in sidebar" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -203,7 +199,15 @@
       <option name="project" value="LOCAL" />
       <updated>1756231893941</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="Highlight selected tab in sidebar">
+      <option name="closed" value="true" />
+      <created>1756241424115</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1756241424115</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -235,7 +239,8 @@
     <MESSAGE value="Product reviews" />
     <MESSAGE value="Offers table" />
     <MESSAGE value="Auth speed fix" />
-    <option name="LAST_COMMIT_MESSAGE" value="Auth speed fix" />
+    <MESSAGE value="Highlight selected tab in sidebar" />
+    <option name="LAST_COMMIT_MESSAGE" value="Highlight selected tab in sidebar" />
     <option name="NON_MODAL_COMMIT_POSTPONE_SLOW_CHECKS" value="false" />
   </component>
   <component name="XDebuggerManager">

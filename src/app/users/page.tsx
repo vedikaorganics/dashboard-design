@@ -74,7 +74,7 @@ function CustomersPageContent() {
     }
   }, [searchParams])
   
-  const { data: usersData, mutate } = useUsers(
+  const { data: usersData, isLoading, mutate } = useUsers(
     currentPage, 
     pageSize,
     searchQuery,
@@ -283,6 +283,7 @@ function CustomersPageContent() {
         <DataTable 
           columns={columns} 
           data={users}
+          isLoading={isLoading}
           searchKey="name"
           searchPlaceholder="Search by name, phone, email, ID, or notes..."
           searchValue={searchQuery}

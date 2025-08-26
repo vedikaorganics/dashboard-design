@@ -64,7 +64,7 @@ function ReviewsPageContent() {
     }
   }, [searchParams])
   
-  const { data: reviewsData, mutate } = useReviews(
+  const { data: reviewsData, isLoading, mutate } = useReviews(
     currentPage, 
     pageSize, 
     approvedFilter,
@@ -345,6 +345,7 @@ function ReviewsPageContent() {
         <DataTable 
           columns={columns} 
           data={reviews}
+          isLoading={isLoading}
           searchKey="author"
           searchPlaceholder="Search by author, review text, product, or review ID..."
           searchValue={searchQuery}
