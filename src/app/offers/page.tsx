@@ -12,14 +12,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Eye, Clock, CheckCircle, Edit, Calendar } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
+import { Eye, Clock, CheckCircle, Edit, Calendar } from "lucide-react"
 import { useOffers } from "@/hooks/use-data"
 import type { Offer } from "@/types"
 import { DataTable } from "@/components/ui/data-table"
@@ -57,6 +54,7 @@ const getOfferType = (isUserOffer: boolean, triggerPrice: number | null) => {
 
 export default function OffersPage() {
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null)
+  const [editingOffer, setEditingOffer] = useState<Offer | null>(null)
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
   
@@ -68,6 +66,36 @@ export default function OffersPage() {
   const handlePaginationChange = ({ pageIndex, pageSize: newPageSize }: { pageIndex: number; pageSize: number }) => {
     setCurrentPage(pageIndex + 1) // Convert 0-based to 1-based
     setPageSize(newPageSize)
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!editingOffer) return
+    
+    const formData = new FormData(e.currentTarget)
+    const updatedOffer = {
+      ...editingOffer,
+      title: formData.get('title') as string,
+      description: formData.get('description') as string,
+      discount: Number(formData.get('discount')),
+      triggerPrice: formData.get('triggerPrice') ? Number(formData.get('triggerPrice')) : null,
+      isUserOffer: formData.get('isUserOffer') === 'on',
+    }
+    
+    try {
+      // Here you would typically make an API call to update the offer
+      console.log('Updated offer:', updatedOffer)
+      
+      // Close the dialog
+      setEditingOffer(null)
+      
+      // You could add a success message here
+      // toast.success("Offer updated successfully")
+    } catch (error) {
+      console.error('Error updating offer:', error)
+      // You could add an error message here
+      // toast.error("Failed to update offer")
+    }
   }
 
   const columns: ColumnDef<any>[] = [
@@ -148,25 +176,14 @@ export default function OffersPage() {
       cell: ({ row }) => {
         const offer = row.original
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => setSelectedOffer(offer)}>
-                <Eye className="mr-2 h-4 w-4" />
-                View details
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit offer
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 w-8 p-0"
+            onClick={() => setEditingOffer(offer)}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
         )
       },
     },
@@ -278,6 +295,94 @@ export default function OffersPage() {
                   <Button variant="outline">Duplicate</Button>
                 </div>
               </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={editingOffer !== null} onOpenChange={() => setEditingOffer(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Offer - {editingOffer?.title}</DialogTitle>
+              <DialogDescription>
+                Update the offer details and save changes
+              </DialogDescription>
+            </DialogHeader>
+            
+            {editingOffer && (
+              <form className="space-y-6" onSubmit={handleEditSubmit}>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Offer Title</Label>
+                    <Input
+                      id="title"
+                      name="title"
+                      defaultValue={editingOffer.title}
+                      placeholder="Enter offer title"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="discount">Discount Amount (₹)</Label>
+                    <Input
+                      id="discount"
+                      name="discount"
+                      type="number"
+                      defaultValue={editingOffer.discount}
+                      placeholder="Enter discount amount"
+                      required
+                      min="0"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    defaultValue={editingOffer.description}
+                    placeholder="Enter offer description"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="triggerPrice">Minimum Order Value (₹)</Label>
+                    <Input
+                      id="triggerPrice"
+                      name="triggerPrice"
+                      type="number"
+                      defaultValue={editingOffer.triggerPrice || ''}
+                      placeholder="Enter minimum order value (optional)"
+                      min="0"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 pt-6">
+                    <Switch
+                      id="isUserOffer"
+                      name="isUserOffer"
+                      defaultChecked={editingOffer.isUserOffer}
+                    />
+                    <Label htmlFor="isUserOffer">User-specific offer</Label>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setEditingOffer(null)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    Save Changes
+                  </Button>
+                </div>
+              </form>
             )}
           </DialogContent>
         </Dialog>
