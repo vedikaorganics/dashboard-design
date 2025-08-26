@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, Search, Sun, Moon, User, LogOut, Shield } from "lucide-react"
+import { Search, Sun, Moon, User, LogOut, Shield } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -94,15 +94,6 @@ export function Header({ title }: HeaderProps) {
               <span className="sr-only">Toggle theme</span>
             </Button>
             
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-4 w-4" />
-              <Badge
-                variant="destructive"
-                className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center p-0 text-xs"
-              >
-                3
-              </Badge>
-            </Button>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
