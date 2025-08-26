@@ -4,8 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f410f7f3-1755-4fb2-a743-524efb314a1a" name="Changes" comment="Product reviews">
-      <change beforePath="$PROJECT_DIR$/src/app/offers/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/offers/page.tsx" afterDir="false" />
+    <list default="true" id="f410f7f3-1755-4fb2-a743-524efb314a1a" name="Changes" comment="Offers table">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -174,7 +174,15 @@
       <option name="project" value="LOCAL" />
       <updated>1756170100915</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Offers table">
+      <option name="closed" value="true" />
+      <created>1756173403277</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1756173403277</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -190,7 +198,8 @@
     <MESSAGE value="NUmber suffic formatting" />
     <MESSAGE value="formatting" />
     <MESSAGE value="Product reviews" />
-    <option name="LAST_COMMIT_MESSAGE" value="Product reviews" />
+    <MESSAGE value="Offers table" />
+    <option name="LAST_COMMIT_MESSAGE" value="Offers table" />
     <option name="NON_MODAL_COMMIT_POSTPONE_SLOW_CHECKS" value="false" />
   </component>
   <component name="XDebuggerManager">

@@ -1,7 +1,9 @@
 "use client"
 
-import { Bell, Search, Sun, Moon, User } from "lucide-react"
+import { Bell, Search, Sun, Moon, User, LogOut, Shield } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -16,6 +18,8 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { useAuth } from "@/components/auth-provider"
+import { signOut } from "@/lib/auth-client"
 
 interface HeaderProps {
   title?: string
@@ -23,6 +27,38 @@ interface HeaderProps {
 
 export function Header({ title }: HeaderProps) {
   const { theme, setTheme } = useTheme()
+  const { user, isAdmin, isMember } = useAuth()
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      toast.success("Signed out successfully")
+      router.push("/login")
+    } catch (error) {
+      toast.error("Error signing out")
+    }
+  }
+
+  const getUserInitials = () => {
+    if (user?.fullName) {
+      return user.fullName
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    }
+    return user?.email?.slice(0, 2).toUpperCase() || "U"
+  }
+
+  const getRoleBadgeVariant = () => {
+    return isAdmin ? "default" : "secondary"
+  }
+
+  const getRoleLabel = () => {
+    return isAdmin ? "Admin" : "Member"
+  }
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -73,18 +109,25 @@ export function Header({ title }: HeaderProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/avatars/01.png" alt="@shadcn" />
-                    <AvatarFallback>SC</AvatarFallback>
+                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">John Doe</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      john@example.com
+                    <p className="text-sm font-medium leading-none">
+                      {user?.fullName || user?.email || "User"}
                     </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user?.email}
+                    </p>
+                    <div className="mt-2">
+                      <Badge variant={getRoleBadgeVariant()} className="text-xs">
+                        <Shield className="mr-1 h-3 w-3" />
+                        {getRoleLabel()}
+                      </Badge>
+                    </div>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -92,12 +135,13 @@ export function Header({ title }: HeaderProps) {
                   <User className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/settings")}>
                   Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  Log out
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sign out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -13,6 +13,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import Link from "next/link"
+import { useAuth } from "@/components/auth-provider"
 
 const navigationItems = [
   {
@@ -42,21 +43,25 @@ const managementItems = [
     title: "Products",
     url: "/products",
     icon: Package,
+    roles: ["admin", "member"], // Both roles can access
   },
   {
     title: "Offers",
     url: "/offers",
     icon: Gift,
+    roles: ["admin", "member"], // Both roles can access
   },
   {
     title: "Campaigns",
     url: "/campaigns",
     icon: Target,
+    roles: ["admin", "member"], // Both roles can access
   },
   {
     title: "Staff",
     url: "/staff",
     icon: UserCheck,
+    roles: ["admin"], // Only admins can access
   },
 ]
 
@@ -69,6 +74,14 @@ const systemItems = [
 ]
 
 export function AppSidebar() {
+  const { user } = useAuth()
+  const userRole = user?.role || "member"
+
+  // Filter management items based on user role
+  const filteredManagementItems = managementItems.filter(item => 
+    item.roles.includes(userRole)
+  )
+
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
@@ -94,7 +107,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Management</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {managementItems.map((item) => (
+              {filteredManagementItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild tooltip={item.title}>
                     <Link href={item.url}>
