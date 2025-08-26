@@ -10,6 +10,7 @@ interface AuthContextType {
   isAdmin: boolean
   isMember: boolean
   refreshSession: () => Promise<void>
+  clearSession: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -35,6 +36,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const clearSession = () => {
+    setSession(null)
+  }
+
   useEffect(() => {
     refreshSession()
   }, [])
@@ -48,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAdmin,
         isMember,
         refreshSession,
+        clearSession,
       }}
     >
       {children}

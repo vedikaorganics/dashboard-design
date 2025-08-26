@@ -57,6 +57,12 @@ export const auth = betterAuth({
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url, token }) => {
+        // Check if user exists in staffs collection before sending magic link
+        const existingUser = await db.collection('staffs').findOne({ email })
+        if (!existingUser) {
+          console.log(`Magic link requested for non-existent user: ${email}`)
+          throw new Error('No account found with this email address')
+        }
         try {
           await transporter.sendMail({
             from: process.env.FROM_EMAIL || "noreply@vedika-organics.com",

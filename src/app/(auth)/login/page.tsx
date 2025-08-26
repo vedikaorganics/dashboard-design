@@ -56,7 +56,12 @@ export default function LoginPage() {
       })
       
       if (error) {
-        toast.error(error.message || "Failed to send magic link")
+        // Show user-friendly error for non-existent accounts
+        if (error.message?.includes('No account found')) {
+          toast.error("No account found with this email address. Please contact your administrator.")
+        } else {
+          toast.error(error.message || "Failed to send magic link")
+        }
       } else {
         toast.success("Check your email for the magic link!")
         setEmail("")
@@ -78,7 +83,7 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
           <CardDescription>
-            Sign in to your Vedika Organics dashboard using your email address
+            Staff members can sign in using their registered email address
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -115,7 +120,7 @@ export default function LoginPage() {
           </form>
           <div className="mt-6 text-center text-sm text-muted-foreground">
             <p>We'll send you a secure link to sign in</p>
-            <p className="mt-1">No password required</p>
+            <p className="mt-1">Only registered staff members can access the dashboard</p>
           </div>
         </CardContent>
       </Card>

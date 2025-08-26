@@ -27,14 +27,17 @@ interface HeaderProps {
 
 export function Header({ title }: HeaderProps) {
   const { theme, setTheme } = useTheme()
-  const { user, isAdmin, isMember } = useAuth()
+  const { user, isAdmin, isMember, clearSession } = useAuth()
   const router = useRouter()
 
   const handleSignOut = async () => {
     try {
       await signOut()
+      // Clear session state immediately
+      clearSession()
       toast.success("Signed out successfully")
-      router.push("/login")
+      // Use window.location for a hard redirect to ensure auth state is cleared
+      window.location.href = "/login"
     } catch (error) {
       toast.error("Error signing out")
     }
