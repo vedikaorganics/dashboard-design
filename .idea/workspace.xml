@@ -4,16 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f410f7f3-1755-4fb2-a743-524efb314a1a" name="Changes" comment="Auth speed fix">
+    <list default="true" id="f410f7f3-1755-4fb2-a743-524efb314a1a" name="Changes" comment="Offers table">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/(auth)/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(auth)/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/(auth)/login/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(auth)/login/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/(auth)/verify/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(auth)/verify/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/orders/[orderId]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/orders/[orderId]/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/orders/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/orders/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/products/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/products/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/staff/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/staff/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/layout/header.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/layout/header.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/layout/app-sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/layout/app-sidebar.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -21,6 +15,11 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectColorInfo">{
@@ -36,9 +35,9 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "develop",
+    "git-widget-placeholder": "devlop-one",
     "junie.onboarding.icon.badge.shown": "true",
-    "last_opened_file_path": "/home/darknight/Documents/dev/kabir/dashboard-design",
+    "last_opened_file_path": "/home/darknight/Documents/dev/claudes/one/dashboard-design",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -49,6 +48,11 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="dashboard-design" />
@@ -204,6 +208,20 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName=".env" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
