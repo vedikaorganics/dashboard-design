@@ -24,10 +24,12 @@ import {
 } from "@/components/ui/table"
 import { DataTablePagination } from "./data-table-pagination"
 import { DataTableToolbar } from "./data-table-toolbar"
+import { TableLoadingSkeleton } from "./table-loading-skeleton"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  isLoading?: boolean
   searchKey?: string
   searchPlaceholder?: string
   searchValue?: string
@@ -57,6 +59,7 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
   columns,
   data,
+  isLoading = false,
   searchKey = "name",
   searchPlaceholder = "Search...",
   searchValue,
@@ -137,6 +140,30 @@ export function DataTable<TData, TValue>({
       ...(!manualFiltering && { globalFilter }),
     },
   })
+
+  // Show loading skeleton if loading
+  if (isLoading) {
+    return (
+      <div className="w-full space-y-4">
+        <DataTableToolbar 
+          table={table} 
+          searchKey={searchKey} 
+          searchPlaceholder={searchPlaceholder} 
+          searchValue={searchValue}
+          onSearchChange={onSearchChange}
+          filterableColumns={filterableColumns}
+          manualFiltering={manualFiltering}
+          toolbarActions={toolbarActions}
+        />
+        <TableLoadingSkeleton 
+          columns={columns.length} 
+          rows={pageSize} 
+          showHeader={true}
+        />
+        <DataTablePagination table={table} />
+      </div>
+    )
+  }
 
   return (
     <div className="w-full space-y-4">

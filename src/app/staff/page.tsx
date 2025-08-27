@@ -145,6 +145,7 @@ export default function StaffPage() {
         <DataTable 
           columns={columns} 
           data={staff}
+          isLoading={isLoading}
           searchKey="fullName"
           searchPlaceholder="Search staff members..."
           manualPagination={true}

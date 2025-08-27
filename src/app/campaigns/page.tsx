@@ -379,6 +379,7 @@ export default function CampaignsPage() {
         <DataTable 
           columns={columns} 
           data={campaigns}
+          isLoading={isLoading}
           searchKey="utm_campaign"
           searchPlaceholder="Search campaigns..."
           searchValue={searchQuery}

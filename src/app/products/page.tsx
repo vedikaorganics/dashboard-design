@@ -23,6 +23,7 @@ import { Search, Package, Image as ImageIcon } from "lucide-react"
 import { useProducts } from "@/hooks/use-data"
 import type { Product, ProductVariant } from "@/types"
 import Image from "next/image"
+import { ProductGridLoadingSkeleton } from "@/components/ui/grid-loading-skeleton"
 
 
 
@@ -43,6 +44,30 @@ export default function ProductsPage() {
   const getProductVariants = (productId: string) => {
     const product = products.find((p: any) => p.id === productId)
     return product?.variants || []
+  }
+  
+  // Show loading skeleton if loading
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Products Catalog">
+        <div className="flex-1 space-y-6">
+          <div className="flex items-center space-x-2 py-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search products by name or ID..." 
+                  className="pl-8" 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+          <ProductGridLoadingSkeleton count={15} />
+        </div>
+      </DashboardLayout>
+    )
   }
   
   return (
