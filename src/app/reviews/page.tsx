@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +13,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { MoreHorizontal, Star, Eye, Check, X, Flag, Clock, Save, Edit3 } from "lucide-react"
 import { useReviews } from "@/hooks/use-data"
 import { StarRating } from "@/components/ui/star-rating"
@@ -55,6 +63,8 @@ function ReviewsPageContent() {
   const [editingSortOrderId, setEditingSortOrderId] = useState<string | null>(null)
   const [editingSortOrderValue, setEditingSortOrderValue] = useState<string>('')
   const [isSavingSortOrder, setIsSavingSortOrder] = useState<boolean>(false)
+  const [selectedReview, setSelectedReview] = useState<any | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false)
 
   // Initialize search query from URL parameters
   useEffect(() => {
@@ -141,6 +151,11 @@ function ReviewsPageContent() {
     setEditingSortOrderId(null)
     setEditingSortOrderValue('')
   }
+
+  const handleViewDetails = (review: any) => {
+    setSelectedReview(review)
+    setIsDialogOpen(true)
+  }
   
   const columns: ColumnDef<any>[] = [
   {
@@ -171,15 +186,15 @@ function ReviewsPageContent() {
       const initials = authorName.split(' ').map((n: string) => n[0] || '').join('') || 'A'
       return (
         <div className="flex items-center space-x-3">
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-6 w-6">
+            {review.avatar && (
+              <AvatarImage src={review.avatar} alt={authorName || 'User avatar'} />
+            )}
             <AvatarFallback className="bg-secondary text-secondary-foreground">
               {initials}
             </AvatarFallback>
           </Avatar>
-          <div>
-            <div className="text-sm">{authorName}</div>
-            <div className="text-xs text-muted-foreground">{review.createdAt ? new Date(review.createdAt).toLocaleDateString() : '-'}</div>
-          </div>
+          <div className="text-sm">{authorName}</div>
         </div>
       )
     },
@@ -191,10 +206,7 @@ function ReviewsPageContent() {
       const review = row.original
       const productName = review.product?.title || review.product || 'Unknown Product'
       return (
-        <div>
-          <div className="text-sm">{productName}</div>
-          <div className="text-xs text-muted-foreground">#{review._id}</div>
-        </div>
+        <div className="text-sm">{productName}</div>
       )
     },
   },
@@ -204,9 +216,8 @@ function ReviewsPageContent() {
     cell: ({ row }) => {
       const rating = row.getValue("rating") as number
       return (
-        <div className="flex items-center space-x-2">
-          <StarRating rating={rating} />
-          <span className="text-sm">{rating}/5</span>
+        <div className="flex items-center">
+          <StarRating rating={rating} showRating={false} />
         </div>
       )
     },
@@ -226,74 +237,60 @@ function ReviewsPageContent() {
     },
   },
   {
-    accessorKey: "isApproved",
-    header: "Status",
-    cell: ({ row }) => getStatusBadge(row.getValue("isApproved")),
-  },
-  {
-    accessorKey: "helpful",
-    header: "Helpful",
-    cell: ({ row }) => {
-      const helpful = row.getValue("helpful") as number
-      return (
-        <div className="text-center">
-          <div className="text-sm">{helpful}</div>
-          <div className="text-xs text-muted-foreground">votes</div>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "sortOrder",
-    header: "Sort Order",
+    accessorKey: "photos",
+    header: "Photos",
     cell: ({ row }) => {
       const review = row.original
-      const sortOrder = row.getValue("sortOrder") as number || 0
-      const isEditing = editingSortOrderId === review._id
-      const isSaving = isSavingSortOrder && editingSortOrderId === review._id
+      const photos = review.photos || []
       
-      if (isEditing) {
-        return (
-          <div className="flex items-center gap-2 min-w-24">
-            <Input
-              type="number"
-              value={editingSortOrderValue}
-              onChange={(e) => setEditingSortOrderValue(e.target.value)}
-              className="h-7 w-16 text-center"
-              autoFocus
-            />
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 w-6 p-0"
-              onClick={() => handleSaveSortOrder(review._id)}
-              disabled={isSaving}
-            >
-              <Save className="h-3 w-3" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 w-6 p-0"
-              onClick={handleCancelSortOrderEdit}
-              disabled={isSaving}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </div>
-        )
+      if (photos.length === 0) {
+        return <span className="text-xs text-muted-foreground">None</span>
       }
       
       return (
-        <div 
-          className="flex items-center gap-1 cursor-pointer group hover:bg-muted/50 -m-2 p-2 rounded min-w-16 justify-center"
-          onClick={() => handleEditSortOrder(review)}
-        >
-          <span className="text-sm text-center">{sortOrder}</span>
-          <Edit3 className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="flex items-center gap-1">
+          {photos.slice(0, 3).map((photo: string, index: number) => (
+            <div
+              key={index}
+              className="relative w-8 h-8 rounded-md overflow-hidden bg-muted"
+            >
+              <img
+                src={photo}
+                alt={`Review photo ${index + 1}`}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </div>
+          ))}
+          {photos.length > 3 && (
+            <span className="text-xs text-muted-foreground ml-1">
+              +{photos.length - 3}
+            </span>
+          )}
         </div>
       )
     },
+  },
+  {
+    accessorKey: "createdAt",
+    header: "Date",
+    cell: ({ row }) => {
+      const review = row.original
+      return (
+        <div className="text-sm">
+          {review.createdAt ? new Date(review.createdAt).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          }) : '-'}
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "isApproved",
+    header: "Status",
+    cell: ({ row }) => getStatusBadge(row.getValue("isApproved")),
   },
   {
     id: "actions",
@@ -309,7 +306,7 @@ function ReviewsPageContent() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleViewDetails(review)}>
               <Eye className="mr-2 h-4 w-4" />
               View details
             </DropdownMenuItem>
@@ -373,6 +370,133 @@ function ReviewsPageContent() {
           pageSize={pageSize}
           onPaginationChange={handlePaginationChange}
         />
+
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Review Details</DialogTitle>
+            </DialogHeader>
+            
+            {selectedReview && (
+              <div className="space-y-6">
+                {/* Customer Information */}
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="h-12 w-12">
+                      {selectedReview.avatar && (
+                        <AvatarImage src={selectedReview.avatar} alt={selectedReview.author || 'User avatar'} />
+                      )}
+                      <AvatarFallback className="bg-secondary text-secondary-foreground">
+                        {(selectedReview.author || 'Anonymous').split(' ').map((n: string) => n[0] || '').join('') || 'A'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium">{selectedReview.author || 'Anonymous'}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {selectedReview.createdAt ? new Date(selectedReview.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        }) : 'Unknown date'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Product Information */}
+                <div className="space-y-2">
+                  <div className="p-3 bg-muted rounded-lg">
+                    <div className="font-medium">{selectedReview.product?.title || selectedReview.product || 'Unknown Product'}</div>
+                  </div>
+                </div>
+
+                {/* Rating */}
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm">Rating</h4>
+                  <div className="flex items-center space-x-3">
+                    <StarRating rating={selectedReview.rating} showRating={false} />
+                    {selectedReview.rating < 4 && (
+                      <Badge variant={selectedReview.rating >= 3 ? 'secondary' : 'destructive'}>
+                        {selectedReview.rating >= 3 ? 'Neutral' : 'Negative'}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                {/* Review Text */}
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm">Review</h4>
+                  <div className="p-4 bg-muted rounded-lg">
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                      {selectedReview.text || 'No review text provided.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Photos */}
+                {selectedReview.photos && selectedReview.photos.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm">Photos ({selectedReview.photos.length})</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {selectedReview.photos.map((photo: string, index: number) => (
+                        <div
+                          key={index}
+                          className="relative aspect-square rounded-lg overflow-hidden bg-muted group cursor-pointer"
+                          onClick={() => window.open(photo, '_blank')}
+                        >
+                          <img
+                            src={photo}
+                            alt={`Review photo ${index + 1}`}
+                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            loading="lazy"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                            <Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Status */}
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm">Status</h4>
+                  {getStatusBadge(selectedReview.isApproved)}
+                </div>
+
+                {/* Additional Information */}
+                {(selectedReview.updatedAt || selectedReview.verified) && (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm">Additional Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      {selectedReview.updatedAt && (
+                        <div>
+                          <span className="font-medium">Last updated: </span>
+                          <span className="text-muted-foreground">
+                            {new Date(selectedReview.updatedAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                      )}
+                      {selectedReview.verified && (
+                        <div>
+                          <span className="font-medium">Verified purchase: </span>
+                          <Badge variant="secondary">Verified</Badge>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   )
