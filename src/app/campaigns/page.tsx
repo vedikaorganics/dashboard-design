@@ -347,7 +347,7 @@ export default function CampaignsPage() {
                 <Link className="mr-2 h-4 w-4" />
                 Copy page URL
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => window.open(`/r/${campaign.shortId}`, '_blank')}>
+              <DropdownMenuItem onClick={() => window.open(`${getPaymentServerUrl()}/r/${campaign.shortId}`, '_blank')}>
                 <ExternalLink className="mr-2 h-4 w-4" />
                 Test URL
               </DropdownMenuItem>
@@ -560,67 +560,34 @@ export default function CampaignsPage() {
         
         {/* Copy Page URL Dialog */}
         <Dialog open={copyDialogOpen} onOpenChange={setCopyDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Copy Page URL</DialogTitle>
-              <DialogDescription>
-                Select a page to copy the campaign URL for {selectedCampaignForCopy?.shortId}
-              </DialogDescription>
+              <DialogTitle>Copy URL - <span className="font-mono">{selectedCampaignForCopy?.shortId}</span></DialogTitle>
             </DialogHeader>
-            <div className="overflow-y-auto flex-1 py-4">
-              <div className="space-y-2">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-left h-auto p-3"
-                  onClick={() => copyPageUrl(selectedCampaignForCopy?.shortId || "", "/")}
+            <div className="space-y-1">
+              <button
+                className="w-full text-left p-2 hover:bg-muted rounded text-xs font-mono cursor-pointer focus:outline-none"
+                onClick={() => copyPageUrl(selectedCampaignForCopy?.shortId || "", "/")}
+              >
+                {getPaymentServerUrl()}/r/{selectedCampaignForCopy?.shortId}
+              </button>
+              
+              <button
+                className="w-full text-left p-2 hover:bg-muted rounded text-xs font-mono cursor-pointer focus:outline-none"
+                onClick={() => copyPageUrl(selectedCampaignForCopy?.shortId || "", "/shop")}
+              >
+                {getPaymentServerUrl()}/r/{selectedCampaignForCopy?.shortId}/shop
+              </button>
+              
+              {products.map((product: any) => (
+                <button
+                  key={product.id}
+                  className="w-full text-left p-2 hover:bg-muted rounded text-xs font-mono cursor-pointer focus:outline-none"
+                  onClick={() => copyPageUrl(selectedCampaignForCopy?.shortId || "", `/shop/${product.id}`)}
                 >
-                  <div>
-                    <div className="font-medium">Home Page</div>
-                    <div className="text-xs text-muted-foreground">
-                      {getPaymentServerUrl()}/r/{selectedCampaignForCopy?.shortId}
-                    </div>
-                  </div>
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-left h-auto p-3"
-                  onClick={() => copyPageUrl(selectedCampaignForCopy?.shortId || "", "/shop")}
-                >
-                  <div>
-                    <div className="font-medium">Shop Page</div>
-                    <div className="text-xs text-muted-foreground">
-                      {getPaymentServerUrl()}/r/{selectedCampaignForCopy?.shortId}/shop
-                    </div>
-                  </div>
-                </Button>
-                
-                <div className="pt-2">
-                  <div className="text-sm font-medium mb-2">Product Pages</div>
-                  <div className="space-y-1">
-                    {products.map((product: any) => (
-                      <Button
-                        key={product.id}
-                        variant="outline"
-                        className="w-full justify-start text-left h-auto p-3"
-                        onClick={() => copyPageUrl(selectedCampaignForCopy?.shortId || "", `/shop/${product.id}`)}
-                      >
-                        <div className="w-full">
-                          <div className="font-medium text-sm">{product.name}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {getPaymentServerUrl()}/r/{selectedCampaignForCopy?.shortId}/shop/{product.id}
-                          </div>
-                        </div>
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-end pt-4 border-t">
-              <Button variant="outline" onClick={() => setCopyDialogOpen(false)}>
-                Cancel
-              </Button>
+                  {getPaymentServerUrl()}/r/{selectedCampaignForCopy?.shortId}/shop/{product.id}
+                </button>
+              ))}
             </div>
           </DialogContent>
         </Dialog>
