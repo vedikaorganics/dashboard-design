@@ -516,15 +516,6 @@ function OrdersPageContent() {
         
         <div className="flex gap-3 flex-wrap">
           <AlertMetric
-            title="Payment Pending"
-            count={summary.paymentPending || 0}
-            description="Orders awaiting payment"
-            icon={Clock}
-            variant="warning"
-            onClick={() => handlePaymentStatusChange(['PENDING'])}
-          />
-          
-          <AlertMetric
             title="Shipping Pending"
             count={summary.shippingPending || 0}
             description="Orders ready to ship"
