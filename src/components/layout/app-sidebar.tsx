@@ -8,13 +8,17 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
+import { useTheme } from "next-themes"
 
 const navigationItems = [
   {
@@ -78,6 +82,8 @@ export function AppSidebar() {
   const { user } = useAuth()
   const pathname = usePathname()
   const userRole = user?.role || "member"
+  const { state } = useSidebar()
+  const { theme } = useTheme()
 
   // Helper function to determine if a navigation item is active
   const isActive = (url: string) => {
@@ -92,11 +98,30 @@ export function AppSidebar() {
     item.roles.includes(userRole)
   )
 
+  // Determine which logo to use based on theme
+  const logoSrc = theme === "dark" ? "/vedika-logo-dark.png" : "/vedika-logo-light.png"
+
   return (
     <Sidebar collapsible="icon">
+      <SidebarHeader className={`border-b border-sidebar-border transition-all duration-200 ${
+        state === "collapsed" ? "opacity-0 h-0 py-0" : "opacity-100 h-14"
+      }`}>
+        <div className="flex items-center gap-2 px-4 h-full">
+          <Image
+            src={logoSrc}
+            alt="Vedika Organics"
+            width={20}
+            height={20}
+            className="shrink-0"
+          />
+          <span className="font-semibold text-sidebar-foreground">
+            Vedika Organics
+          </span>
+        </div>
+      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Vedika Organics</SidebarGroupLabel>
+          <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => (
