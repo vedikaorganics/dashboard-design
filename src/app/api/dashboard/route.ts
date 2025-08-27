@@ -39,14 +39,20 @@ export async function GET(request: NextRequest) {
 
     // Execute consolidated queries in parallel for better performance
     const queryStart = Date.now()
+    console.log('📋 Dashboard API: Starting parallel queries execution...')
+    
+    // Track individual query performance with detailed timing
     const [
       ordersAnalytics,
-      usersAnalytics,
+      usersAnalytics, 
       reviewsAnalytics,
       consolidatedRevenueData
     ] = await Promise.all([
-      // Consolidated orders analytics - replaces 9 separate queries
-      ordersCollection.aggregate([
+      // Orders Analytics Query - Track timing
+      (async () => {
+        const start = Date.now()
+        console.log('🔄 Dashboard API: Starting orders analytics query...')
+        const result = await ordersCollection.aggregate([
         {
           $facet: {
             // All-time totals and confirmed orders
@@ -131,10 +137,17 @@ export async function GET(request: NextRequest) {
             ]
           }
         }
-      ]).toArray(),
+      ]).toArray()
+        const duration = Date.now() - start
+        console.log(`✅ Dashboard API: Orders analytics completed in ${duration}ms`)
+        return result
+      })(),
 
-      // Consolidated users analytics - replaces 2 separate queries  
-      usersCollection.aggregate([
+      // Users Analytics Query - Track timing
+      (async () => {
+        const start = Date.now()
+        console.log('🔄 Dashboard API: Starting users analytics query...')
+        const result = await usersCollection.aggregate([
         {
           $facet: {
             totalUsers: [
@@ -168,10 +181,17 @@ export async function GET(request: NextRequest) {
             ]
           }
         }
-      ]).toArray(),
+      ]).toArray()
+        const duration = Date.now() - start
+        console.log(`✅ Dashboard API: Users analytics completed in ${duration}ms`)
+        return result
+      })(),
 
-      // Consolidated reviews analytics - replaces 4 separate queries
-      reviewsCollection.aggregate([
+      // Reviews Analytics Query - Track timing
+      (async () => {
+        const start = Date.now()
+        console.log('🔄 Dashboard API: Starting reviews analytics query...')
+        const result = await reviewsCollection.aggregate([
         {
           $facet: {
             totalStats: [
@@ -212,10 +232,17 @@ export async function GET(request: NextRequest) {
             ]
           }
         }
-      ]).toArray(),
+      ]).toArray()
+        const duration = Date.now() - start
+        console.log(`✅ Dashboard API: Reviews analytics completed in ${duration}ms`)
+        return result
+      })(),
 
-      // Consolidated revenue analytics - combines daily revenue, customer segmentation, and amount ranges
-      ordersCollection.aggregate([
+      // Consolidated Revenue Query - Track timing
+      (async () => {
+        const start = Date.now()
+        console.log('🔄 Dashboard API: Starting consolidated revenue query...')
+        const result = await ordersCollection.aggregate([
         {
           $match: {
             $or: [{ paymentStatus: 'PAID' }, { paymentStatus: 'CASH_ON_DELIVERY' }]
@@ -308,6 +335,10 @@ export async function GET(request: NextRequest) {
           }
         }
       ]).toArray()
+        const duration = Date.now() - start
+        console.log(`✅ Dashboard API: Consolidated revenue completed in ${duration}ms`)
+        return result
+      })()
     ])
     console.log(`📊 Dashboard API: All queries completed in ${Date.now() - queryStart}ms`)
 
