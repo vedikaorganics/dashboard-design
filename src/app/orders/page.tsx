@@ -383,9 +383,22 @@ function OrdersPageContent() {
       ),
       cell: ({ row }) => {
         const order = row.original
-        return (
-          <div>{getCustomerName(order)}</div>
-        )
+        const customerName = getCustomerName(order)
+        
+        // Link to customer profile if we have userId
+        if (order.userId) {
+          return (
+            <Link 
+              href={`/users/${order.userId}`}
+              className="hover:underline hover:text-primary"
+            >
+              {customerName}
+            </Link>
+          )
+        }
+        
+        // Fallback to plain text if no userId
+        return <div>{customerName}</div>
       },
     },
     {
