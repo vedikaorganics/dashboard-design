@@ -32,6 +32,11 @@ const INDEX_DEFINITIONS = {
       description: 'Dashboard analytics - payment status with date filtering'
     },
     {
+      collection: 'orders',
+      index: { "createdAt": -1, "paymentStatus": 1 },
+      description: 'Time-series queries with payment filtering (optimized for consolidated revenue)'
+    },
+    {
       collection: 'orders', 
       index: { "userId": 1 },
       description: 'User order lookups'
@@ -43,6 +48,11 @@ const INDEX_DEFINITIONS = {
       options: { unique: true }
     },
     {
+      collection: 'orders',
+      index: { "paymentStatus": 1, "deliveryStatus": 1, "createdAt": -1 },
+      description: 'Complex filtering with date sorting (orders to ship, etc.)'
+    },
+    {
       collection: 'users',
       index: { "phoneNumberVerified": 1, "createdAt": -1 },
       description: 'Verified users with date filtering'
@@ -50,13 +60,18 @@ const INDEX_DEFINITIONS = {
     {
       collection: 'users',
       index: { "userId": 1 },
-      description: 'User ID lookups',
+      description: 'User ID lookups for orders $lookup',
       options: { unique: true }
     },
     {
       collection: 'reviews',
       index: { "isApproved": 1, "createdAt": -1 },
       description: 'Review approval status with date'
+    },
+    {
+      collection: 'reviews',
+      index: { "productId": 1, "createdAt": -1 },
+      description: 'Product reviews with date sorting'
     }
   ],
   

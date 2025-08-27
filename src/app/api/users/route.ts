@@ -4,10 +4,17 @@ import { cache } from '@/lib/cache'
 import { auth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
+  const startTime = Date.now()
+  console.log('🚀 Users API: Request started')
+  
   try {
     // Validate session for security
+    const authStart = Date.now()
     const session = await auth.api.getSession({ headers: request.headers })
+    console.log(`🔐 Users API: Auth check completed in ${Date.now() - authStart}ms`)
+    
     if (!session?.user) {
+      console.log('❌ Users API: Unauthorized request')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     const { searchParams } = new URL(request.url)
@@ -26,12 +33,19 @@ export async function GET(request: NextRequest) {
     const cacheKey = `users-${page}-${limit}-${JSON.stringify(filterParams)}`
     
     // Check cache first
+    const cacheStart = Date.now()
     const cached = cache.get(cacheKey)
+    console.log(`💾 Users API: Cache check completed in ${Date.now() - cacheStart}ms`)
+    
     if (cached) {
+      console.log(`✅ Users API: Cache hit! Total time: ${Date.now() - startTime}ms`)
       return NextResponse.json(cached)
     }
+    console.log('🔄 Users API: Cache miss, executing queries')
 
+    const collectionStart = Date.now()
     const usersCollection = await getCollection('users')
+    console.log(`🗃️ Users API: Collection obtained in ${Date.now() - collectionStart}ms`)
 
     // Build filter for users
     const filter: Record<string, unknown> = {}
@@ -124,6 +138,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Execute queries in parallel
+    const queryStart = Date.now()
     const [users, totalCount] = await Promise.all([
       usersCollection
         .find(filter)
@@ -133,6 +148,7 @@ export async function GET(request: NextRequest) {
         .toArray(),
       usersCollection.countDocuments(filter)
     ])
+    console.log(`📊 Users API: Queries completed in ${Date.now() - queryStart}ms`)
 
     // Use the user data as-is, since it already contains the needed fields
     // noOfOrders, lastOrderedOn are already in the user document
@@ -151,11 +167,17 @@ export async function GET(request: NextRequest) {
     }
 
     // Cache for 5 minutes
+    const cacheSetStart = Date.now()
     cache.set(cacheKey, result, 300)
-
+    console.log(`💾 Users API: Data cached in ${Date.now() - cacheSetStart}ms`)
+    
+    const totalTime = Date.now() - startTime
+    console.log(`✅ Users API: Request completed successfully in ${totalTime}ms`)
+    
     return NextResponse.json(result)
   } catch (error) {
-    console.error('Users API error:', error)
+    const errorTime = Date.now() - startTime
+    console.error(`❌ Users API error after ${errorTime}ms:`, error)
     return NextResponse.json(
       { error: 'Failed to fetch users' },
       { status: 500 }
