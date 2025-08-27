@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
-import { cache } from '@/lib/cache'
 import { auth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
@@ -32,16 +31,6 @@ export async function GET(request: NextRequest) {
     }
     const cacheKey = `reviews-${page}-${limit}-${JSON.stringify(filterParams)}`
     
-    // Check cache first
-    const cacheStart = Date.now()
-    const cached = cache.get(cacheKey)
-    console.log(`💾 Reviews API: Cache check completed in ${Date.now() - cacheStart}ms`)
-    
-    if (cached) {
-      console.log(`✅ Reviews API: Cache hit! Total time: ${Date.now() - startTime}ms`)
-      return NextResponse.json(cached)
-    }
-    console.log('🔄 Reviews API: Cache miss, executing queries')
 
     const collectionStart = Date.now()
     const reviewsCollection = await getCollection('reviews')
@@ -155,10 +144,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Cache for 3 minutes
-    const cacheSetStart = Date.now()
-    cache.set(cacheKey, result, 180)
-    console.log(`💾 Reviews API: Data cached in ${Date.now() - cacheSetStart}ms`)
     
     const totalTime = Date.now() - startTime
     console.log(`✅ Reviews API: Request completed successfully in ${totalTime}ms`)
@@ -198,14 +183,6 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    // Clear related caches - clear all review caches since we now have complex filtering
-    const cacheStats = cache.getStats()
-    cacheStats.keys.forEach(key => {
-      if (key.startsWith('reviews-')) {
-        cache.delete(key)
-      }
-    })
-    cache.delete('dashboard-overview')
 
     return NextResponse.json({ success: true })
   } catch (error) {

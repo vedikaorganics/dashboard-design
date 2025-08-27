@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
-import { cache } from '@/lib/cache'
 import { auth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
@@ -24,26 +23,6 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || undefined
     const paymentStatus = searchParams.get('paymentStatus')?.split(',') || undefined
     const deliveryStatus = searchParams.get('deliveryStatus')?.split(',') || undefined
-
-    // Create cache key that includes all filter parameters
-    const filterParams = {
-      status,
-      search,
-      paymentStatus: paymentStatus?.sort().join(','),
-      deliveryStatus: deliveryStatus?.sort().join(',')
-    }
-    const cacheKey = `orders-${page}-${limit}-${JSON.stringify(filterParams)}`
-    
-    // Check cache first
-    const cacheStart = Date.now()
-    const cached = cache.get(cacheKey)
-    console.log(`💾 Orders API: Cache check completed in ${Date.now() - cacheStart}ms`)
-    
-    if (cached) {
-      console.log(`✅ Orders API: Cache hit! Total time: ${Date.now() - startTime}ms`)
-      return NextResponse.json(cached)
-    }
-    console.log('🔄 Orders API: Cache miss, executing query')
 
     const collectionStart = Date.now()
     const ordersCollection = await getCollection('orders')
@@ -187,11 +166,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Cache for 90 seconds (optimized queries allow shorter cache)
-    const cacheSetStart = Date.now()
-    cache.set(cacheKey, finalResult, 90)
-    console.log(`💾 Orders API: Data cached in ${Date.now() - cacheSetStart}ms`)
-    
     const totalTime = Date.now() - startTime
     console.log(`✅ Orders API: Request completed successfully in ${totalTime}ms`)
     

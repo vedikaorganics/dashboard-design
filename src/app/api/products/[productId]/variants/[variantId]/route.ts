@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
-import { cache, cacheKeys } from '@/lib/cache'
 
 export async function PATCH(
   request: Request,
@@ -30,10 +29,6 @@ export async function PATCH(
       )
     }
 
-    // Clear caches
-    const productCacheKey = `${cacheKeys.products}:${productId}`
-    cache.delete(productCacheKey)
-    cache.delete(cacheKeys.products)
 
     return NextResponse.json({ 
       success: true,
@@ -70,10 +65,6 @@ export async function DELETE(
       )
     }
 
-    // Clear caches
-    const productCacheKey = `${cacheKeys.products}:${productId}`
-    cache.delete(productCacheKey)
-    cache.delete(cacheKeys.products)
 
     return NextResponse.json({ 
       success: true,

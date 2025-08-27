@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
-import { cache, cacheKeys } from '@/lib/cache'
 
 export async function GET(
   request: Request,
@@ -9,12 +8,6 @@ export async function GET(
   try {
     const { productId } = await context.params
     
-    // Check cache first
-    const cacheKey = `${cacheKeys.products}:${productId}`
-    const cached = cache.get(cacheKey)
-    if (cached) {
-      return NextResponse.json(cached)
-    }
 
     const [productsCollection, variantsCollection, reviewsCollection] = await Promise.all([
       getCollection('products'),
@@ -68,8 +61,6 @@ export async function GET(
       totalSections: product.sections?.length || 0,
     }
 
-    // Cache for 5 minutes (product details change more frequently than list)
-    cache.set(cacheKey, result, 300)
 
     return NextResponse.json(result)
   } catch (error) {
@@ -109,11 +100,6 @@ export async function PATCH(
       )
     }
 
-    // Clear cache for this product
-    const cacheKey = `${cacheKeys.products}:${productId}`
-    cache.delete(cacheKey)
-    // Also clear the general products cache
-    cache.delete(cacheKeys.products)
 
     return NextResponse.json({ 
       success: true,
@@ -153,10 +139,6 @@ export async function DELETE(
       )
     }
 
-    // Clear caches
-    const cacheKey = `${cacheKeys.products}:${productId}`
-    cache.delete(cacheKey)
-    cache.delete(cacheKeys.products)
 
     return NextResponse.json({ 
       success: true,

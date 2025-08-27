@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getCollection } from "@/lib/mongodb"
-import { cache } from "@/lib/cache"
 import { auth } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
@@ -19,13 +18,6 @@ export async function GET(request: NextRequest) {
     }
 
     const normalizedQuery = query.trim()
-    const cacheKey = `search:${normalizedQuery.toLowerCase()}`
-
-    // Check cache first
-    const cached = cache.get(cacheKey)
-    if (cached) {
-      return NextResponse.json(cached)
-    }
     // Create regex pattern for case-insensitive search
     const searchRegex = new RegExp(normalizedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
     const searchNumber = parseFloat(normalizedQuery)
@@ -118,8 +110,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Cache results for 60 seconds
-    cache.set(cacheKey, results, 60)
 
     return NextResponse.json(results)
   } catch (error) {

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
-import { cache, cacheKeys } from '@/lib/cache'
 import { auth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
@@ -17,16 +16,6 @@ export async function GET(request: NextRequest) {
       console.log('❌ Dashboard API: Unauthorized request')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    // Check cache first
-    const cacheStart = Date.now()
-    const cached = cache.get(cacheKeys.dashboard)
-    console.log(`💾 Dashboard API: Cache check completed in ${Date.now() - cacheStart}ms`)
-    
-    if (cached) {
-      console.log(`✅ Dashboard API: Cache hit! Total time: ${Date.now() - startTime}ms`)
-      return NextResponse.json(cached)
-    }
-    console.log('🔄 Dashboard API: Cache miss, executing queries')
 
     // Get collections
     const collectionStart = Date.now()
@@ -473,11 +462,6 @@ export async function GET(request: NextRequest) {
       dailyRevenueChart
     }
 
-    // Cache for 3 minutes (optimized queries allow shorter cache)
-    const cacheSetStart = Date.now()
-    cache.set(cacheKeys.dashboard, dashboardData, 180)
-    console.log(`💾 Dashboard API: Data cached in ${Date.now() - cacheSetStart}ms`)
-    
     const totalTime = Date.now() - startTime
     console.log(`✅ Dashboard API: Request completed successfully in ${totalTime}ms`)
     
