@@ -6,7 +6,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import {
   Dialog,
   DialogContent,
@@ -171,6 +171,9 @@ function CustomersPageContent() {
         return (
           <Link href={`/users/${customer._id}`} className="flex items-center space-x-2 hover:bg-muted/50 -m-2 p-2 rounded group">
             <Avatar className="h-8 w-8">
+              {customer.avatar && (
+                <AvatarImage src={customer.avatar} alt={customer.name || 'Customer avatar'} />
+              )}
               <AvatarFallback className="bg-secondary text-secondary-foreground">
                 {customer.name ? customer.name.split(' ').map((n: string) => n[0]).join('') : 
                  customer.phoneNumber.slice(-2)}
