@@ -170,7 +170,7 @@ function CustomersPageContent() {
         const customer = row.original
         return (
           <Link href={`/users/${customer._id}`} className="flex items-center space-x-2 hover:bg-muted/50 -m-2 p-2 rounded group">
-            <Avatar className="h-8 w-8">
+            <Avatar className="h-6 w-6">
               {customer.avatar && (
                 <AvatarImage src={customer.avatar} alt={customer.name || 'Customer avatar'} />
               )}

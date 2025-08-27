@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -186,7 +186,10 @@ function ReviewsPageContent() {
       const initials = authorName.split(' ').map((n: string) => n[0] || '').join('') || 'A'
       return (
         <div className="flex items-center space-x-3">
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-6 w-6">
+            {review.avatar && (
+              <AvatarImage src={review.avatar} alt={authorName || 'User avatar'} />
+            )}
             <AvatarFallback className="bg-secondary text-secondary-foreground">
               {initials}
             </AvatarFallback>
@@ -380,6 +383,9 @@ function ReviewsPageContent() {
                 <div className="space-y-2">
                   <div className="flex items-center space-x-3">
                     <Avatar className="h-12 w-12">
+                      {selectedReview.avatar && (
+                        <AvatarImage src={selectedReview.avatar} alt={selectedReview.author || 'User avatar'} />
+                      )}
                       <AvatarFallback className="bg-secondary text-secondary-foreground">
                         {(selectedReview.author || 'Anonymous').split(' ').map((n: string) => n[0] || '').join('') || 'A'}
                       </AvatarFallback>
