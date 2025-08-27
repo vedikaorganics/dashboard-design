@@ -566,14 +566,14 @@ export default function CampaignsPage() {
             </DialogHeader>
             <div className="space-y-1">
               <button
-                className="w-full text-left p-2 hover:bg-muted rounded text-xs font-mono"
+                className="w-full text-left p-2 hover:bg-muted rounded text-xs font-mono cursor-pointer"
                 onClick={() => copyPageUrl(selectedCampaignForCopy?.shortId || "", "/")}
               >
                 {getPaymentServerUrl()}/r/{selectedCampaignForCopy?.shortId}
               </button>
               
               <button
-                className="w-full text-left p-2 hover:bg-muted rounded text-xs font-mono"
+                className="w-full text-left p-2 hover:bg-muted rounded text-xs font-mono cursor-pointer"
                 onClick={() => copyPageUrl(selectedCampaignForCopy?.shortId || "", "/shop")}
               >
                 {getPaymentServerUrl()}/r/{selectedCampaignForCopy?.shortId}/shop
@@ -582,7 +582,7 @@ export default function CampaignsPage() {
               {products.map((product: any) => (
                 <button
                   key={product.id}
-                  className="w-full text-left p-2 hover:bg-muted rounded text-xs font-mono"
+                  className="w-full text-left p-2 hover:bg-muted rounded text-xs font-mono cursor-pointer"
                   onClick={() => copyPageUrl(selectedCampaignForCopy?.shortId || "", `/shop/${product.id}`)}
                 >
                   {getPaymentServerUrl()}/r/{selectedCampaignForCopy?.shortId}/shop/{product.id}
