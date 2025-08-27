@@ -42,8 +42,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { MoreHorizontal, Plus, Edit, Trash2, Copy, Link, ExternalLink, Check } from "lucide-react"
-import { useCampaigns } from "@/hooks/use-data"
+import { useCampaigns, useProducts } from "@/hooks/use-data"
 import { DataTable } from "@/components/ui/data-table"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -98,6 +105,8 @@ export default function CampaignsPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [copyDialogOpen, setCopyDialogOpen] = useState(false)
+  const [selectedCampaignForCopy, setSelectedCampaignForCopy] = useState<Campaign | null>(null)
   const [createFormData, setCreateFormData] = useState<CampaignFormData>({
     utm_source: '',
     utm_medium: '',
@@ -124,11 +133,20 @@ export default function CampaignsPage() {
     setCurrentPage(1) // Reset to first page when searching
   }
   
-  const copyToClipboard = async (shortId: string) => {
-    const url = `${window.location.origin}/r/${shortId}`
+  const copyPageUrl = async (shortId: string, pagePath: string) => {
+    // Convert "/" back to empty string for the URL
+    const urlPath = pagePath === "/" ? "" : pagePath
+    const baseUrl = process.env.NEXT_PUBLIC_PAYMENT_SERVER_URL || 'https://www.mrnite.com'
+    const url = `${baseUrl}/r/${shortId}${urlPath}`
     await navigator.clipboard.writeText(url)
     setCopiedId(shortId)
     setTimeout(() => setCopiedId(null), 2000)
+    setCopyDialogOpen(false)
+  }
+
+  const openCopyDialog = (campaign: Campaign) => {
+    setSelectedCampaignForCopy(campaign)
+    setCopyDialogOpen(true)
   }
   
   const handleCreate = async () => {
@@ -229,13 +247,17 @@ export default function CampaignsPage() {
       cell: ({ row }) => {
         const campaign = row.original
         return (
-          <div className="flex items-center space-x-2">
+          <div className="group flex items-center space-x-2">
             <code className="bg-muted px-2 py-1 rounded text-sm font-mono">{campaign.shortId}</code>
             <Button
-              variant="ghost" 
+              variant="ghost"
               size="sm"
-              onClick={() => copyToClipboard(campaign.shortId)}
-              className="h-6 w-6 p-0"
+              onClick={() => {
+                navigator.clipboard.writeText(campaign.shortId)
+                setCopiedId(campaign.shortId)
+                setTimeout(() => setCopiedId(null), 2000)
+              }}
+              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
             >
               {copiedId === campaign.shortId ? 
                 <Check className="h-3 w-3 text-green-600" /> : 
@@ -320,9 +342,9 @@ export default function CampaignsPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => copyToClipboard(campaign.shortId)}>
-                <Copy className="mr-2 h-4 w-4" />
-                Copy short URL
+              <DropdownMenuItem onClick={() => openCopyDialog(campaign)}>
+                <Link className="mr-2 h-4 w-4" />
+                Copy page URL
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => window.open(`/r/${campaign.shortId}`, '_blank')}>
                 <ExternalLink className="mr-2 h-4 w-4" />
@@ -367,9 +389,13 @@ export default function CampaignsPage() {
     searchQuery
   )
   
+  const { data: productsData } = useProducts()
+  
   const campaigns = (campaignsData as any)?.campaigns || []
   const pagination = (campaignsData as any)?.pagination || {}
   const summary = (campaignsData as any)?.summary || {}
+  
+  const products = (productsData as any)?.products || []
   
   const totalCampaigns = summary.totalCampaigns || 0
   
@@ -526,6 +552,73 @@ export default function CampaignsPage() {
               </Button>
               <Button onClick={handleUpdate} disabled={!editFormData.utm_source || !editFormData.utm_medium || !editFormData.utm_campaign}>
                 Update Campaign
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Copy Page URL Dialog */}
+        <Dialog open={copyDialogOpen} onOpenChange={setCopyDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>Copy Page URL</DialogTitle>
+              <DialogDescription>
+                Select a page to copy the campaign URL for {selectedCampaignForCopy?.shortId}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="overflow-y-auto flex-1 py-4">
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left h-auto p-3"
+                  onClick={() => copyPageUrl(selectedCampaignForCopy?.shortId || "", "/")}
+                >
+                  <div>
+                    <div className="font-medium">Home Page</div>
+                    <div className="text-xs text-muted-foreground">
+                      https://www.mrnite.com/r/{selectedCampaignForCopy?.shortId}
+                    </div>
+                  </div>
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left h-auto p-3"
+                  onClick={() => copyPageUrl(selectedCampaignForCopy?.shortId || "", "/shop")}
+                >
+                  <div>
+                    <div className="font-medium">Shop Page</div>
+                    <div className="text-xs text-muted-foreground">
+                      https://www.mrnite.com/r/{selectedCampaignForCopy?.shortId}/shop
+                    </div>
+                  </div>
+                </Button>
+                
+                <div className="pt-2">
+                  <div className="text-sm font-medium mb-2">Product Pages</div>
+                  <div className="space-y-1">
+                    {products.map((product: any) => (
+                      <Button
+                        key={product.id}
+                        variant="outline"
+                        className="w-full justify-start text-left h-auto p-3"
+                        onClick={() => copyPageUrl(selectedCampaignForCopy?.shortId || "", `/shop/${product.id}`)}
+                      >
+                        <div className="w-full">
+                          <div className="font-medium text-sm">{product.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            https://www.mrnite.com/r/{selectedCampaignForCopy?.shortId}/shop/{product.id}
+                          </div>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end pt-4 border-t">
+              <Button variant="outline" onClick={() => setCopyDialogOpen(false)}>
+                Cancel
               </Button>
             </div>
           </DialogContent>
