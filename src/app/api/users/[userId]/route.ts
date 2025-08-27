@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
-import { cache } from '@/lib/cache'
 
 export async function GET(
   request: NextRequest,
@@ -14,13 +13,6 @@ export async function GET(
     const includeReviews = searchParams.get('includeReviews') === 'true'
     const includeRewards = searchParams.get('includeRewards') === 'true'
 
-    const cacheKey = `user-details-${userId}-${includeOrders}-${includeReviews}-${includeRewards}`
-    
-    // Check cache first
-    const cached = cache.get(cacheKey)
-    if (cached) {
-      return NextResponse.json(cached)
-    }
 
     const usersCollection = await getCollection('users')
     const ordersCollection = await getCollection('orders')
@@ -98,8 +90,6 @@ export async function GET(
       result.rewardsPoints = totalEarned
     }
 
-    // Cache for 5 minutes
-    cache.set(cacheKey, result, 300)
 
     return NextResponse.json(result)
   } catch (error) {
@@ -138,13 +128,6 @@ export async function PATCH(
       )
     }
 
-    // Clear the users cache to refresh the data
-    const keys = cache.getStats().keys
-    keys.forEach(key => {
-      if (key.startsWith('users-') || key.startsWith('user-details-')) {
-        cache.delete(key)
-      }
-    })
 
     return NextResponse.json({ success: true })
   } catch (error) {

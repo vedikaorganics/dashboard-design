@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
-import { cache } from '@/lib/cache'
 
 export async function PATCH(
   request: NextRequest,
@@ -38,13 +37,6 @@ export async function PATCH(
       )
     }
 
-    // Clear the reviews cache to refresh the data
-    const keys = cache.getStats().keys
-    keys.forEach(key => {
-      if (key.startsWith('reviews-')) {
-        cache.delete(key)
-      }
-    })
 
     return NextResponse.json({ 
       success: true,

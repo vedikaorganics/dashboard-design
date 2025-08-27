@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
-import { cache, cacheKeys } from '@/lib/cache'
 import { auth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
@@ -9,11 +8,6 @@ export async function GET(request: NextRequest) {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    // Check cache first
-    const cached = cache.get(cacheKeys.products)
-    if (cached) {
-      return NextResponse.json(cached)
     }
 
     const [productsCollection, variantsCollection, reviewsCollection] = await Promise.all([
@@ -75,8 +69,6 @@ export async function GET(request: NextRequest) {
         : 0
     }
 
-    // Cache for 10 minutes (products don't change often)
-    cache.set(cacheKeys.products, result, 600)
 
     return NextResponse.json(result)
   } catch (error) {

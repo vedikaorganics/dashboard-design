@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
-import { cache } from '@/lib/cache'
 import { auth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
@@ -23,25 +22,6 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || undefined
     const phoneVerified = searchParams.get('phoneVerified')?.split(',') || undefined
     const lastOrdered = searchParams.get('lastOrdered')?.split(',') || undefined
-
-    // Create cache key that includes all filter parameters
-    const filterParams = {
-      search,
-      phoneVerified: phoneVerified?.sort().join(','),
-      lastOrdered: lastOrdered?.sort().join(',')
-    }
-    const cacheKey = `users-${page}-${limit}-${JSON.stringify(filterParams)}`
-    
-    // Check cache first
-    const cacheStart = Date.now()
-    const cached = cache.get(cacheKey)
-    console.log(`💾 Users API: Cache check completed in ${Date.now() - cacheStart}ms`)
-    
-    if (cached) {
-      console.log(`✅ Users API: Cache hit! Total time: ${Date.now() - startTime}ms`)
-      return NextResponse.json(cached)
-    }
-    console.log('🔄 Users API: Cache miss, executing queries')
 
     const collectionStart = Date.now()
     const usersCollection = await getCollection('users')
@@ -166,11 +146,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Cache for 5 minutes
-    const cacheSetStart = Date.now()
-    cache.set(cacheKey, result, 300)
-    console.log(`💾 Users API: Data cached in ${Date.now() - cacheSetStart}ms`)
-    
     const totalTime = Date.now() - startTime
     console.log(`✅ Users API: Request completed successfully in ${totalTime}ms`)
     

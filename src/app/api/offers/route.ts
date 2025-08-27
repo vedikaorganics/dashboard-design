@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
-import { cache, cacheKeys } from '@/lib/cache'
 import { auth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
@@ -14,12 +13,6 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
 
-    // Check cache first
-    const cacheKey = cacheKeys.offers + `_${page}_${limit}`
-    const cached = cache.get(cacheKey)
-    if (cached) {
-      return NextResponse.json(cached)
-    }
 
     const [offersCollection, ordersCollection] = await Promise.all([
       getCollection('offers'),
@@ -85,8 +78,6 @@ export async function GET(request: NextRequest) {
       totalSavings: Object.values(offerUsage).reduce((sum: number, usage: any) => sum + usage.totalSavings, 0)
     }
 
-    // Cache for 10 minutes
-    cache.set(cacheKey, result, 600)
 
     return NextResponse.json(result)
   } catch (error) {

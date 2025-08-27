@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
-import { cache } from '@/lib/cache'
 import { auth } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
@@ -55,7 +54,6 @@ export async function POST(request: NextRequest) {
       const syncResult = await syncResponse.json()
 
       // Clear cache to force refresh of orders data
-      cache.clear()
 
       return NextResponse.json({
         message: 'Payment status synced successfully',

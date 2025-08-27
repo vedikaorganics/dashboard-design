@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ObjectId } from 'mongodb'
 import { getCollection } from '@/lib/mongodb'
-import { cache } from '@/lib/cache'
 import { limechatService } from '@/lib/limechat'
 import { after } from 'next/server'
 
@@ -19,12 +18,6 @@ export async function GET(
       )
     }
 
-    // Check cache first
-    const cacheKey = `order-${orderId}`
-    const cached = cache.get(cacheKey)
-    if (cached) {
-      return NextResponse.json(cached)
-    }
 
     const ordersCollection = await getCollection('orders')
     const usersCollection = await getCollection('users')
@@ -89,8 +82,6 @@ export async function GET(
       items: enrichedItems
     }
 
-    // Cache for 5 minutes (individual orders don't change as frequently)
-    cache.set(cacheKey, result, 300)
 
     return NextResponse.json(result)
   } catch (error) {
@@ -155,17 +146,6 @@ export async function PATCH(
     }
 
     // Clear related caches
-    cache.delete(`order-${orderId}`)
-    // Clear orders list cache
-    const cacheKeys = ['orders-', 'dashboard-overview']
-    cacheKeys.forEach(keyPrefix => {
-      const allKeys = cache.getStats?.()?.keys || []
-      allKeys.forEach(key => {
-        if (key.startsWith(keyPrefix)) {
-          cache.delete(key)
-        }
-      })
-    })
 
     // Send LimeChat event after API response if order is dispatched or delivered
     if (deliveryStatus === 'DISPATCHED' || deliveryStatus === 'DELIVERED') {

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
-import { cache, cacheKeys } from '@/lib/cache'
 import { auth } from '@/lib/auth'
 
 // Helper function to generate random short ID
@@ -27,12 +26,6 @@ export async function GET(request: NextRequest) {
     
     const skip = (page - 1) * limit
     
-    // Create cache key with pagination and search parameters
-    const cacheKey = `${cacheKeys.campaigns}-${page}-${limit}-${search}`
-    const cached = cache.get(cacheKey)
-    if (cached) {
-      return NextResponse.json(cached)
-    }
 
     const campaignsCollection = await getCollection('campaigns')
     
@@ -85,8 +78,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Cache for 2 minutes
-    cache.set(cacheKey, result, 120)
 
     return NextResponse.json(result)
   } catch (error) {
@@ -136,7 +127,6 @@ export async function POST(request: NextRequest) {
     const result = await campaignsCollection.insertOne(newCampaign)
     
     // Clear cache
-    cache.delete(cacheKeys.campaigns)
     
     return NextResponse.json({
       _id: result.insertedId,
@@ -187,7 +177,6 @@ export async function PUT(request: NextRequest) {
     }
     
     // Clear cache
-    cache.delete(cacheKeys.campaigns)
     
     return NextResponse.json({ message: 'Campaign updated successfully' })
   } catch (error) {
@@ -225,7 +214,6 @@ export async function DELETE(request: NextRequest) {
     }
     
     // Clear cache
-    cache.delete(cacheKeys.campaigns)
     
     return NextResponse.json({ message: 'Campaign deleted successfully' })
   } catch (error) {
