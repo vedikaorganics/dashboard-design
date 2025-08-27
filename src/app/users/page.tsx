@@ -171,7 +171,7 @@ function CustomersPageContent() {
         return (
           <Link href={`/users/${customer._id}`} className="flex items-center space-x-2 hover:bg-muted/50 -m-2 p-2 rounded group">
             <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-primary/10 text-primary">
+              <AvatarFallback className="bg-secondary text-secondary-foreground">
                 {customer.name ? customer.name.split(' ').map((n: string) => n[0]).join('') : 
                  customer.phoneNumber.slice(-2)}
               </AvatarFallback>
