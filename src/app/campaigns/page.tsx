@@ -51,6 +51,7 @@ import {
 } from "@/components/ui/select"
 import { MoreHorizontal, Plus, Edit, Trash2, Copy, Link, ExternalLink, Check } from "lucide-react"
 import { useCampaigns, useProducts } from "@/hooks/use-data"
+import { getPaymentServerUrl } from "@/lib/env"
 import { DataTable } from "@/components/ui/data-table"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -136,7 +137,7 @@ export default function CampaignsPage() {
   const copyPageUrl = async (shortId: string, pagePath: string) => {
     // Convert "/" back to empty string for the URL
     const urlPath = pagePath === "/" ? "" : pagePath
-    const baseUrl = process.env.NEXT_PUBLIC_PAYMENT_SERVER_URL || 'https://www.mrnite.com'
+    const baseUrl = getPaymentServerUrl()
     const url = `${baseUrl}/r/${shortId}${urlPath}`
     await navigator.clipboard.writeText(url)
     setCopiedId(shortId)

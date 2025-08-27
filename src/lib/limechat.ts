@@ -1,3 +1,5 @@
+import { getLimeChatAccessToken, getLimeChatAccountId } from './env'
+
 interface LimeChatEventData {
   order_id: string;
   total_amount: number;
@@ -15,16 +17,8 @@ class LimeChatService {
   private readonly LIMECHAT_ACCOUNT_ID: string;
 
   constructor() {
-    // Enforce that environment variables must exist at build time
-    if (!process.env.LIMECHAT_ACCESS_TOKEN) {
-      throw new Error('LIMECHAT_ACCESS_TOKEN environment variable is required');
-    }
-    if (!process.env.LIMECHAT_ACCOUNT_ID) {
-      throw new Error('LIMECHAT_ACCOUNT_ID environment variable is required');
-    }
-
-    this.LIMECHAT_ACCESS_TOKEN = process.env.LIMECHAT_ACCESS_TOKEN;
-    this.LIMECHAT_ACCOUNT_ID = process.env.LIMECHAT_ACCOUNT_ID;
+    this.LIMECHAT_ACCESS_TOKEN = getLimeChatAccessToken();
+    this.LIMECHAT_ACCOUNT_ID = getLimeChatAccountId();
   }
 
   private async sendEvent(eventName: string, data: LimeChatEventData, phone: string, distinct_id: string) {

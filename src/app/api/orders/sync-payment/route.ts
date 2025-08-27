@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
 import { auth } from '@/lib/auth'
+import { getPaymentServerUrl, getPaymentServerApiKey } from '@/lib/env'
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,11 +37,11 @@ export async function POST(request: NextRequest) {
     try {
       // Call the payment server sync endpoint for this order
       const syncResponse = await fetch(
-        `${process.env.PAYMENT_SERVER_URL}/api/admin/orders/${orderId}/sync-payment`,
+        `${getPaymentServerUrl()}/api/admin/orders/${orderId}/sync-payment`,
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${process.env.PAYMENT_SERVER_API_KEY}`,
+            'Authorization': `Bearer ${getPaymentServerApiKey()}`,
             'Content-Type': 'application/json',
           },
         }
