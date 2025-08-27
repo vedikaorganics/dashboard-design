@@ -577,7 +577,7 @@ export default function CampaignsPage() {
                   <div>
                     <div className="font-medium">Home Page</div>
                     <div className="text-xs text-muted-foreground">
-                      https://www.mrnite.com/r/{selectedCampaignForCopy?.shortId}
+                      {getPaymentServerUrl()}/r/{selectedCampaignForCopy?.shortId}
                     </div>
                   </div>
                 </Button>
@@ -590,7 +590,7 @@ export default function CampaignsPage() {
                   <div>
                     <div className="font-medium">Shop Page</div>
                     <div className="text-xs text-muted-foreground">
-                      https://www.mrnite.com/r/{selectedCampaignForCopy?.shortId}/shop
+                      {getPaymentServerUrl()}/r/{selectedCampaignForCopy?.shortId}/shop
                     </div>
                   </div>
                 </Button>
@@ -608,7 +608,7 @@ export default function CampaignsPage() {
                         <div className="w-full">
                           <div className="font-medium text-sm">{product.name}</div>
                           <div className="text-xs text-muted-foreground">
-                            https://www.mrnite.com/r/{selectedCampaignForCopy?.shortId}/shop/{product.id}
+                            {getPaymentServerUrl()}/r/{selectedCampaignForCopy?.shortId}/shop/{product.id}
                           </div>
                         </div>
                       </Button>
