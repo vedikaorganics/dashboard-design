@@ -4,10 +4,17 @@ import { cache } from '@/lib/cache'
 import { auth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
+  const startTime = Date.now()
+  console.log('🚀 Reviews API: Request started')
+  
   try {
     // Validate session for security
+    const authStart = Date.now()
     const session = await auth.api.getSession({ headers: request.headers })
+    console.log(`🔐 Reviews API: Auth check completed in ${Date.now() - authStart}ms`)
+    
     if (!session?.user) {
+      console.log('❌ Reviews API: Unauthorized request')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     const { searchParams } = new URL(request.url)
@@ -26,15 +33,19 @@ export async function GET(request: NextRequest) {
     const cacheKey = `reviews-${page}-${limit}-${JSON.stringify(filterParams)}`
     
     // Check cache first
+    const cacheStart = Date.now()
     const cached = cache.get(cacheKey)
+    console.log(`💾 Reviews API: Cache check completed in ${Date.now() - cacheStart}ms`)
+    
     if (cached) {
+      console.log(`✅ Reviews API: Cache hit! Total time: ${Date.now() - startTime}ms`)
       return NextResponse.json(cached)
     }
+    console.log('🔄 Reviews API: Cache miss, executing queries')
 
-    const [reviewsCollection, productsCollection] = await Promise.all([
-      getCollection('reviews'),
-      getCollection('products')
-    ])
+    const collectionStart = Date.now()
+    const reviewsCollection = await getCollection('reviews')
+    console.log(`🗄️  Reviews API: Collection obtained in ${Date.now() - collectionStart}ms`)
 
     // Build filter
     const filter: any = {}
@@ -68,33 +79,47 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    // Execute queries in parallel
-    const [reviews, totalCount] = await Promise.all([
-      reviewsCollection
-        .find(filter)
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .toArray(),
-      reviewsCollection.countDocuments(filter)
+    // Execute single aggregation with product lookup
+    const queryStart = Date.now()
+    const [reviewsResult] = await Promise.all([
+      reviewsCollection.aggregate([
+        {
+          $facet: {
+            // Main reviews data with product lookup
+            reviews: [
+              { $match: filter },
+              { $sort: { createdAt: -1 } },
+              { $skip: (page - 1) * limit },
+              { $limit: limit },
+              {
+                $lookup: {
+                  from: 'products',
+                  localField: 'productId',
+                  foreignField: 'id',
+                  as: 'product'
+                }
+              },
+              {
+                $addFields: {
+                  product: { $arrayElemAt: ['$product', 0] }
+                }
+              }
+            ],
+            // Total count for pagination
+            totalCount: [
+              { $match: filter },
+              { $count: 'count' }
+            ]
+          }
+        }
+      ]).toArray()
     ])
+    console.log(`📊 Reviews API: Aggregation query completed in ${Date.now() - queryStart}ms`)
 
-    // Get product data for reviews (batch fetch)
-    const productIds = [...new Set(reviews.map(review => review.productId))]
-    const products = await productsCollection
-      .find({ id: { $in: productIds } })
-      .toArray()
-    
-    const productMap = products.reduce((acc, product) => {
-      acc[product.id] = product
-      return acc
-    }, {} as Record<string, any>)
-
-    // Enrich reviews with product data
-    let enrichedReviews = reviews.map(review => ({
-      ...review,
-      product: productMap[review.productId]
-    }))
+    // Extract results from aggregation
+    const aggregationResult = reviewsResult[0]
+    let enrichedReviews = aggregationResult.reviews || []
+    const totalCount = aggregationResult.totalCount[0]?.count || 0
 
     // Apply post-processing search filter for product names
     if (search && search.trim()) {
@@ -131,11 +156,17 @@ export async function GET(request: NextRequest) {
     }
 
     // Cache for 3 minutes
+    const cacheSetStart = Date.now()
     cache.set(cacheKey, result, 180)
-
+    console.log(`💾 Reviews API: Data cached in ${Date.now() - cacheSetStart}ms`)
+    
+    const totalTime = Date.now() - startTime
+    console.log(`✅ Reviews API: Request completed successfully in ${totalTime}ms`)
+    
     return NextResponse.json(result)
   } catch (error) {
-    console.error('Reviews API error:', error)
+    const errorTime = Date.now() - startTime
+    console.error(`❌ Reviews API error after ${errorTime}ms:`, error)
     return NextResponse.json(
       { error: 'Failed to fetch reviews' },
       { status: 500 }

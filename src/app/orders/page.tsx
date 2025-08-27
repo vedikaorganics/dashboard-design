@@ -7,6 +7,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import Link from "next/link"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Tooltip,
@@ -20,7 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CheckCircle, Clock, Truck, Package, Ban, ChevronRight } from "lucide-react"
+import { CheckCircle, Clock, Truck, Package, Ban, ChevronRight, RefreshCw } from "lucide-react"
 import { useOrders } from "@/hooks/use-data"
 import { DataTable } from "@/components/ui/data-table"
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
@@ -159,19 +160,84 @@ const DeliveryStatusDropdown = ({ order, onStatusUpdate }: {
   )
 }
 
-const getPaymentStatusBadge = (paymentStatus: string) => {
-  switch (paymentStatus) {
-    case 'PAID':
-      return <Badge className="bg-success/20 text-success"><CheckCircle className="w-3 h-3 mr-1" />Paid</Badge>
-    case 'CASH_ON_DELIVERY':
-      return <Badge className="bg-success/20 text-success"><CheckCircle className="w-3 h-3 mr-1" />COD</Badge>
-    case 'PENDING':
-      return <Badge className="bg-warning/20 text-warning"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
-    case 'FAILED':
-      return <Badge className="bg-destructive/20 text-destructive">Failed</Badge>
-    default:
-      return <Badge variant="outline">{paymentStatus}</Badge>
+const PaymentStatusWithSync = ({ order, onSync }: { 
+  order: Order, 
+  onSync: (orderId: string) => void 
+}) => {
+  const [isSyncing, setIsSyncing] = useState(false)
+
+  const handleSync = async () => {
+    setIsSyncing(true)
+    try {
+      const response = await fetch('/api/orders/sync-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orderId: order.orderId }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to sync payment')
+      }
+
+      toast.success('Payment status synced successfully', {
+        description: `${order.orderId}: ${result.previousStatus} → ${result.newStatus}`
+      })
+
+      onSync(order.orderId)
+    } catch (error) {
+      console.error('Payment sync error:', error)
+      toast.error('Failed to sync payment status', {
+        description: error instanceof Error ? error.message : 'Unknown error'
+      })
+    } finally {
+      setIsSyncing(false)
+    }
   }
+
+  const getPaymentStatusBadge = (paymentStatus: string) => {
+    switch (paymentStatus) {
+      case 'PAID':
+        return <Badge className="bg-success/20 text-success"><CheckCircle className="w-3 h-3 mr-1" />Paid</Badge>
+      case 'CASH_ON_DELIVERY':
+        return <Badge className="bg-success/20 text-success"><CheckCircle className="w-3 h-3 mr-1" />COD</Badge>
+      case 'PENDING':
+        return <Badge className="bg-warning/20 text-warning"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
+      case 'FAILED':
+        return <Badge className="bg-destructive/20 text-destructive">Failed</Badge>
+      default:
+        return <Badge variant="outline">{paymentStatus}</Badge>
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      {getPaymentStatusBadge(order.paymentStatus)}
+      {order.paymentStatus === 'PENDING' && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSync}
+                disabled={isSyncing}
+                className="h-6 w-6 p-0"
+              >
+                <RefreshCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Sync payment status with payment server</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </div>
+  )
 }
 
 const getCustomerName = (order: Order) => {
@@ -246,6 +312,12 @@ function OrdersPageContent() {
     // Quick refresh from server for consistency
     setTimeout(() => mutate(), 100)
   }
+
+  // Handle payment sync
+  const handlePaymentSync = (orderId: string) => {
+    // Refresh data from server after sync
+    mutate()
+  }
   
   const handlePaginationChange = ({ pageIndex, pageSize: newPageSize }: { pageIndex: number; pageSize: number }) => {
     setCurrentPage(pageIndex + 1) // Convert 0-based to 1-based
@@ -267,6 +339,7 @@ function OrdersPageContent() {
     setDeliveryStatusFilter(status)
     setCurrentPage(1)
   }
+
 
   const columns: ColumnDef<Order>[] = [
     {
@@ -333,7 +406,12 @@ function OrdersPageContent() {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Payment" />
       ),
-      cell: ({ row }) => getPaymentStatusBadge(row.getValue("paymentStatus")),
+      cell: ({ row }) => (
+        <PaymentStatusWithSync 
+          order={row.original} 
+          onSync={handlePaymentSync}
+        />
+      ),
     },
     {
       id: "notes",
@@ -437,15 +515,6 @@ function OrdersPageContent() {
       <div className="flex-1 space-y-6">
         
         <div className="flex gap-3 flex-wrap">
-          <AlertMetric
-            title="Payment Pending"
-            count={summary.paymentPending || 0}
-            description="Orders awaiting payment"
-            icon={Clock}
-            variant="warning"
-            onClick={() => handlePaymentStatusChange(['PENDING'])}
-          />
-          
           <AlertMetric
             title="Shipping Pending"
             count={summary.shippingPending || 0}
