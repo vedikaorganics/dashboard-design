@@ -204,7 +204,7 @@ const PaymentStatusWithSync = ({ order, onSync }: {
       case 'PAID':
         return <Badge className="bg-success/20 text-success"><CheckCircle className="w-3 h-3 mr-1" />Paid</Badge>
       case 'CASH_ON_DELIVERY':
-        return <Badge className="bg-success/20 text-success"><CheckCircle className="w-3 h-3 mr-1" />COD</Badge>
+        return <Badge className="bg-info/20 text-info"><CheckCircle className="w-3 h-3 mr-1" />COD</Badge>
       case 'PENDING':
         return <Badge className="bg-warning/20 text-warning"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
       case 'FAILED':
