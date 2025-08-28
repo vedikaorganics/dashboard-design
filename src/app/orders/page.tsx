@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
+import { useUrlState, useUrlPagination, useUrlSearchState, useUrlStateMultiple } from "@/hooks/use-url-state"
 import { toast } from "sonner"
 import { ColumnDef } from "@tanstack/react-table"
 import Link from "next/link"
@@ -261,23 +262,15 @@ const deliveryStatusFilterOptions = deliveryStatusOptions.map(option => ({
 
 
 function OrdersPageContent() {
-  const searchParams = useSearchParams()
-  const [currentPage, setCurrentPage] = useState<number>(1)
-  const [pageSize, setPageSize] = useState<number>(10)
-  const [searchQuery, setSearchQuery] = useState<string>('')
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string[]>([])
-  const [deliveryStatusFilter, setDeliveryStatusFilter] = useState<string[]>([])
-
-  // Initialize search query from URL parameters
-  useEffect(() => {
-    const urlSearchQuery = searchParams.get('search')
-    if (urlSearchQuery) {
-      setSearchQuery(urlSearchQuery)
-    }
-  }, [searchParams])
+  // URL state management
+  const [searchQuery, setSearchQuery] = useUrlSearchState("search", 300)
+  const [paymentStatusFilter, setPaymentStatusFilter] = useUrlState<string[]>("paymentStatus", [])
+  const [deliveryStatusFilter, setDeliveryStatusFilter] = useUrlState<string[]>("deliveryStatus", [])
+  const { page, pageSize, pageIndex, setPagination } = useUrlPagination(10)
+  const { clearAll } = useUrlStateMultiple()
   
   const { data: ordersData, isLoading, mutate } = useOrders(
-    currentPage, 
+    page, 
     pageSize, 
     undefined, // status
     searchQuery,
@@ -319,25 +312,24 @@ function OrdersPageContent() {
     mutate()
   }
   
-  const handlePaginationChange = ({ pageIndex, pageSize: newPageSize }: { pageIndex: number; pageSize: number }) => {
-    setCurrentPage(pageIndex + 1) // Convert 0-based to 1-based
-    setPageSize(newPageSize)
-  }
+  const handlePaginationChange = setPagination
   
-  // Handle filter changes - reset to page 1 when filters change
+  // Handle filter changes
   const handleSearchChange = (search: string) => {
     setSearchQuery(search)
-    setCurrentPage(1)
   }
   
   const handlePaymentStatusChange = (status: string[]) => {
     setPaymentStatusFilter(status)
-    setCurrentPage(1)
   }
   
   const handleDeliveryStatusChange = (status: string[]) => {
     setDeliveryStatusFilter(status)
-    setCurrentPage(1)
+  }
+
+  const handleClearAll = () => {
+    // Clear all filter parameters but keep pagination
+    clearAll(['page', 'limit'])
   }
 
 
@@ -574,9 +566,10 @@ function OrdersPageContent() {
           manualPagination={true}
           manualFiltering={true}
           pageCount={pagination.totalPages || 0}
-          pageIndex={(currentPage - 1) || 0} // Convert 1-based to 0-based
+          pageIndex={pageIndex}
           pageSize={pageSize}
           onPaginationChange={handlePaginationChange}
+          onClearAll={handleClearAll}
         />
       </div>
     </DashboardLayout>

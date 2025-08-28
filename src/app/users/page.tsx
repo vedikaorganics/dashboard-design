@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect, Suspense } from "react"
+import { useState, useEffect, Suspense, useMemo } from "react"
 import { useSearchParams } from "next/navigation"
+import { useUrlState, useUrlPagination, useUrlSearchState, useUrlStateMultiple } from "@/hooks/use-url-state"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -55,27 +56,20 @@ const lastOrderedOptions = [
 
 
 function CustomersPageContent() {
-  const searchParams = useSearchParams()
   const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null)
   const [noteCustomer, setNoteCustomer] = useState<User | null>(null)
   const [noteText, setNoteText] = useState<string>('')
   const [isSavingNote, setIsSavingNote] = useState<boolean>(false)
-  const [currentPage, setCurrentPage] = useState<number>(1)
-  const [pageSize, setPageSize] = useState<number>(10)
-  const [searchQuery, setSearchQuery] = useState<string>('')
-  const [phoneVerifiedFilter, setPhoneVerifiedFilter] = useState<string[]>([])
-  const [lastOrderedFilter, setLastOrderedFilter] = useState<string[]>([])
-
-  // Initialize search query from URL parameters
-  useEffect(() => {
-    const urlSearchQuery = searchParams.get('search')
-    if (urlSearchQuery) {
-      setSearchQuery(urlSearchQuery)
-    }
-  }, [searchParams])
+  
+  // URL state management
+  const [searchQuery, setSearchQuery] = useUrlSearchState("search", 300)
+  const [phoneVerifiedFilter, setPhoneVerifiedFilter] = useUrlState<string[]>("verified", [])
+  const [lastOrderedFilter, setLastOrderedFilter] = useUrlState<string[]>("lastOrdered", [])
+  const { page, pageSize, pageIndex, setPagination } = useUrlPagination(10)
+  const { clearAll } = useUrlStateMultiple()
   
   const { data: usersData, isLoading, mutate } = useUsers(
-    currentPage, 
+    page, 
     pageSize,
     searchQuery,
     phoneVerifiedFilter,
@@ -86,25 +80,24 @@ function CustomersPageContent() {
   const users = (usersData as any)?.users || []
   const pagination = (usersData as any)?.pagination || {}
   
-  const handlePaginationChange = ({ pageIndex, pageSize: newPageSize }: { pageIndex: number; pageSize: number }) => {
-    setCurrentPage(pageIndex + 1) // Convert 0-based to 1-based
-    setPageSize(newPageSize)
-  }
+  const handlePaginationChange = setPagination
   
-  // Handle filter changes - reset to page 1 when filters change
+  // Handle filter changes
   const handleSearchChange = (search: string) => {
     setSearchQuery(search)
-    setCurrentPage(1)
   }
   
   const handlePhoneVerifiedChange = (verified: string[]) => {
     setPhoneVerifiedFilter(verified)
-    setCurrentPage(1)
   }
 
   const handleLastOrderedChange = (dateRange: string[]) => {
     setLastOrderedFilter(dateRange)
-    setCurrentPage(1)
+  }
+
+  const handleClearAll = () => {
+    // Clear all filter parameters but keep pagination
+    clearAll(['page', 'limit'])
   }
 
   const handleOpenNoteDialog = (customer: User) => {
@@ -310,9 +303,10 @@ function CustomersPageContent() {
           manualPagination={true}
           manualFiltering={true}
           pageCount={pagination.totalPages || 0}
-          pageIndex={(currentPage - 1) || 0}
+          pageIndex={pageIndex}
           pageSize={pageSize}
           onPaginationChange={handlePaginationChange}
+          onClearAll={handleClearAll}
         />
         
         <Dialog open={selectedCustomer !== null} onOpenChange={() => setSelectedCustomer(null)}>
