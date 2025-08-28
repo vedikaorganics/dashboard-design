@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
+import { useUrlSearchState } from "@/hooks/use-url-state"
 import Link from "next/link"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -28,9 +29,9 @@ import { ProductGridLoadingSkeleton } from "@/components/ui/grid-loading-skeleto
 
 
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
-  const [searchTerm, setSearchTerm] = useState<string>("")
+  const [searchTerm, setSearchTerm] = useUrlSearchState("search", 300)
   
   const { data: productsData, isLoading } = useProducts()
   
@@ -316,5 +317,13 @@ export default function ProductsPage() {
         </Dialog>
       </div>
     </DashboardLayout>
+  )
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProductsPageContent />
+    </Suspense>
   )
 }

@@ -54,6 +54,10 @@ interface DataTableProps<TData, TValue> {
   onPaginationChange?: (pagination: { pageIndex: number; pageSize: number }) => void
   manualPagination?: boolean
   manualFiltering?: boolean
+  // URL state management props
+  useUrlState?: boolean
+  sortingState?: SortingState
+  onSortingChange?: (sorting: SortingState) => void
 }
 
 export function DataTable<TData, TValue>({
@@ -73,8 +77,24 @@ export function DataTable<TData, TValue>({
   onPaginationChange,
   manualPagination = false,
   manualFiltering = false,
+  useUrlState = false,
+  sortingState,
+  onSortingChange,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([])
+  // Use external sorting state if provided, otherwise use internal state
+  const [internalSorting, setInternalSorting] = React.useState<SortingState>([])
+  const sorting = useUrlState && sortingState !== undefined ? sortingState : internalSorting
+  const setSorting = React.useCallback((updaterOrValue: React.SetStateAction<SortingState>) => {
+    if (useUrlState && onSortingChange) {
+      const newValue = typeof updaterOrValue === 'function' 
+        ? updaterOrValue(sorting) 
+        : updaterOrValue;
+      onSortingChange(newValue);
+    } else {
+      setInternalSorting(updaterOrValue);
+    }
+  }, [useUrlState, onSortingChange, sorting])
+  
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})

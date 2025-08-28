@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
+import { useUrlState, useUrlPagination, useUrlSearchState } from "@/hooks/use-url-state"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -53,44 +54,32 @@ const ratingOptions = [
 ]
 
 function ReviewsPageContent() {
-  const searchParams = useSearchParams()
-  const [currentPage, setCurrentPage] = useState<number>(1)
-  const [pageSize, setPageSize] = useState<number>(10)
   const [approvedFilter, setApprovedFilter] = useState<boolean | undefined>(undefined)
-  const [searchQuery, setSearchQuery] = useState<string>('')
-  const [approvalStatusFilter, setApprovalStatusFilter] = useState<string[]>([])
-  const [ratingFilter, setRatingFilter] = useState<string[]>([])
   const [editingSortOrderId, setEditingSortOrderId] = useState<string | null>(null)
   const [editingSortOrderValue, setEditingSortOrderValue] = useState<string>('')
   const [isSavingSortOrder, setIsSavingSortOrder] = useState<boolean>(false)
   const [selectedReview, setSelectedReview] = useState<any | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false)
-
-  // Initialize search query from URL parameters
-  useEffect(() => {
-    const urlSearchQuery = searchParams.get('search')
-    if (urlSearchQuery) {
-      setSearchQuery(urlSearchQuery)
-    }
-  }, [searchParams])
+  
+  // URL state management
+  const [searchQuery, setSearchQuery] = useUrlSearchState("search", 300)
+  const [approvalStatusFilter, setApprovalStatusFilter] = useUrlState<string[]>("status", [])
+  const [ratingFilter, setRatingFilter] = useUrlState<string[]>("rating", [])
+  const { page, pageSize, pageIndex, setPagination } = useUrlPagination(10)
   
   const { data: reviewsData, isLoading, mutate } = useReviews(
-    currentPage, 
+    page, 
     pageSize, 
     approvedFilter,
     searchQuery,
     ratingFilter
   )
   
-  const handlePaginationChange = ({ pageIndex, pageSize: newPageSize }: { pageIndex: number; pageSize: number }) => {
-    setCurrentPage(pageIndex + 1) // Convert 0-based to 1-based
-    setPageSize(newPageSize)
-  }
+  const handlePaginationChange = setPagination
   
-  // Handle filter changes - reset to page 1 when filters change
+  // Handle filter changes
   const handleSearchChange = (search: string) => {
     setSearchQuery(search)
-    setCurrentPage(1)
   }
   
   const handleApprovalStatusChange = (status: string[]) => {
@@ -101,12 +90,10 @@ function ReviewsPageContent() {
     } else {
       setApprovedFilter(undefined)
     }
-    setCurrentPage(1)
   }
   
   const handleRatingChange = (ratings: string[]) => {
     setRatingFilter(ratings)
-    setCurrentPage(1)
   }
 
   const handleEditSortOrder = (review: any) => {
@@ -366,7 +353,7 @@ function ReviewsPageContent() {
           manualPagination={true}
           manualFiltering={true}
           pageCount={pagination.totalPages || 0}
-          pageIndex={(currentPage - 1) || 0}
+          pageIndex={pageIndex}
           pageSize={pageSize}
           onPaginationChange={handlePaginationChange}
         />
