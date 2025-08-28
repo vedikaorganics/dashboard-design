@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1756308920472,
+      "tag": "0000_overconfident_overlord",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1756316543854,
+      "tag": "0001_absent_jack_murdock",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1756404626092,
+      "tag": "0002_wooden_psylocke",
+      "breakpoints": true
+    }
+  ]
+}
