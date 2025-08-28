@@ -3,13 +3,17 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb"
 import { magicLink } from "better-auth/plugins/magic-link"
 import { MongoClient } from "mongodb"
 import nodemailer from "nodemailer"
-
-if (!process.env.MONGODB_URI) {
-  throw new Error("MONGODB_URI environment variable is required")
-}
+import { 
+  getMongoDbUri, 
+  getBetterAuthSecret, 
+  getBetterAuthUrl, 
+  getMailjetApiKey, 
+  getMailjetSecretKey, 
+  getFromEmail 
+} from './env'
 
 // Create MongoDB client
-const client = new MongoClient(process.env.MONGODB_URI, {
+const client = new MongoClient(getMongoDbUri(), {
   maxPoolSize: 10,
   serverSelectionTimeoutMS: 5000,
   socketTimeoutMS: 45000,
@@ -23,8 +27,8 @@ const transporter = nodemailer.createTransport({
   port: 587,
   secure: false,
   auth: {
-    user: process.env.MAILJET_API_KEY,
-    pass: process.env.MAILJET_SECRET_KEY,
+    user: getMailjetApiKey(),
+    pass: getMailjetSecretKey(),
   },
 })
 
@@ -65,7 +69,7 @@ export const auth = betterAuth({
         }
         try {
           await transporter.sendMail({
-            from: process.env.FROM_EMAIL || "noreply@vedika-organics.com",
+            from: getFromEmail(),
             to: email,
             subject: "Sign in to Vedika Organics Dashboard",
             html: `
@@ -97,8 +101,8 @@ export const auth = betterAuth({
       expiresIn: 60 * 10, // 10 minutes
     }),
   ],
-  secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  secret: getBetterAuthSecret(),
+  baseURL: getBetterAuthUrl(),
 })
 
 export type Session = typeof auth.$Infer.Session.session & {

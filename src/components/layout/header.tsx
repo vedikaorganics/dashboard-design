@@ -43,7 +43,7 @@ export function Header({ title }: HeaderProps) {
   const [searchFocused, setSearchFocused] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
   const { data: searchResults, isLoading: searchLoading } = useGlobalSearch(searchQuery)
-  const searchContainerRef = useRef<HTMLDivElement>(null)
+  const searchContainerRef = useRef<HTMLFormElement>(null)
 
   const handleSignOut = async () => {
     try {
@@ -112,6 +112,14 @@ export function Header({ title }: HeaderProps) {
     setShowDropdown(false)
   }
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+      setShowDropdown(false)
+    }
+  }
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -139,7 +147,7 @@ export function Header({ title }: HeaderProps) {
           </div>
           
           <div className="hidden w-full flex-1 md:flex md:justify-center md:max-w-md">
-            <div className="relative w-full" ref={searchContainerRef}>
+            <form onSubmit={handleSearchSubmit} className="relative w-full" ref={searchContainerRef}>
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search everything..."
@@ -157,7 +165,7 @@ export function Header({ title }: HeaderProps) {
                 onResultClick={handleResultClick}
                 onViewAll={handleViewAll}
               />
-            </div>
+            </form>
           </div>
           
           <nav className="flex items-center space-x-2">

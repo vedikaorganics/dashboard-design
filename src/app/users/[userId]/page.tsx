@@ -7,7 +7,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Separator } from "@/components/ui/separator"
@@ -201,7 +201,10 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-4">
                 <Avatar className="h-16 w-16">
-                  <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                  {user.avatar && (
+                    <AvatarImage src={user.avatar} alt={user.name || 'User avatar'} />
+                  )}
+                  <AvatarFallback className="bg-secondary text-secondary-foreground text-lg">
                     {initials}
                   </AvatarFallback>
                 </Avatar>

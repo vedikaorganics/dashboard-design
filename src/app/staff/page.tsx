@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
+import { useUrlPagination } from "@/hooks/use-url-state"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -26,19 +27,15 @@ const getRoleBadge = (role: string) => {
 }
 
 
-export default function StaffPage() {
-  const [currentPage, setCurrentPage] = useState<number>(1)
-  const [pageSize, setPageSize] = useState<number>(10)
+function StaffPageContent() {
+  const { page, pageSize, pageIndex, setPagination } = useUrlPagination(10)
   
-  const { data: staffData, isLoading } = useStaff(currentPage, pageSize)
+  const { data: staffData, isLoading } = useStaff(page, pageSize)
   
   const staff = (staffData as any)?.staff || []
   const pagination = (staffData as any)?.pagination || {}
   
-  const handlePaginationChange = ({ pageIndex, pageSize: newPageSize }: { pageIndex: number; pageSize: number }) => {
-    setCurrentPage(pageIndex + 1) // Convert 0-based to 1-based
-    setPageSize(newPageSize)
-  }
+  const handlePaginationChange = setPagination
 
   const columns: ColumnDef<any>[] = [
     {
@@ -150,7 +147,7 @@ export default function StaffPage() {
           searchPlaceholder="Search staff members..."
           manualPagination={true}
           pageCount={pagination.totalPages || 0}
-          pageIndex={(currentPage - 1) || 0}
+          pageIndex={pageIndex}
           pageSize={pageSize}
           onPaginationChange={handlePaginationChange}
         />
@@ -163,5 +160,13 @@ export default function StaffPage() {
         <Plus className="h-6 w-6" />
       </Button>
     </DashboardLayout>
+  )
+}
+
+export default function StaffPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <StaffPageContent />
+    </Suspense>
   )
 }
