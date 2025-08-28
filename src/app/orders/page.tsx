@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { useUrlState, useUrlPagination, useUrlSearchState } from "@/hooks/use-url-state"
+import { useUrlState, useUrlPagination, useUrlSearchState, useUrlStateMultiple } from "@/hooks/use-url-state"
 import { toast } from "sonner"
 import { ColumnDef } from "@tanstack/react-table"
 import Link from "next/link"
@@ -267,6 +267,7 @@ function OrdersPageContent() {
   const [paymentStatusFilter, setPaymentStatusFilter] = useUrlState<string[]>("paymentStatus", [])
   const [deliveryStatusFilter, setDeliveryStatusFilter] = useUrlState<string[]>("deliveryStatus", [])
   const { page, pageSize, pageIndex, setPagination } = useUrlPagination(10)
+  const { clearAll } = useUrlStateMultiple()
   
   const { data: ordersData, isLoading, mutate } = useOrders(
     page, 
@@ -324,6 +325,11 @@ function OrdersPageContent() {
   
   const handleDeliveryStatusChange = (status: string[]) => {
     setDeliveryStatusFilter(status)
+  }
+
+  const handleClearAll = () => {
+    // Clear all filter parameters but keep pagination
+    clearAll(['page', 'limit'])
   }
 
 
@@ -563,6 +569,7 @@ function OrdersPageContent() {
           pageIndex={pageIndex}
           pageSize={pageSize}
           onPaginationChange={handlePaginationChange}
+          onClearAll={handleClearAll}
         />
       </div>
     </DashboardLayout>

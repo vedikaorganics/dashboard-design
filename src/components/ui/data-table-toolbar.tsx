@@ -162,6 +162,7 @@ interface DataTableToolbarProps<TData> {
   }>
   manualFiltering?: boolean
   toolbarActions?: React.ReactNode
+  onClearAll?: () => void
 }
 
 export function DataTableToolbar<TData>({
@@ -172,6 +173,7 @@ export function DataTableToolbar<TData>({
   filterableColumns = [],
   manualFiltering = false,
   toolbarActions,
+  onClearAll,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = manualFiltering 
     ? (searchValue && searchValue.trim().length > 0) || filterableColumns.some(col => col.value && col.value.length > 0)
@@ -221,7 +223,10 @@ export function DataTableToolbar<TData>({
             variant="outline"
             size="sm"
             onClick={() => {
-              if (manualFiltering) {
+              if (onClearAll) {
+                // Use custom clear all function if provided
+                onClearAll()
+              } else if (manualFiltering) {
                 // Reset manual filters
                 onSearchChange && onSearchChange('')
                 filterableColumns.forEach(col => {

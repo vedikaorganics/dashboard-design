@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { useUrlState, useUrlPagination, useUrlSearchState } from "@/hooks/use-url-state"
+import { useUrlState, useUrlPagination, useUrlSearchState, useUrlStateMultiple } from "@/hooks/use-url-state"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -66,6 +66,7 @@ function ReviewsPageContent() {
   const [approvalStatusFilter, setApprovalStatusFilter] = useUrlState<string[]>("status", [])
   const [ratingFilter, setRatingFilter] = useUrlState<string[]>("rating", [])
   const { page, pageSize, pageIndex, setPagination } = useUrlPagination(10)
+  const { clearAll } = useUrlStateMultiple()
   
   const { data: reviewsData, isLoading, mutate } = useReviews(
     page, 
@@ -94,6 +95,11 @@ function ReviewsPageContent() {
   
   const handleRatingChange = (ratings: string[]) => {
     setRatingFilter(ratings)
+  }
+
+  const handleClearAll = () => {
+    // Clear all filter parameters but keep pagination
+    clearAll(['page', 'limit'])
   }
 
   const handleEditSortOrder = (review: any) => {
@@ -356,6 +362,7 @@ function ReviewsPageContent() {
           pageIndex={pageIndex}
           pageSize={pageSize}
           onPaginationChange={handlePaginationChange}
+          onClearAll={handleClearAll}
         />
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

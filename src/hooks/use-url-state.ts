@@ -129,7 +129,25 @@ export function useUrlStateMultiple() {
     [searchParams, pathname, router]
   )
 
-  return { setMultiple }
+  const clearAll = useCallback(
+    (keysToKeep: string[] = ['page', 'limit']) => {
+      const params = new URLSearchParams()
+      
+      // Keep only specified keys
+      keysToKeep.forEach(key => {
+        const value = searchParams.get(key)
+        if (value) {
+          params.set(key, value)
+        }
+      })
+
+      const newUrl = `${pathname}?${params.toString()}`
+      router.replace(newUrl)
+    },
+    [searchParams, pathname, router]
+  )
+
+  return { setMultiple, clearAll }
 }
 
 export function useUrlPagination(defaultPageSize = 10) {
@@ -158,14 +176,21 @@ export function useUrlPagination(defaultPageSize = 10) {
 }
 
 export function useUrlSearchState(key: string = "search", debounceMs: number = 300) {
-  const [urlValue, setUrlValue] = useUrlState(key, "", { debounceMs, replace: true })
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
   const [localValue, setLocalValue] = useState("")
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   
+  // Get initial value from URL
+  const urlValue = useMemo(() => {
+    return searchParams.get(key) || ""
+  }, [searchParams, key])
+
   // Initialize local value from URL on mount
   useEffect(() => {
     setLocalValue(urlValue)
-  }, [])
+  }, [urlValue])
 
   // Sync local value to URL with debouncing
   useEffect(() => {
@@ -173,9 +198,17 @@ export function useUrlSearchState(key: string = "search", debounceMs: number = 3
       clearTimeout(timeoutRef.current)
     }
     
+    // Always sync if values are different
     if (localValue !== urlValue) {
       timeoutRef.current = setTimeout(() => {
-        setUrlValue(localValue)
+        const params = new URLSearchParams(searchParams)
+        if (localValue === "" || localValue === null || localValue === undefined) {
+          params.delete(key)
+        } else {
+          params.set(key, localValue)
+        }
+        const newUrl = `${pathname}?${params.toString()}`
+        router.replace(newUrl)
       }, debounceMs)
     }
     
@@ -184,14 +217,7 @@ export function useUrlSearchState(key: string = "search", debounceMs: number = 3
         clearTimeout(timeoutRef.current)
       }
     }
-  }, [localValue, setUrlValue, debounceMs, urlValue])
-
-  // Update local value when URL changes (e.g., browser back/forward, external URL changes)
-  useEffect(() => {
-    if (urlValue !== localValue && timeoutRef.current === null) {
-      setLocalValue(urlValue)
-    }
-  }, [urlValue, localValue])
+  }, [localValue, urlValue, searchParams, pathname, router, key, debounceMs])
 
   const setValue = useCallback((newValue: string) => {
     setLocalValue(newValue)

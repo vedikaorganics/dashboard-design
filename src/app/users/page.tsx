@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, useMemo } from "react"
 import { useSearchParams } from "next/navigation"
-import { useUrlState, useUrlPagination, useUrlSearchState } from "@/hooks/use-url-state"
+import { useUrlState, useUrlPagination, useUrlSearchState, useUrlStateMultiple } from "@/hooks/use-url-state"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -66,6 +66,7 @@ function CustomersPageContent() {
   const [phoneVerifiedFilter, setPhoneVerifiedFilter] = useUrlState<string[]>("verified", [])
   const [lastOrderedFilter, setLastOrderedFilter] = useUrlState<string[]>("lastOrdered", [])
   const { page, pageSize, pageIndex, setPagination } = useUrlPagination(10)
+  const { clearAll } = useUrlStateMultiple()
   
   const { data: usersData, isLoading, mutate } = useUsers(
     page, 
@@ -92,6 +93,11 @@ function CustomersPageContent() {
 
   const handleLastOrderedChange = (dateRange: string[]) => {
     setLastOrderedFilter(dateRange)
+  }
+
+  const handleClearAll = () => {
+    // Clear all filter parameters but keep pagination
+    clearAll(['page', 'limit'])
   }
 
   const handleOpenNoteDialog = (customer: User) => {
@@ -300,6 +306,7 @@ function CustomersPageContent() {
           pageIndex={pageIndex}
           pageSize={pageSize}
           onPaginationChange={handlePaginationChange}
+          onClearAll={handleClearAll}
         />
         
         <Dialog open={selectedCustomer !== null} onOpenChange={() => setSelectedCustomer(null)}>

@@ -58,6 +58,7 @@ interface DataTableProps<TData, TValue> {
   useUrlState?: boolean
   sortingState?: SortingState
   onSortingChange?: (sorting: SortingState) => void
+  onClearAll?: () => void
 }
 
 export function DataTable<TData, TValue>({
@@ -80,6 +81,7 @@ export function DataTable<TData, TValue>({
   useUrlState = false,
   sortingState,
   onSortingChange,
+  onClearAll,
 }: DataTableProps<TData, TValue>) {
   // Use external sorting state if provided, otherwise use internal state
   const [internalSorting, setInternalSorting] = React.useState<SortingState>([])
@@ -174,6 +176,7 @@ export function DataTable<TData, TValue>({
           filterableColumns={filterableColumns}
           manualFiltering={manualFiltering}
           toolbarActions={toolbarActions}
+          onClearAll={onClearAll}
         />
         <TableLoadingSkeleton 
           columns={columns.length} 
@@ -196,6 +199,7 @@ export function DataTable<TData, TValue>({
         filterableColumns={filterableColumns}
         manualFiltering={manualFiltering}
         toolbarActions={toolbarActions}
+        onClearAll={onClearAll}
       />
       <div className="rounded-md border">
         <Table>
