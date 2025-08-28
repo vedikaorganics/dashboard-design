@@ -1,6 +1,7 @@
 "use client"
 
 import { Home, Settings, ShoppingCart, Users, Star, Target, Package, Gift, UserCheck } from "lucide-react"
+import { useState, useEffect } from "react"
 
 import {
   Sidebar,
@@ -84,6 +85,12 @@ export function AppSidebar() {
   const userRole = user?.role || "member"
   const { state } = useSidebar()
   const { theme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  // Ensure component is mounted before using theme to prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Helper function to determine if a navigation item is active
   const isActive = (url: string) => {
@@ -98,8 +105,8 @@ export function AppSidebar() {
     item.roles.includes(userRole)
   )
 
-  // Determine which logo to use based on theme
-  const logoSrc = theme === "dark" ? "/vedika-logo-dark.png" : "/vedika-logo-light.png"
+  // Determine which logo to use based on theme, only after mounted to prevent hydration mismatch
+  const logoSrc = mounted && theme === "dark" ? "/vedika-logo-dark.png" : "/vedika-logo-light.png"
 
   return (
     <Sidebar collapsible="icon">

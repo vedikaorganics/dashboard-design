@@ -110,7 +110,7 @@ function CustomersPageContent() {
     
     setIsSavingNote(true)
     try {
-      const response = await fetch(`/api/users/${noteCustomer._id}`, {
+      const response = await fetch(`/api/users/${noteCustomer.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'

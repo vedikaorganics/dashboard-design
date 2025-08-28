@@ -182,17 +182,17 @@ export interface Staff {
 }
 
 export interface User {
-  _id: string;
+  id: string; // UUID primary key
+  userId: string; // Legacy MongoDB userId
   phoneNumber: string;
   phoneNumberVerified: boolean;
-  email: string;
-  name: string;
-  avatar: string;
+  email: string | null;
+  name: string | null;
+  avatar: string | null;
   offers: string[];
   noOfOrders: number;
-  notes: string;
-  userId: string;
-  lastOrderedOn?: string;
+  notes: string | null;
+  lastOrderedOn?: string | null; // timestamp with timezone
   createdAt: string;
   updatedAt: string;
 }

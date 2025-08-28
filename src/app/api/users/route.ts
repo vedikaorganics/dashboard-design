@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCollection } from '@/lib/mongodb'
+import { db, users } from '@/lib/db'
 import { auth } from '@/lib/auth'
+import { and, or, like, gte, lt, isNull, isNotNull, count, desc } from 'drizzle-orm'
+import { sql } from 'drizzle-orm'
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now()
@@ -10,7 +12,8 @@ export async function GET(request: NextRequest) {
     // Validate session for security
     const authStart = Date.now()
     const session = await auth.api.getSession({ headers: request.headers })
-    console.log(`🔐 Users API: Auth check completed in ${Date.now() - authStart}ms`)
+    const authTime = Date.now() - authStart
+    console.log(`🔐 Users API: Auth check completed in ${authTime}ms`)
     
     if (!session?.user) {
       console.log('❌ Users API: Unauthorized request')
@@ -23,17 +26,20 @@ export async function GET(request: NextRequest) {
     const phoneVerified = searchParams.get('phoneVerified')?.split(',') || undefined
     const lastOrdered = searchParams.get('lastOrdered')?.split(',') || undefined
 
-    const collectionStart = Date.now()
-    const usersCollection = await getCollection('users')
-    console.log(`🗃️ Users API: Collection obtained in ${Date.now() - collectionStart}ms`)
+    const filterStart = Date.now()
+    console.log(`🔍 Users API: Building query filters...`)
 
-    // Build filter for users
-    const filter: Record<string, unknown> = {}
+    // Build where conditions array
+    const whereConditions: any[] = []
     
     // Phone verification filter
     if (phoneVerified && phoneVerified.length > 0) {
       const verifiedBooleans = phoneVerified.map(v => v === 'verified')
-      filter.phoneNumberVerified = { $in: verifiedBooleans }
+      whereConditions.push(
+        or(...verifiedBooleans.map(verified => 
+          sql`${users.phoneNumberVerified} = ${verified}`
+        ))
+      )
     }
 
     // Last ordered date filter
@@ -44,110 +50,115 @@ export async function GET(request: NextRequest) {
       for (const range of lastOrdered) {
         switch (range) {
           case 'never':
-            dateFilters.push({ lastOrderedOn: { $exists: false } })
-            dateFilters.push({ lastOrderedOn: null })
+            dateFilters.push(isNull(users.lastOrderedOn))
             break
           case 'last_7_days':
             const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-            dateFilters.push({ lastOrderedOn: { $gte: last7Days } })
+            dateFilters.push(gte(users.lastOrderedOn, last7Days))
             break
           case 'last_30_days':
             const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-            dateFilters.push({ lastOrderedOn: { $gte: last30Days } })
+            dateFilters.push(gte(users.lastOrderedOn, last30Days))
             break
           case 'last_90_days':
             const last90Days = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
-            dateFilters.push({ lastOrderedOn: { $gte: last90Days } })
+            dateFilters.push(gte(users.lastOrderedOn, last90Days))
             break
           case 'over_90_days':
             const over90Days = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
-            dateFilters.push({ 
-              lastOrderedOn: { 
-                $exists: true, 
-                $ne: null, 
-                $lt: over90Days 
-              } 
-            })
+            dateFilters.push(
+              and(
+                isNotNull(users.lastOrderedOn),
+                lt(users.lastOrderedOn, over90Days)
+              )
+            )
             break
         }
       }
       
       if (dateFilters.length > 0) {
-        if (dateFilters.length === 1) {
-          // Single date filter, apply directly
-          Object.assign(filter, dateFilters[0])
-        } else {
-          // Multiple date filters, use $or
-          const existingOr = filter.$or as any[] || []
-          filter.$or = [...existingOr, ...dateFilters]
-        }
+        whereConditions.push(or(...dateFilters))
       }
     }
     
     // Search filter - search across multiple fields
     if (search && search.trim()) {
-      const searchRegex = new RegExp(search.trim(), 'i')
+      const searchTerm = `%${search.trim()}%`
       
       const searchFilters = [
-        // Search in name
-        { name: searchRegex },
-        
-        // Search in phone number
-        { phoneNumber: searchRegex },
-        
-        // Search in email
-        { email: searchRegex },
-        
-        // Search in userId
-        { userId: searchRegex },
-        
-        // Search in notes
-        { notes: searchRegex }
+        like(users.name, searchTerm),
+        like(users.phoneNumber, searchTerm),
+        like(users.email, searchTerm),
+        like(users.userId, searchTerm),
+        like(users.notes, searchTerm)
       ]
       
-      if (filter.$or) {
-        // Combine with existing $or filters using $and
-        filter.$and = [
-          { $or: filter.$or },
-          { $or: searchFilters }
-        ]
-        delete filter.$or
-      } else {
-        filter.$or = searchFilters
-      }
+      whereConditions.push(or(...searchFilters))
     }
 
-    // Execute queries in parallel
-    const queryStart = Date.now()
-    const [users, totalCount] = await Promise.all([
-      usersCollection
-        .find(filter)
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .toArray(),
-      usersCollection.countDocuments(filter)
-    ])
-    console.log(`📊 Users API: Queries completed in ${Date.now() - queryStart}ms`)
+    // Combine all conditions with AND
+    const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined
+    
+    const filterTime = Date.now() - filterStart
+    console.log(`🔍 Users API: Filter building completed in ${filterTime}ms`)
 
-    // Use the user data as-is, since it already contains the needed fields
-    // noOfOrders, lastOrderedOn are already in the user document
-    const enrichedUsers = users
+    // Execute queries individually to track timing
+    const queryStart = Date.now()
+    console.log(`🗄️ Users API: Starting PostgreSQL queries...`)
+    
+    // Execute data query
+    const dataQueryStart = Date.now()
+    const usersList = await db.select()
+      .from(users)
+      .where(whereClause)
+      .orderBy(desc(users.createdAt))
+      .limit(limit)
+      .offset((page - 1) * limit)
+    const dataQueryTime = Date.now() - dataQueryStart
+    console.log(`📊 Query 1 - Data fetch completed in ${dataQueryTime}ms (fetched ${usersList.length} users)`)
+    
+    // Execute count query
+    const countQueryStart = Date.now()
+    const [{ count: totalCount }] = await db.select({ count: count() })
+      .from(users)
+      .where(whereClause)
+    const countQueryTime = Date.now() - countQueryStart
+    console.log(`📊 Query 2 - Count query completed in ${countQueryTime}ms (total: ${totalCount} users)`)
+    
+    const totalDbTime = Date.now() - queryStart
+    console.log(`🗄️ All PostgreSQL queries completed in ${totalDbTime}ms`)
+    
+    const processingStart = Date.now()
+    console.log(`🔄 Users API: Processing response data...`)
+
+    // Transform the data to match the expected API format
+    const enrichedUsers = usersList
 
     const result = {
       users: enrichedUsers,
       pagination: {
         page,
         limit,
-        total: totalCount,
-        totalPages: Math.ceil(totalCount / limit),
-        hasNext: page < Math.ceil(totalCount / limit),
+        total: totalCount || 0,
+        totalPages: Math.ceil((totalCount || 0) / limit),
+        hasNext: page < Math.ceil((totalCount || 0) / limit),
         hasPrev: page > 1
       }
     }
 
+    const processingTime = Date.now() - processingStart
     const totalTime = Date.now() - startTime
+    
+    console.log(`🔄 Users API: Response processing completed in ${processingTime}ms`)
     console.log(`✅ Users API: Request completed successfully in ${totalTime}ms`)
+    console.log(`📈 Performance Breakdown:`)
+    console.log(`   ├── Auth check: ${authTime}ms`)
+    console.log(`   ├── Filter building: ${filterTime}ms`)
+    console.log(`   ├── PostgreSQL queries: ${totalDbTime}ms`)
+    console.log(`   │   ├── Data fetch query: ${dataQueryTime}ms`)
+    console.log(`   │   └── Count query: ${countQueryTime}ms`)
+    console.log(`   ├── Response processing: ${processingTime}ms`)
+    console.log(`   └── Total: ${totalTime}ms`)
     
     return NextResponse.json(result)
   } catch (error) {
