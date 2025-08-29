@@ -105,31 +105,43 @@ export async function GET(request: NextRequest) {
     const filterTime = Date.now() - filterStart
     console.log(`🔍 Users API: Filter building completed in ${filterTime}ms`)
 
-    // Execute queries individually to track timing
+    // Execute single optimized query with window function for count
     const queryStart = Date.now()
-    console.log(`🗄️ Users API: Starting PostgreSQL queries...`)
+    console.log(`🗄️ Users API: Starting optimized single PostgreSQL query...`)
     
-    // Execute data query
-    const dataQueryStart = Date.now()
-    const usersList = await db.select()
+    const singleQueryStart = Date.now()
+    const results = await db.select({
+      id: users.id,
+      userId: users.userId,
+      phoneNumber: users.phoneNumber,
+      phoneNumberVerified: users.phoneNumberVerified,
+      email: users.email,
+      name: users.name,
+      avatar: users.avatar,
+      offers: users.offers,
+      noOfOrders: users.noOfOrders,
+      notes: users.notes,
+      lastOrderedOn: users.lastOrderedOn,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      totalCount: sql<number>`COUNT(*) OVER()`.as('total_count')
+    })
       .from(users)
       .where(whereClause)
       .orderBy(desc(users.createdAt))
       .limit(limit)
       .offset((page - 1) * limit)
-    const dataQueryTime = Date.now() - dataQueryStart
-    console.log(`📊 Query 1 - Data fetch completed in ${dataQueryTime}ms (fetched ${usersList.length} users)`)
     
-    // Execute count query
-    const countQueryStart = Date.now()
-    const [{ count: totalCount }] = await db.select({ count: count() })
-      .from(users)
-      .where(whereClause)
-    const countQueryTime = Date.now() - countQueryStart
-    console.log(`📊 Query 2 - Count query completed in ${countQueryTime}ms (total: ${totalCount} users)`)
+    const singleQueryTime = Date.now() - singleQueryStart
     
-    const totalDbTime = Date.now() - queryStart
-    console.log(`🗄️ All PostgreSQL queries completed in ${totalDbTime}ms`)
+    // Extract users and total count from combined result
+    const usersList = results.map(({ totalCount, ...user }) => user)
+    const totalCount = results.length > 0 ? results[0].totalCount : 0
+    
+    console.log(`📊 Optimized single query completed in ${singleQueryTime}ms (fetched ${usersList.length} users, total: ${totalCount})`)
+    
+    const totalDbTime = singleQueryTime
+    console.log(`🗄️ Database query optimization: reduced from 2 queries to 1 query in ${totalDbTime}ms`)
     
     const processingStart = Date.now()
     console.log(`🔄 Users API: Processing response data...`)
@@ -157,23 +169,29 @@ export async function GET(request: NextRequest) {
     console.log(`📈 Performance Breakdown:`)
     console.log(`   ├── Auth check: ${authTime}ms`)
     console.log(`   ├── Filter building: ${filterTime}ms`)
-    console.log(`   ├── PostgreSQL queries: ${totalDbTime}ms`)
-    console.log(`   │   ├── Data fetch query: ${dataQueryTime}ms`)
-    console.log(`   │   └── Count query: ${countQueryTime}ms`)
+    console.log(`   ├── PostgreSQL query (optimized): ${totalDbTime}ms`)
+    console.log(`   │   └── Single query with COUNT() OVER()`)
     console.log(`   ├── Response processing: ${processingTime}ms`)
     console.log(`   └── Total: ${totalTime}ms`)
     
-    // Add performance headers for monitoring (visible in Network tab)
+    // Add performance monitoring headers only
     const headers = new Headers()
+    
+    // Performance monitoring headers
     headers.set('X-Response-Time', `${totalTime}ms`)
     headers.set('X-Auth-Time', `${authTime}ms`)
     headers.set('X-Filter-Time', `${filterTime}ms`)
-    headers.set('X-DB-Total-Time', `${totalDbTime}ms`)
-    headers.set('X-DB-Data-Time', `${dataQueryTime}ms`)
-    headers.set('X-DB-Count-Time', `${countQueryTime}ms`)
+    headers.set('X-DB-Query-Time', `${totalDbTime}ms`)
+    headers.set('X-DB-Query-Type', 'single-optimized')
     headers.set('X-Processing-Time', `${processingTime}ms`)
     headers.set('X-Records-Fetched', usersList.length.toString())
     headers.set('X-Total-Records', (totalCount || 0).toString())
+    headers.set('X-Query-Optimization', 'window-function')
+    
+    // Ensure no caching
+    headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    headers.set('Pragma', 'no-cache')
+    headers.set('Expires', '0')
     
     return NextResponse.json(result, { headers })
   } catch (error) {
