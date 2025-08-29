@@ -4,16 +4,12 @@ import { auth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now()
-  console.log('🚀 Orders API: Request started')
   
   try {
     // Validate session for security
-    const authStart = Date.now()
     const session = await auth.api.getSession({ headers: request.headers })
-    console.log(`🔐 Orders API: Auth check completed in ${Date.now() - authStart}ms`)
     
     if (!session?.user) {
-      console.log('❌ Orders API: Unauthorized request')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     const { searchParams } = new URL(request.url)
@@ -24,9 +20,7 @@ export async function GET(request: NextRequest) {
     const paymentStatus = searchParams.get('paymentStatus')?.split(',') || undefined
     const deliveryStatus = searchParams.get('deliveryStatus')?.split(',') || undefined
 
-    const collectionStart = Date.now()
     const ordersCollection = await getCollection('orders')
-    console.log(`🗃️ Orders API: Collection obtained in ${Date.now() - collectionStart}ms`)
 
     // Build filter
     const filter: Record<string, unknown> = {}
@@ -75,7 +69,6 @@ export async function GET(request: NextRequest) {
     }
 
     // Execute single aggregation with user data join
-    const queryStart = Date.now()
     const [ordersResult] = await Promise.all([
       ordersCollection.aggregate([
         {
@@ -137,7 +130,6 @@ export async function GET(request: NextRequest) {
         }
       ]).toArray()
     ])
-    console.log(`📊 Orders API: Aggregation query completed in ${Date.now() - queryStart}ms`)
 
     // Extract results from aggregation
     const result = ordersResult[0]
@@ -166,9 +158,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const totalTime = Date.now() - startTime
-    console.log(`✅ Orders API: Request completed successfully in ${totalTime}ms`)
-    
     return NextResponse.json(finalResult)
   } catch (error) {
     const errorTime = Date.now() - startTime

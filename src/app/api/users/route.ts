@@ -4,16 +4,12 @@ import { auth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now()
-  console.log('🚀 Users API: Request started')
   
   try {
     // Validate session for security
-    const authStart = Date.now()
     const session = await auth.api.getSession({ headers: request.headers })
-    console.log(`🔐 Users API: Auth check completed in ${Date.now() - authStart}ms`)
     
     if (!session?.user) {
-      console.log('❌ Users API: Unauthorized request')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     const { searchParams } = new URL(request.url)
@@ -23,9 +19,7 @@ export async function GET(request: NextRequest) {
     const phoneVerified = searchParams.get('phoneVerified')?.split(',') || undefined
     const lastOrdered = searchParams.get('lastOrdered')?.split(',') || undefined
 
-    const collectionStart = Date.now()
     const usersCollection = await getCollection('users')
-    console.log(`🗃️ Users API: Collection obtained in ${Date.now() - collectionStart}ms`)
 
     // Build filter for users
     const filter: Record<string, unknown> = {}
@@ -118,7 +112,6 @@ export async function GET(request: NextRequest) {
     }
 
     // Execute queries in parallel
-    const queryStart = Date.now()
     const [users, totalCount] = await Promise.all([
       usersCollection
         .find(filter)
@@ -128,7 +121,6 @@ export async function GET(request: NextRequest) {
         .toArray(),
       usersCollection.countDocuments(filter)
     ])
-    console.log(`📊 Users API: Queries completed in ${Date.now() - queryStart}ms`)
 
     // Use the user data as-is, since it already contains the needed fields
     // noOfOrders, lastOrderedOn are already in the user document
@@ -146,9 +138,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const totalTime = Date.now() - startTime
-    console.log(`✅ Users API: Request completed successfully in ${totalTime}ms`)
-    
     return NextResponse.json(result)
   } catch (error) {
     const errorTime = Date.now() - startTime

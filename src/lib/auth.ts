@@ -29,7 +29,6 @@ async function getAuthInstance() {
   if (!authInstance) {
     const client = await clientPromise
     const database = client.db()
-    console.log('✅ Auth: Using shared MongoDB connection')
     
     authInstance = betterAuth({
       database: mongodbAdapter(database),

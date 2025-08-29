@@ -25,26 +25,20 @@ async function createConnectionWithRetry(): Promise<MongoClient> {
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`🔄 MongoDB: Connection attempt ${attempt}/${maxRetries}`)
       const client = new MongoClient(uri, options)
       await client.connect()
       
       // Test the connection
       await client.db().admin().ping()
-      console.log('✅ MongoDB: Connection successful')
       
       return client
     } catch (error) {
-      console.error(`❌ MongoDB: Connection attempt ${attempt} failed:`, error)
-      
       if (attempt === maxRetries) {
-        console.error('💥 MongoDB: All connection attempts failed')
         throw new Error(`Failed to connect to MongoDB after ${maxRetries} attempts: ${error}`)
       }
       
       // Exponential backoff: wait longer between each retry
       const delay = baseDelay * Math.pow(2, attempt - 1)
-      console.log(`⏳ MongoDB: Retrying in ${delay}ms...`)
       await new Promise(resolve => setTimeout(resolve, delay))
     }
   }
@@ -78,7 +72,6 @@ export async function getDatabase(): Promise<Db> {
     const client = await clientPromise
     return client.db() // Uses the database name from the connection string
   } catch (error) {
-    console.error('❌ MongoDB: Failed to get database:', error)
     throw new Error(`Database connection failed: ${error}`)
   }
 }
@@ -89,7 +82,6 @@ export async function getCollection(collectionName: string) {
     const db = await getDatabase()
     return db.collection(collectionName)
   } catch (error) {
-    console.error(`❌ MongoDB: Failed to get collection '${collectionName}':`, error)
     throw new Error(`Collection '${collectionName}' access failed: ${error}`)
   }
 }
