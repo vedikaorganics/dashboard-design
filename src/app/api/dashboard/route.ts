@@ -4,31 +4,23 @@ import { auth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now()
-  console.log('🚀 Dashboard API: Request started')
   
   try {
     // Validate session for security
-    const authStart = Date.now()
     const session = await auth.api.getSession({ headers: request.headers })
-    console.log(`🔐 Dashboard API: Auth check completed in ${Date.now() - authStart}ms`)
     
     if (!session?.user) {
-      console.log('❌ Dashboard API: Unauthorized request')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Get collections
-    const collectionStart = Date.now()
     const [ordersCollection, usersCollection, reviewsCollection] = await Promise.all([
       getCollection('orders'),
       getCollection('users'),
       getCollection('reviews')
     ])
-    console.log(`🗄️  Dashboard API: Collections obtained in ${Date.now() - collectionStart}ms`)
 
     // Execute consolidated queries in parallel for better performance
-    const queryStart = Date.now()
-    console.log('📋 Dashboard API: Starting parallel queries execution...')
     
     // Track individual query performance with detailed timing
     const [
@@ -37,10 +29,8 @@ export async function GET(request: NextRequest) {
       reviewsAnalytics,
       consolidatedRevenueData
     ] = await Promise.all([
-      // Orders Analytics Query - Track timing
+      // Orders Analytics Query
       (async () => {
-        const start = Date.now()
-        console.log('🔄 Dashboard API: Starting orders analytics query...')
         const result = await ordersCollection.aggregate([
         {
           $facet: {
@@ -127,15 +117,11 @@ export async function GET(request: NextRequest) {
           }
         }
       ]).toArray()
-        const duration = Date.now() - start
-        console.log(`✅ Dashboard API: Orders analytics completed in ${duration}ms`)
         return result
       })(),
 
-      // Users Analytics Query - Track timing
+      // Users Analytics Query
       (async () => {
-        const start = Date.now()
-        console.log('🔄 Dashboard API: Starting users analytics query...')
         const result = await usersCollection.aggregate([
         {
           $facet: {
@@ -171,15 +157,11 @@ export async function GET(request: NextRequest) {
           }
         }
       ]).toArray()
-        const duration = Date.now() - start
-        console.log(`✅ Dashboard API: Users analytics completed in ${duration}ms`)
         return result
       })(),
 
-      // Reviews Analytics Query - Track timing
+      // Reviews Analytics Query
       (async () => {
-        const start = Date.now()
-        console.log('🔄 Dashboard API: Starting reviews analytics query...')
         const result = await reviewsCollection.aggregate([
         {
           $facet: {
@@ -222,15 +204,11 @@ export async function GET(request: NextRequest) {
           }
         }
       ]).toArray()
-        const duration = Date.now() - start
-        console.log(`✅ Dashboard API: Reviews analytics completed in ${duration}ms`)
         return result
       })(),
 
-      // Consolidated Revenue Query - Track timing
+      // Consolidated Revenue Query
       (async () => {
-        const start = Date.now()
-        console.log('🔄 Dashboard API: Starting consolidated revenue query...')
         const result = await ordersCollection.aggregate([
         {
           $match: {
@@ -324,12 +302,9 @@ export async function GET(request: NextRequest) {
           }
         }
       ]).toArray()
-        const duration = Date.now() - start
-        console.log(`✅ Dashboard API: Consolidated revenue completed in ${duration}ms`)
         return result
       })()
     ])
-    console.log(`📊 Dashboard API: All queries completed in ${Date.now() - queryStart}ms`)
 
     // Extract data from consolidated results
     const orderStats = ordersAnalytics[0]
@@ -462,9 +437,6 @@ export async function GET(request: NextRequest) {
       dailyRevenueChart
     }
 
-    const totalTime = Date.now() - startTime
-    console.log(`✅ Dashboard API: Request completed successfully in ${totalTime}ms`)
-    
     return NextResponse.json(dashboardData)
   } catch (error) {
     const errorTime = Date.now() - startTime

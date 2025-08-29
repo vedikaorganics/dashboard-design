@@ -2,14 +2,49 @@ import { MongoClient, Db } from 'mongodb'
 import { getMongoDbUri } from './env'
 
 const uri = getMongoDbUri()
+
+// Optimized MongoDB connection options for Vercel serverless
 const options = {
-  maxPoolSize: 10, // Maintain up to 10 socket connections
-  serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+  maxPoolSize: 3, // Reduced for serverless - less connections per instance
+  serverSelectionTimeoutMS: 10000, // Increased timeout for cold starts
   socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+  heartbeatFrequencyMS: 10000, // Send heartbeat every 10 seconds to detect connection issues
+  retryWrites: true, // Automatically retry failed writes
+  retryReads: true, // Automatically retry failed reads
+  connectTimeoutMS: 10000, // 10 second connection timeout
+  maxIdleTimeMS: 30000, // Close idle connections after 30 seconds
 }
 
 let client: MongoClient
 let clientPromise: Promise<MongoClient>
+
+// Connection retry logic with exponential backoff
+async function createConnectionWithRetry(): Promise<MongoClient> {
+  const maxRetries = 3
+  const baseDelay = 1000 // 1 second
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const client = new MongoClient(uri, options)
+      await client.connect()
+      
+      // Test the connection
+      await client.db().admin().ping()
+      
+      return client
+    } catch (error) {
+      if (attempt === maxRetries) {
+        throw new Error(`Failed to connect to MongoDB after ${maxRetries} attempts: ${error}`)
+      }
+      
+      // Exponential backoff: wait longer between each retry
+      const delay = baseDelay * Math.pow(2, attempt - 1)
+      await new Promise(resolve => setTimeout(resolve, delay))
+    }
+  }
+  
+  throw new Error('MongoDB connection failed - this should never be reached')
+}
 
 if (process.env.NODE_ENV === 'development') {
   // In development mode, use a global variable so that the value
@@ -19,28 +54,37 @@ if (process.env.NODE_ENV === 'development') {
   }
 
   if (!globalWithMongo._mongoClientPromise) {
-    client = new MongoClient(uri, options)
-    globalWithMongo._mongoClientPromise = client.connect()
+    globalWithMongo._mongoClientPromise = createConnectionWithRetry()
   }
   clientPromise = globalWithMongo._mongoClientPromise
 } else {
   // In production mode, it's best to not use a global variable.
-  client = new MongoClient(uri, options)
-  clientPromise = client.connect()
+  clientPromise = createConnectionWithRetry()
 }
 
 // Export a module-scoped MongoClient promise. By doing this in a
 // separate module, the client can be shared across functions.
 export default clientPromise
 
-// Helper function to get the database
+// Helper function to get the database with error handling
 export async function getDatabase(): Promise<Db> {
-  const client = await clientPromise
-  return client.db() // Uses the database name from the connection string
+  try {
+    const client = await clientPromise
+    return client.db() // Uses the database name from the connection string
+  } catch (error) {
+    throw new Error(`Database connection failed: ${error}`)
+  }
 }
 
-// Collection helpers for type safety
+// Collection helpers for type safety with error handling
 export async function getCollection(collectionName: string) {
-  const db = await getDatabase()
-  return db.collection(collectionName)
+  try {
+    const db = await getDatabase()
+    return db.collection(collectionName)
+  } catch (error) {
+    throw new Error(`Collection '${collectionName}' access failed: ${error}`)
+  }
 }
+
+// Export the client promise for auth.ts to use
+export { clientPromise }

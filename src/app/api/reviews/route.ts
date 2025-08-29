@@ -4,16 +4,12 @@ import { auth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now()
-  console.log('🚀 Reviews API: Request started')
   
   try {
     // Validate session for security
-    const authStart = Date.now()
     const session = await auth.api.getSession({ headers: request.headers })
-    console.log(`🔐 Reviews API: Auth check completed in ${Date.now() - authStart}ms`)
     
     if (!session?.user) {
-      console.log('❌ Reviews API: Unauthorized request')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     const { searchParams } = new URL(request.url)
@@ -32,9 +28,7 @@ export async function GET(request: NextRequest) {
     const cacheKey = `reviews-${page}-${limit}-${JSON.stringify(filterParams)}`
     
 
-    const collectionStart = Date.now()
     const reviewsCollection = await getCollection('reviews')
-    console.log(`🗄️  Reviews API: Collection obtained in ${Date.now() - collectionStart}ms`)
 
     // Build filter
     const filter: any = {}
@@ -69,7 +63,6 @@ export async function GET(request: NextRequest) {
     }
 
     // Execute single aggregation with product lookup
-    const queryStart = Date.now()
     const [reviewsResult] = await Promise.all([
       reviewsCollection.aggregate([
         {
@@ -103,7 +96,6 @@ export async function GET(request: NextRequest) {
         }
       ]).toArray()
     ])
-    console.log(`📊 Reviews API: Aggregation query completed in ${Date.now() - queryStart}ms`)
 
     // Extract results from aggregation
     const aggregationResult = reviewsResult[0]
@@ -144,9 +136,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    
-    const totalTime = Date.now() - startTime
-    console.log(`✅ Reviews API: Request completed successfully in ${totalTime}ms`)
     
     return NextResponse.json(result)
   } catch (error) {
