@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import * as React from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -49,7 +50,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { MoreHorizontal, Plus, Edit, Trash2, Copy, Link, ExternalLink, Check } from "lucide-react"
+import { MoreHorizontal, Plus, Edit, Trash2, Copy, Link, ExternalLink, Check, RefreshCw, AlertCircle, CheckCircle } from "lucide-react"
 import { useCampaigns, useProducts } from "@/hooks/use-data"
 import { getPaymentServerUrl } from "@/lib/env"
 import { DataTable } from "@/components/ui/data-table"
@@ -108,6 +109,9 @@ export default function CampaignsPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [copyDialogOpen, setCopyDialogOpen] = useState(false)
   const [selectedCampaignForCopy, setSelectedCampaignForCopy] = useState<Campaign | null>(null)
+  const [syncStatus, setSyncStatus] = useState<any>(null)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [syncStatusLoading, setSyncStatusLoading] = useState(false)
   const [createFormData, setCreateFormData] = useState<CampaignFormData>({
     utm_source: '',
     utm_medium: '',
@@ -209,6 +213,47 @@ export default function CampaignsPage() {
       console.error('Error deleting campaign:', error)
     }
   }
+  
+  const checkSyncStatus = async () => {
+    setSyncStatusLoading(true)
+    try {
+      const response = await fetch('/api/campaigns/sync')
+      const data = await response.json()
+      setSyncStatus(data)
+    } catch (error) {
+      console.error('Error checking sync status:', error)
+    } finally {
+      setSyncStatusLoading(false)
+    }
+  }
+  
+  const manualSync = async () => {
+    setIsSyncing(true)
+    try {
+      const response = await fetch('/api/campaigns/sync', {
+        method: 'POST'
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        console.log('Sync completed:', result)
+        
+        // Show sync results to user
+        if (result.deleted > 0) {
+          console.log(`Deleted ${result.deleted} orphaned campaigns from Redis`)
+        }
+        
+        await checkSyncStatus() // Refresh status after sync
+      }
+    } catch (error) {
+      console.error('Error syncing campaigns:', error)
+    } finally {
+      setIsSyncing(false)
+    }
+  }
+  
+  // Don't auto-check sync status on mount to avoid expensive Redis calls
+  // Only check when user manually clicks sync or when there's a sync issue
   
   const openEditDialog = (campaign: Campaign) => {
     setSelectedCampaign(campaign)
@@ -418,7 +463,52 @@ export default function CampaignsPage() {
           pageSize={pageSize}
           onPaginationChange={handlePaginationChange}
           toolbarActions={
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <div className="flex items-center space-x-2">
+              {/* Sync Controls - Only show sync button, no auto status checking */}
+              <div className="flex items-center space-x-2 mr-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    // Check status first, then sync
+                    checkSyncStatus().then(() => manualSync())
+                  }}
+                  disabled={isSyncing || syncStatusLoading}
+                  className="h-8"
+                  title="Check sync status and sync all campaigns to Redis cache"
+                >
+                  {isSyncing || syncStatusLoading ? (
+                    <>
+                      <RefreshCw className="mr-1 h-3 w-3 animate-spin" />
+                      {syncStatusLoading ? 'Checking...' : 'Syncing...'}
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-1 h-3 w-3" />
+                      Check & Sync Cache
+                    </>
+                  )}
+                </Button>
+                
+                {/* Show sync status only after manual check */}
+                {syncStatus && !syncStatusLoading && (
+                  <div className="flex items-center text-sm ml-2">
+                    {syncStatus.sync?.consistent ? (
+                      <div className="flex items-center text-green-600">
+                        <CheckCircle className="mr-1 h-4 w-4" />
+                        Synced ({syncStatus.mongodb?.count || 0} campaigns)
+                      </div>
+                    ) : (
+                      <div className="flex items-center text-yellow-600">
+                        <AlertCircle className="mr-1 h-4 w-4" />
+                        Out of sync (MongoDB: {syncStatus.mongodb?.count || 0}, Redis: {syncStatus.redis?.count || 0})
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8">
                   <Plus className="mr-2 h-4 w-4" />
@@ -489,6 +579,7 @@ export default function CampaignsPage() {
                 </div>
               </DialogContent>
             </Dialog>
+            </div>
           }
         />
         

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
 import { auth } from '@/lib/auth'
+import { CampaignRedis } from '@/lib/redis'
 
 // Helper function to generate random short ID
 function generateShortId(length: number = 4): string {
@@ -124,7 +125,27 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date()
     }
 
+    // Step 1: Insert into MongoDB
     const result = await campaignsCollection.insertOne(newCampaign)
+    
+    // Step 2: Sync to Redis - if this fails, rollback MongoDB
+    try {
+      await CampaignRedis.setCampaign(shortId!, {
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        utm_content,
+        utm_term
+      })
+    } catch (redisError) {
+      // Rollback: Delete from MongoDB
+      await campaignsCollection.deleteOne({ _id: result.insertedId })
+      console.error('Redis sync failed during create:', redisError)
+      return NextResponse.json(
+        { error: 'Failed to sync campaign to cache' },
+        { status: 500 }
+      )
+    }
     
     // Clear cache
     
@@ -155,6 +176,19 @@ export async function PUT(request: NextRequest) {
 
     const campaignsCollection = await getCollection('campaigns')
     
+    // Step 1: Get old campaign data for potential rollback
+    const oldCampaign = await campaignsCollection.findOne({
+      _id: new (require('mongodb').ObjectId)(_id)
+    })
+    
+    if (!oldCampaign) {
+      return NextResponse.json(
+        { error: 'Campaign not found' },
+        { status: 404 }
+      )
+    }
+    
+    // Step 2: Update MongoDB
     const updateResult = await campaignsCollection.updateOne(
       { _id: new (require('mongodb').ObjectId)(_id) },
       {
@@ -169,10 +203,29 @@ export async function PUT(request: NextRequest) {
       }
     )
 
-    if (updateResult.matchedCount === 0) {
+    // Step 3: Sync to Redis - if this fails, rollback MongoDB
+    try {
+      await CampaignRedis.updateCampaign(
+        oldCampaign.shortId, 
+        oldCampaign.shortId, // shortId doesn't change in PUT
+        {
+          utm_source,
+          utm_medium,
+          utm_campaign,
+          utm_content,
+          utm_term
+        }
+      )
+    } catch (redisError) {
+      // Rollback: Restore old campaign data in MongoDB
+      await campaignsCollection.replaceOne(
+        { _id: new (require('mongodb').ObjectId)(_id) },
+        oldCampaign
+      )
+      console.error('Redis sync failed during update:', redisError)
       return NextResponse.json(
-        { error: 'Campaign not found' },
-        { status: 404 }
+        { error: 'Failed to sync campaign update to cache' },
+        { status: 500 }
       )
     }
     
@@ -202,14 +255,33 @@ export async function DELETE(request: NextRequest) {
 
     const campaignsCollection = await getCollection('campaigns')
     
+    // Step 1: Get campaign data for potential restore
+    const campaign = await campaignsCollection.findOne({
+      _id: new (require('mongodb').ObjectId)(_id)
+    })
+    
+    if (!campaign) {
+      return NextResponse.json(
+        { error: 'Campaign not found' },
+        { status: 404 }
+      )
+    }
+    
+    // Step 2: Delete from MongoDB
     const deleteResult = await campaignsCollection.deleteOne({
       _id: new (require('mongodb').ObjectId)(_id)
     })
 
-    if (deleteResult.deletedCount === 0) {
+    // Step 3: Delete from Redis - if this fails, restore to MongoDB
+    try {
+      await CampaignRedis.deleteCampaign(campaign.shortId)
+    } catch (redisError) {
+      // Rollback: Restore campaign to MongoDB
+      await campaignsCollection.insertOne(campaign)
+      console.error('Redis delete failed during delete:', redisError)
       return NextResponse.json(
-        { error: 'Campaign not found' },
-        { status: 404 }
+        { error: 'Failed to delete campaign from cache' },
+        { status: 500 }
       )
     }
     
