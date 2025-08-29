@@ -1,0 +1,2 @@
+CREATE INDEX "idx_users_created_at" ON "users" USING btree ("created_at" DESC NULLS LAST);--> statement-breakpoint
+CREATE INDEX "idx_users_created_at_filters" ON "users" USING btree ("created_at" DESC NULLS LAST,"phone_number_verified");

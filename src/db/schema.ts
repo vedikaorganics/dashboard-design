@@ -38,7 +38,11 @@ export const users = pgTable('users', {
   phoneNumberIdx: index('idx_users_phone_number').on(table.phoneNumber),
   emailIdx: index('idx_users_email').on(table.email),
   userIdIdx: index('idx_users_user_id').on(table.userId),
-  phoneVerifiedIdx: index('idx_users_phone_verified').on(table.phoneNumberVerified)
+  phoneVerifiedIdx: index('idx_users_phone_verified').on(table.phoneNumberVerified),
+  // Performance-critical index for ORDER BY created_at DESC queries
+  createdAtIdx: index('idx_users_created_at').on(table.createdAt.desc()),
+  // Composite index for common query patterns (created_at + phone_verified filters)
+  createdAtFiltersIdx: index('idx_users_created_at_filters').on(table.createdAt.desc(), table.phoneNumberVerified)
 }))
 
 export const addresses = pgTable('addresses', {
