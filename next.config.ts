@@ -13,6 +13,8 @@ function validateEnvVars() {
     'PAYMENT_SERVER_API_KEY',
     'LIMECHAT_ACCESS_TOKEN',
     'LIMECHAT_ACCOUNT_ID',
+    'UPSTASH_REDIS_REST_URL',
+    'UPSTASH_REDIS_REST_TOKEN',
   ] as const
 
   const missingVars: string[] = []
