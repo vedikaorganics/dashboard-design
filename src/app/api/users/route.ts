@@ -3,24 +3,23 @@ import { db, users } from '@/lib/db'
 import { auth } from '@/lib/auth'
 import { and, or, like, gte, lt, isNull, isNotNull, count, desc } from 'drizzle-orm'
 import { sql } from 'drizzle-orm'
-import { logger } from '@/lib/logger'
 
 // Force dynamic rendering to ensure console.logs appear in Vercel production
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now()
-  logger.info('Users API: Request started')
+  console.log('🚀 Users API: Request started')
   
   try {
     // Validate session for security
     const authStart = Date.now()
     const session = await auth.api.getSession({ headers: request.headers })
     const authTime = Date.now() - authStart
-    logger.performance({ operation: 'Auth check', duration: authTime })
+    console.log(`🔐 Users API: Auth check completed in ${authTime}ms`)
     
     if (!session?.user) {
-      logger.warn('Users API: Unauthorized request')
+      console.log('❌ Users API: Unauthorized request')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     const { searchParams } = new URL(request.url)
@@ -31,7 +30,7 @@ export async function GET(request: NextRequest) {
     const lastOrdered = searchParams.get('lastOrdered')?.split(',') || undefined
 
     const filterStart = Date.now()
-    logger.debug('Building query filters')
+    console.log(`🔍 Users API: Building query filters...`)
 
     // Build where conditions array
     const whereConditions: any[] = []
@@ -104,11 +103,11 @@ export async function GET(request: NextRequest) {
     const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined
     
     const filterTime = Date.now() - filterStart
-    logger.performance({ operation: 'Filter building', duration: filterTime })
+    console.log(`🔍 Users API: Filter building completed in ${filterTime}ms`)
 
     // Execute queries individually to track timing
     const queryStart = Date.now()
-    logger.info('Starting PostgreSQL queries')
+    console.log(`🗄️ Users API: Starting PostgreSQL queries...`)
     
     // Execute data query
     const dataQueryStart = Date.now()
@@ -119,7 +118,7 @@ export async function GET(request: NextRequest) {
       .limit(limit)
       .offset((page - 1) * limit)
     const dataQueryTime = Date.now() - dataQueryStart
-    logger.dbQuery('Data fetch query', dataQueryTime, usersList.length)
+    console.log(`📊 Query 1 - Data fetch completed in ${dataQueryTime}ms (fetched ${usersList.length} users)`)
     
     // Execute count query
     const countQueryStart = Date.now()
@@ -127,14 +126,13 @@ export async function GET(request: NextRequest) {
       .from(users)
       .where(whereClause)
     const countQueryTime = Date.now() - countQueryStart
-    logger.dbQuery('Count query', countQueryTime)
+    console.log(`📊 Query 2 - Count query completed in ${countQueryTime}ms (total: ${totalCount} users)`)
     
     const totalDbTime = Date.now() - queryStart
-    logger.performance({ operation: 'All PostgreSQL queries', duration: totalDbTime, 
-      metadata: { totalRecords: totalCount, fetchedRecords: usersList.length } })
+    console.log(`🗄️ All PostgreSQL queries completed in ${totalDbTime}ms`)
     
     const processingStart = Date.now()
-    logger.debug('Processing response data')
+    console.log(`🔄 Users API: Processing response data...`)
 
     // Transform the data to match the expected API format
     const enrichedUsers = usersList
@@ -154,18 +152,16 @@ export async function GET(request: NextRequest) {
     const processingTime = Date.now() - processingStart
     const totalTime = Date.now() - startTime
     
-    logger.performance({ operation: 'Response processing', duration: processingTime })
-    logger.apiRequest('GET', '/api/users', startTime)
-    
-    // Performance breakdown with enhanced logging
-    logger.performanceBreakdown('Users API Request', {
-      'Auth check': authTime,
-      'Filter building': filterTime,
-      'PostgreSQL queries': totalDbTime,
-      '  ├── Data fetch': dataQueryTime,
-      '  └── Count query': countQueryTime,
-      'Response processing': processingTime
-    })
+    console.log(`🔄 Users API: Response processing completed in ${processingTime}ms`)
+    console.log(`✅ Users API: Request completed successfully in ${totalTime}ms`)
+    console.log(`📈 Performance Breakdown:`)
+    console.log(`   ├── Auth check: ${authTime}ms`)
+    console.log(`   ├── Filter building: ${filterTime}ms`)
+    console.log(`   ├── PostgreSQL queries: ${totalDbTime}ms`)
+    console.log(`   │   ├── Data fetch query: ${dataQueryTime}ms`)
+    console.log(`   │   └── Count query: ${countQueryTime}ms`)
+    console.log(`   ├── Response processing: ${processingTime}ms`)
+    console.log(`   └── Total: ${totalTime}ms`)
     
     // Add performance headers for monitoring (visible in Network tab)
     const headers = new Headers()
@@ -182,7 +178,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result, { headers })
   } catch (error) {
     const errorTime = Date.now() - startTime
-    logger.error(`Users API error after ${errorTime}ms`, error)
+    console.error(`❌ Users API error after ${errorTime}ms:`, error)
     return NextResponse.json(
       { error: 'Failed to fetch users' },
       { status: 500 }
