@@ -93,7 +93,8 @@ export async function GET(request: NextRequest) {
           metadata: {
             status: order.orderStatus,
             createdAt: order.createdAt,
-            totalAmount: order.totalAmount || order.amount
+            totalAmount: order.totalAmount || order.amount,
+            orderId: order.orderId
           }
         })),
         reviews: reviews.map(review => ({
