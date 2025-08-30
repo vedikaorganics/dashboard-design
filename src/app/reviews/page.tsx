@@ -149,6 +149,29 @@ function ReviewsPageContent() {
     setSelectedReview(review)
     setIsDialogOpen(true)
   }
+
+  const handleApprovalToggle = async (reviewId: string, newApprovalStatus: boolean) => {
+    try {
+      const response = await fetch(`/api/reviews/${reviewId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ isApproved: newApprovalStatus })
+      })
+      
+      if (response.ok) {
+        // Refresh data to show updated status
+        mutate()
+      } else {
+        const error = await response.json()
+        alert(`Failed to ${newApprovalStatus ? 'approve' : 'unapprove'} review: ${error.message || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Failed to update review approval:', error)
+      alert(`Failed to ${newApprovalStatus ? 'approve' : 'unapprove'} review`)
+    }
+  }
   
   const columns: ColumnDef<any>[] = [
   {
@@ -304,12 +327,12 @@ function ReviewsPageContent() {
               View details
             </DropdownMenuItem>
             {!review.isApproved ? (
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleApprovalToggle(review._id, true)}>
                 <Check className="mr-2 h-4 w-4" />
                 Approve review
               </DropdownMenuItem>
             ) : (
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleApprovalToggle(review._id, false)}>
                 <X className="mr-2 h-4 w-4" />
                 Unapprove review
               </DropdownMenuItem>
