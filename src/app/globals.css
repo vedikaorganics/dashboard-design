@@ -136,10 +136,17 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-variant-numeric: tabular-nums;
   }
 }
 
 @layer utilities {
+  /* Monospace font for all numbers */
+  .font-mono-numbers {
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-mono);
+  }
+
   /* Custom scrollbar styles */
   .scrollbar-thin {
     scrollbar-width: thin;
