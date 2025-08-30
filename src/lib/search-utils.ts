@@ -36,6 +36,11 @@ export function getSearchResultUrl(result: SearchResult): string {
     return `${baseRoutes[result.type]}?search=${encodeURIComponent(searchQuery)}`
   }
   
+  // For orders, use orderId instead of _id
+  if (result.type === 'order' && result.metadata?.orderId) {
+    return `${baseRoutes[result.type]}/${result.metadata.orderId}`
+  }
+  
   return `${baseRoutes[result.type]}/${result.id}`
 }
 
