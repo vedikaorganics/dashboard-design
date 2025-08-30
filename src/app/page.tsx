@@ -293,7 +293,36 @@ export default function DashboardPage() {
         
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Recurring Revenue</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Monthly Recurring Revenue</CardTitle>
+              <div className="flex items-center space-x-6">
+                {(() => {
+                  const latestData = dailyRevenueChart[dailyRevenueChart.length - 1]
+                  if (!latestData) return null
+                  
+                  const currentTotal = ((latestData.mrr * 30) / 100000).toFixed(2)
+                  const currentRepeat = ((latestData.repeatCustomerMrr * 30) / 100000).toFixed(2)
+                  const currentNew = ((latestData.newCustomerMrr * 30) / 100000).toFixed(2)
+                  
+                  return (
+                    <>
+                      <div className="text-center">
+                        <div className="text-lg font-bold">₹{currentTotal}L</div>
+                        <div className="text-sm text-muted-foreground">Total</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-[#10b981]">₹{currentRepeat}L</div>
+                        <div className="text-sm text-muted-foreground">Repeat</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-[#f59e0b]">₹{currentNew}L</div>
+                        <div className="text-sm text-muted-foreground">New</div>
+                      </div>
+                    </>
+                  )
+                })()}
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <ChartContainer
