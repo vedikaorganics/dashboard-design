@@ -230,8 +230,8 @@ export async function GET(request: NextRequest) {
             },
             amountRange: {
               $multiply: [
-                { $floor: { $divide: ["$amount", 500] } },
-                500
+                { $floor: { $divide: ["$amount", 250] } },
+                250
               ]
             },
             dateStr: {
@@ -369,7 +369,7 @@ export async function GET(request: NextRequest) {
 
     // Order amount range data from consolidated query
     const orderAmountRangeData = (consolidatedRevenue?.amountRanges || []).map((item: any) => ({
-      name: `₹${item._id.toLocaleString()}-₹${(item._id + 499).toLocaleString()}`,
+      name: `₹${item._id.toLocaleString()}-₹${(item._id + 249).toLocaleString()}`,
       value: item.count
     }))
 
