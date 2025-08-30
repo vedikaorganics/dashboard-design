@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
+import { revalidateVariant } from '@/lib/revalidate'
 
 export async function PATCH(
   request: Request,
@@ -29,10 +30,16 @@ export async function PATCH(
       )
     }
 
+    // Revalidate website pages after successful variant update
+    const revalidateResult = await revalidateVariant(productId, variantId)
+    if (!revalidateResult.success) {
+      console.warn('Failed to revalidate website pages:', revalidateResult.error)
+    }
 
     return NextResponse.json({ 
       success: true,
-      message: 'Variant updated successfully' 
+      message: 'Variant updated successfully',
+      revalidated: revalidateResult.success
     })
   } catch (error) {
     console.error('Variant update API error:', error)
@@ -65,10 +72,16 @@ export async function DELETE(
       )
     }
 
+    // Revalidate website pages after successful variant deletion
+    const revalidateResult = await revalidateVariant(productId, variantId)
+    if (!revalidateResult.success) {
+      console.warn('Failed to revalidate website pages:', revalidateResult.error)
+    }
 
     return NextResponse.json({ 
       success: true,
-      message: 'Variant deleted successfully' 
+      message: 'Variant deleted successfully',
+      revalidated: revalidateResult.success
     })
   } catch (error) {
     console.error('Variant delete API error:', error)

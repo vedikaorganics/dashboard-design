@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCollection } from '@/lib/mongodb'
+import { revalidateProduct } from '@/lib/revalidate'
 
 export async function GET(
   request: Request,
@@ -100,10 +101,16 @@ export async function PATCH(
       )
     }
 
+    // Revalidate website pages after successful update
+    const revalidateResult = await revalidateProduct(productId, updateData.slug)
+    if (!revalidateResult.success) {
+      console.warn('Failed to revalidate website pages:', revalidateResult.error)
+    }
 
     return NextResponse.json({ 
       success: true,
-      message: 'Product updated successfully' 
+      message: 'Product updated successfully',
+      revalidated: revalidateResult.success
     })
   } catch (error) {
     console.error('Product update API error:', error)
@@ -139,11 +146,17 @@ export async function DELETE(
       )
     }
 
+    // Revalidate website pages after successful deletion
+    const revalidateResult = await revalidateProduct(productId)
+    if (!revalidateResult.success) {
+      console.warn('Failed to revalidate website pages:', revalidateResult.error)
+    }
 
     return NextResponse.json({ 
       success: true,
       message: 'Product and variants deleted successfully',
-      deletedVariants: variantResult.deletedCount
+      deletedVariants: variantResult.deletedCount,
+      revalidated: revalidateResult.success
     })
   } catch (error) {
     console.error('Product delete API error:', error)
