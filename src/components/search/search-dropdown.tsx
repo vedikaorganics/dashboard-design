@@ -163,7 +163,7 @@ interface SearchResultItemProps {
 function SearchResultItem({ result, query, onClick }: SearchResultItemProps) {
   return (
     <button
-      className="w-full text-left p-2 rounded-md hover:bg-muted/50 focus:bg-muted/50 focus:outline-none transition-colors min-w-0"
+      className="w-full text-left p-2 rounded-md hover:bg-muted/50 focus:bg-muted/50 focus:outline-none transition-colors min-w-0 cursor-pointer"
       onClick={onClick}
     >
       <div className="flex items-center justify-between min-w-0 gap-2">
