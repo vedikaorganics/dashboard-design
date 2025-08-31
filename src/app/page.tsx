@@ -203,7 +203,9 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {(recentOrdersData as any)?.orders?.slice(0, 5).map((order: any) => {
+                {(recentOrdersData as any)?.orders
+                  ?.filter((order: any) => order.paymentStatus === 'CASH_ON_DELIVERY' || order.paymentStatus === 'PAID')
+                  ?.slice(0, 5).map((order: any) => {
                   const customerName = order.address.firstName + (order.address.lastName ? ` ${order.address.lastName}` : '')
                   const timestamp = order.time || order.createdAt
                   const { time, relativeDate } = formatRelativeDateTime(timestamp)
