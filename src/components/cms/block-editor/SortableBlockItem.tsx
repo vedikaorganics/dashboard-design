@@ -171,8 +171,7 @@ export function SortableBlockItem({
     >
       <Card 
         className={cn(
-          'transition-all cursor-pointer',
-          isSelected ? 'ring-2 ring-primary shadow-md' : 'hover:shadow-sm'
+          'transition-all cursor-pointer hover:shadow-sm'
         )}
         onClick={onSelect}
       >
