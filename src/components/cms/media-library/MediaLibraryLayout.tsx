@@ -71,7 +71,7 @@ export function MediaLibraryLayout({
   return (
     <div ref={containerRef} className="h-full flex flex-col bg-background">
       {/* Header */}
-      <div className="flex-shrink-0 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex-shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         {header}
       </div>
 
@@ -79,7 +79,7 @@ export function MediaLibraryLayout({
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         <div 
-          className="flex-shrink-0 border-r bg-muted/20 relative"
+          className="flex-shrink-0 bg-muted/20 relative"
           style={{ width: sidebarWidth }}
         >
           <div className="h-full overflow-auto">
@@ -96,7 +96,6 @@ export function MediaLibraryLayout({
             )}
             onMouseDown={handleMouseDown('sidebar')}
           >
-            <div className="absolute inset-y-0 right-0 w-px bg-border" />
             <div className="absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
               <GripVertical className="w-3 h-3 text-muted-foreground" />
             </div>
@@ -120,7 +119,7 @@ export function MediaLibraryLayout({
         {/* Details Panel */}
         {showDetails && details && (
           <div 
-            className="flex-shrink-0 border-l bg-muted/10 relative"
+            className="flex-shrink-0 bg-muted/10 relative"
             style={{ width: detailsWidth }}
           >
             {/* Details Resizer */}

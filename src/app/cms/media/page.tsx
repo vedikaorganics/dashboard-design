@@ -210,7 +210,7 @@ export default function CMSMediaPage() {
     
     if (viewMode === 'grid') {
       return (
-        <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}>
+        <div className="grid gap-3 pl-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}>
           {assets.map((asset) => (
             <MediaCard
               key={asset._id}
@@ -228,7 +228,7 @@ export default function CMSMediaPage() {
       )
     } else if (viewMode === 'list') {
       return (
-        <div className="divide-y">
+        <div className="divide-y pl-4">
           {assets.map((asset) => (
             <div key={asset._id} className="flex items-center space-x-4 hover:bg-muted/50">
               <div className="w-16 h-16 flex-shrink-0">
@@ -256,7 +256,7 @@ export default function CMSMediaPage() {
       )
     } else {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pl-4">
           {assets.map((asset) => (
             <MediaCard
               key={asset._id}
