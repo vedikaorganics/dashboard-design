@@ -22,16 +22,25 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
   switch (type) {
     case 'video-cta':
       return {
-        video: '',
+        video: {
+          desktop: '',
+          mobile: ''
+        },
         heading: 'Your Heading Here',
         text: 'Add your description text here.',
-        cta: { text: 'Learn More', link: '' }
+        cta: { text: 'Learn More', link: '' },
+        overlay: false,
+        overlayOpacity: 0.5,
+        height: 'medium'
       } as any
     
     case 'sliding-images-cta':
       return {
         slides: [{
-          image: '',
+          image: {
+            desktop: '',
+            mobile: ''
+          },
           heading: 'Slide Heading',
           text: 'Slide description text.',
           cta: { text: 'Learn More', link: '' }
@@ -51,11 +60,16 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
     
     case 'image':
       return {
-        src: '',
+        src: {
+          desktop: '',
+          mobile: ''
+        },
         alt: '',
         caption: '',
         link: '',
-        objectFit: 'cover'
+        objectFit: 'cover',
+        width: '',
+        height: ''
       } as any
     
     case 'gallery':
@@ -70,8 +84,14 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
     case 'video':
       return {
         type: 'upload',
-        src: '',
-        poster: '',
+        src: {
+          desktop: '',
+          mobile: ''
+        },
+        poster: {
+          desktop: '',
+          mobile: ''
+        },
         controls: true,
         autoplay: false,
         loop: false,
@@ -111,7 +131,12 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
           text: 'Get Started',
           url: '',
           style: 'primary'
-        }]
+        }],
+        backgroundImage: {
+          desktop: '',
+          mobile: ''
+        },
+        backgroundColor: ''
       } as any
     
     case 'banner':
@@ -206,17 +231,33 @@ export function validateBlockContent(type: string, content: BlockContent): boole
     // Check if required fields exist based on block type
     switch (type) {
       case 'video-cta':
-        return Boolean((content as any).video && (content as any).heading)
+        const videoCTAContent = content as any
+        return Boolean(
+          (videoCTAContent.video?.desktop || videoCTAContent.video) && 
+          videoCTAContent.heading
+        )
       case 'sliding-images-cta':
         return Array.isArray((content as any).slides) && (content as any).slides.length > 0
       case 'text':
         return Boolean((content as any).text)
       case 'image':
-        return Boolean((content as any).src && (content as any).alt)
+        const imageContent = content as any
+        return Boolean(
+          (imageContent.src?.desktop || imageContent.src) && 
+          imageContent.alt
+        )
       case 'gallery':
-        return Array.isArray((content as any).images) && (content as any).images.length > 0
+        const galleryContent = content as any
+        return Array.isArray(galleryContent.images) && 
+               galleryContent.images.length > 0 &&
+               galleryContent.images.every((img: any) => 
+                 (img.src?.desktop || img.src) && img.alt
+               )
       case 'video':
-        return Boolean((content as any).src)
+        const videoContent = content as any
+        return Boolean(
+          videoContent.src?.desktop || videoContent.src
+        )
       case 'product-grid':
         return true // No required fields for product grid
       case 'testimonials':

@@ -32,12 +32,31 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
         return (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="video">Video URL</Label>
+              <Label htmlFor="video-desktop">Desktop Video URL</Label>
               <Input
-                id="video"
-                value={videoCTAContent.video || ''}
-                onChange={(e) => updateBlockContent({ video: e.target.value })}
+                id="video-desktop"
+                value={videoCTAContent.video?.desktop || ''}
+                onChange={(e) => updateBlockContent({ 
+                  video: { 
+                    ...videoCTAContent.video, 
+                    desktop: e.target.value 
+                  }
+                })}
                 placeholder="https://..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="video-mobile">Mobile Video URL (Optional)</Label>
+              <Input
+                id="video-mobile"
+                value={videoCTAContent.video?.mobile || ''}
+                onChange={(e) => updateBlockContent({ 
+                  video: { 
+                    ...videoCTAContent.video, 
+                    mobile: e.target.value 
+                  }
+                })}
+                placeholder="https://... (optional)"
               />
             </div>
             <div className="space-y-2">
@@ -106,13 +125,34 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                     </Button>
                   </div>
                   <Input
-                    value={slide.image || ''}
+                    value={slide.image?.desktop || ''}
                     onChange={(e) => {
                       const newSlides = [...slidingContent.slides]
-                      newSlides[index] = { ...slide, image: e.target.value }
+                      newSlides[index] = { 
+                        ...slide, 
+                        image: { 
+                          ...slide.image, 
+                          desktop: e.target.value 
+                        }
+                      }
                       updateBlockContent({ slides: newSlides })
                     }}
-                    placeholder="Image URL"
+                    placeholder="Desktop Image URL"
+                  />
+                  <Input
+                    value={slide.image?.mobile || ''}
+                    onChange={(e) => {
+                      const newSlides = [...slidingContent.slides]
+                      newSlides[index] = { 
+                        ...slide, 
+                        image: { 
+                          ...slide.image, 
+                          mobile: e.target.value 
+                        }
+                      }
+                      updateBlockContent({ slides: newSlides })
+                    }}
+                    placeholder="Mobile Image URL (Optional)"
                   />
                   <Input
                     value={slide.heading || ''}
@@ -202,13 +242,34 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                     </Button>
                   </div>
                   <Input
-                    value={image.src || ''}
+                    value={image.src?.desktop || ''}
                     onChange={(e) => {
                       const newImages = [...galleryContent.images]
-                      newImages[index] = { ...image, src: e.target.value }
+                      newImages[index] = { 
+                        ...image, 
+                        src: { 
+                          ...image.src, 
+                          desktop: e.target.value 
+                        }
+                      }
                       updateBlockContent({ images: newImages })
                     }}
-                    placeholder="Image URL"
+                    placeholder="Desktop Image URL"
+                  />
+                  <Input
+                    value={image.src?.mobile || ''}
+                    onChange={(e) => {
+                      const newImages = [...galleryContent.images]
+                      newImages[index] = { 
+                        ...image, 
+                        src: { 
+                          ...image.src, 
+                          mobile: e.target.value 
+                        }
+                      }
+                      updateBlockContent({ images: newImages })
+                    }}
+                    placeholder="Mobile Image URL (Optional)"
                   />
                   <Input
                     value={image.alt || ''}
@@ -302,20 +363,58 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="src">Video URL</Label>
+              <Label htmlFor="src-desktop">Desktop Video URL</Label>
               <Input
-                id="src"
-                value={videoContent.src || ''}
-                onChange={(e) => updateBlockContent({ src: e.target.value })}
+                id="src-desktop"
+                value={videoContent.src?.desktop || ''}
+                onChange={(e) => updateBlockContent({ 
+                  src: { 
+                    ...videoContent.src, 
+                    desktop: e.target.value 
+                  }
+                })}
                 placeholder="https://..."
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="poster">Poster Image URL</Label>
+              <Label htmlFor="src-mobile">Mobile Video URL (Optional)</Label>
               <Input
-                id="poster"
-                value={videoContent.poster || ''}
-                onChange={(e) => updateBlockContent({ poster: e.target.value })}
+                id="src-mobile"
+                value={videoContent.src?.mobile || ''}
+                onChange={(e) => updateBlockContent({ 
+                  src: { 
+                    ...videoContent.src, 
+                    mobile: e.target.value 
+                  }
+                })}
+                placeholder="https://... (optional)"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="poster-desktop">Desktop Poster Image URL</Label>
+              <Input
+                id="poster-desktop"
+                value={videoContent.poster?.desktop || ''}
+                onChange={(e) => updateBlockContent({ 
+                  poster: { 
+                    ...videoContent.poster, 
+                    desktop: e.target.value 
+                  }
+                })}
+                placeholder="https://... (optional)"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="poster-mobile">Mobile Poster Image URL (Optional)</Label>
+              <Input
+                id="poster-mobile"
+                value={videoContent.poster?.mobile || ''}
+                onChange={(e) => updateBlockContent({ 
+                  poster: { 
+                    ...videoContent.poster, 
+                    mobile: e.target.value 
+                  }
+                })}
                 placeholder="https://... (optional)"
               />
             </div>
@@ -553,6 +652,43 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                 onChange={(e) => updateBlockContent({ description: e.target.value })}
                 placeholder="Enter description..."
                 rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bg-desktop">Desktop Background Image URL</Label>
+              <Input
+                id="bg-desktop"
+                value={ctaContent.backgroundImage?.desktop || ''}
+                onChange={(e) => updateBlockContent({ 
+                  backgroundImage: { 
+                    ...ctaContent.backgroundImage, 
+                    desktop: e.target.value 
+                  }
+                })}
+                placeholder="https://... (optional)"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bg-mobile">Mobile Background Image URL</Label>
+              <Input
+                id="bg-mobile"
+                value={ctaContent.backgroundImage?.mobile || ''}
+                onChange={(e) => updateBlockContent({ 
+                  backgroundImage: { 
+                    ...ctaContent.backgroundImage, 
+                    mobile: e.target.value 
+                  }
+                })}
+                placeholder="https://... (optional)"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bg-color">Background Color</Label>
+              <Input
+                id="bg-color"
+                value={ctaContent.backgroundColor || ''}
+                onChange={(e) => updateBlockContent({ backgroundColor: e.target.value })}
+                placeholder="#hex or color name (optional)"
               />
             </div>
             <div className="space-y-2">
@@ -914,12 +1050,31 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
         return (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="src">Image URL</Label>
+              <Label htmlFor="src-desktop">Desktop Image URL</Label>
               <Input
-                id="src"
-                value={imageContent.src || ''}
-                onChange={(e) => updateBlockContent({ src: e.target.value })}
+                id="src-desktop"
+                value={imageContent.src?.desktop || ''}
+                onChange={(e) => updateBlockContent({ 
+                  src: { 
+                    ...imageContent.src, 
+                    desktop: e.target.value 
+                  }
+                })}
                 placeholder="https://..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="src-mobile">Mobile Image URL (Optional)</Label>
+              <Input
+                id="src-mobile"
+                value={imageContent.src?.mobile || ''}
+                onChange={(e) => updateBlockContent({ 
+                  src: { 
+                    ...imageContent.src, 
+                    mobile: e.target.value 
+                  }
+                })}
+                placeholder="https://... (optional)"
               />
             </div>
             <div className="space-y-2">

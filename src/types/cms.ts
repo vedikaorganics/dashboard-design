@@ -138,7 +138,10 @@ export type BlockContent =
   | ColumnsBlockContent
 
 export interface VideoCTABlockContent {
-  video: string
+  video: {
+    desktop: string
+    mobile?: string
+  }
   heading: string
   text: string
   cta: {
@@ -152,7 +155,10 @@ export interface VideoCTABlockContent {
 
 export interface SlidingImagesCTABlockContent {
   slides: Array<{
-    image: string
+    image: {
+      desktop: string
+      mobile?: string
+    }
     heading: string
     text: string
     cta: {
@@ -173,7 +179,10 @@ export interface TextBlockContent {
 }
 
 export interface ImageBlockContent {
-  src: string
+  src: {
+    desktop: string
+    mobile?: string
+  }
   alt: string
   caption?: string
   link?: string
@@ -184,7 +193,10 @@ export interface ImageBlockContent {
 
 export interface GalleryBlockContent {
   images: Array<{
-    src: string
+    src: {
+      desktop: string
+      mobile?: string
+    }
     alt: string
     caption?: string
   }>
@@ -196,8 +208,14 @@ export interface GalleryBlockContent {
 
 export interface VideoBlockContent {
   type: "upload" | "youtube" | "vimeo"
-  src: string
-  poster?: string
+  src: {
+    desktop: string
+    mobile?: string
+  }
+  poster?: {
+    desktop: string
+    mobile?: string
+  }
   controls: boolean
   autoplay: boolean
   loop: boolean
@@ -248,7 +266,10 @@ export interface CTABlockContent {
     url: string
     style: "primary" | "secondary" | "outline"
   }>
-  backgroundImage?: string
+  backgroundImage?: {
+    desktop: string
+    mobile?: string
+  }
   backgroundColor?: string
 }
 

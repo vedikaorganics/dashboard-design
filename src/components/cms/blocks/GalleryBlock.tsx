@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight, X, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -23,6 +23,29 @@ export function GalleryBlock({ content, isEditing = false, className }: GalleryB
   } = content
 
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+  
+  // Detect screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Get the appropriate image source
+  const getImageSrc = (imageSrc: any) => {
+    if (typeof imageSrc === 'string') return imageSrc
+    if (!imageSrc) return ''
+    
+    // Use mobile version on mobile if available, otherwise fallback to desktop
+    if (isMobile && imageSrc.mobile) return imageSrc.mobile
+    return imageSrc.desktop || ''
+  }
 
   // If editing and no images, show placeholder
   if (isEditing && images.length === 0) {
@@ -93,7 +116,7 @@ export function GalleryBlock({ content, isEditing = false, className }: GalleryB
                   onClick={() => openLightbox(index)}
                 >
                   <Image
-                    src={image.src}
+                    src={getImageSrc(image.src)}
                     alt={image.alt || `Gallery image ${index + 1}`}
                     fill
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -153,7 +176,7 @@ export function GalleryBlock({ content, isEditing = false, className }: GalleryB
             {/* Image */}
             <div className="relative max-w-full max-h-full">
               <Image
-                src={images[lightboxIndex].src}
+                src={getImageSrc(images[lightboxIndex].src)}
                 alt={images[lightboxIndex].alt || `Gallery image ${lightboxIndex + 1}`}
                 width={1200}
                 height={800}
@@ -187,7 +210,7 @@ export function GalleryBlock({ content, isEditing = false, className }: GalleryB
               onClick={() => openLightbox(index)}
             >
               <Image
-                src={image.src}
+                src={getImageSrc(image.src)}
                 alt={image.alt || `Gallery image ${index + 1}`}
                 fill
                 className="object-cover"
@@ -218,12 +241,12 @@ export function GalleryBlockEditor({
   const addImage = () => {
     const newImages = [
       ...(content.images || []),
-      { src: '', alt: '', caption: '' }
+      { src: { desktop: '', mobile: '' }, alt: '', caption: '' }
     ]
     onChange({ images: newImages })
   }
 
-  const updateImage = (index: number, updates: Partial<{ src: string; alt: string; caption: string }>) => {
+  const updateImage = (index: number, updates: Partial<{ src: any; alt: string; caption: string }>) => {
     const newImages = [...(content.images || [])]
     newImages[index] = { ...newImages[index], ...updates }
     onChange({ images: newImages })
@@ -320,18 +343,39 @@ export function GalleryBlockEditor({
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium">Image URL</label>
-                  <input
-                    type="url"
-                    value={image.src || ''}
-                    onChange={(e) => updateImage(index, { src: e.target.value })}
-                    placeholder="https://example.com/image.jpg"
-                    className="w-full p-2 border rounded text-sm"
-                  />
-                </div>
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium">Desktop Image URL</label>
+                    <input
+                      type="url"
+                      value={typeof image.src === 'string' ? image.src : (image.src?.desktop || '')}
+                      onChange={(e) => updateImage(index, { 
+                        src: typeof image.src === 'string' 
+                          ? { desktop: e.target.value, mobile: '' }
+                          : { ...image.src, desktop: e.target.value }
+                      })}
+                      placeholder="https://example.com/desktop-image.jpg"
+                      className="w-full p-2 border rounded text-sm"
+                    />
+                  </div>
 
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium">Mobile Image URL (Optional)</label>
+                    <input
+                      type="url"
+                      value={typeof image.src === 'string' ? '' : (image.src?.mobile || '')}
+                      onChange={(e) => updateImage(index, { 
+                        src: typeof image.src === 'string' 
+                          ? { desktop: image.src, mobile: e.target.value }
+                          : { ...image.src, mobile: e.target.value }
+                      })}
+                      placeholder="https://example.com/mobile-image.jpg"
+                      className="w-full p-2 border rounded text-sm"
+                    />
+                  </div>
+                </div>
+                
                 <div className="space-y-2">
                   <label className="text-xs font-medium">Alt Text</label>
                   <input
@@ -356,10 +400,10 @@ export function GalleryBlockEditor({
               </div>
 
               {/* Image preview */}
-              {image.src && (
+              {(image.src && (typeof image.src === 'string' ? image.src : image.src?.desktop)) && (
                 <div className="relative w-24 h-24 rounded border overflow-hidden bg-muted">
                   <Image
-                    src={image.src}
+                    src={typeof image.src === 'string' ? image.src : (image.src?.desktop || '')}
                     alt={image.alt || 'Preview'}
                     fill
                     className="object-cover"

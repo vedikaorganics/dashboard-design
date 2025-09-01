@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { useEffect, useState } from 'react'
 import { ImageBlockContent } from '@/types/cms'
 import { cn } from '@/lib/utils'
 
@@ -11,6 +12,8 @@ interface ImageBlockProps {
 }
 
 export function ImageBlock({ content, isEditing = false, className }: ImageBlockProps) {
+  const [isMobile, setIsMobile] = useState(false)
+  
   const {
     src,
     alt,
@@ -21,8 +24,30 @@ export function ImageBlock({ content, isEditing = false, className }: ImageBlock
     height
   } = content
 
-  // If editing and no image, show placeholder
-  if (isEditing && !src) {
+  // Detect screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Get the appropriate image source
+  const getImageSrc = () => {
+    if (typeof src === 'string') return src
+    if (!src) return ''
+    
+    // Use mobile version on mobile if available, otherwise fallback to desktop
+    if (isMobile && src.mobile) return src.mobile
+    return src.desktop || ''
+  }
+
+  // If editing and no desktop image, show placeholder
+  if (isEditing && (!src?.desktop && !src)) {
     return (
       <div className={cn('text-center', className)}>
         <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-12 bg-muted/20">
@@ -48,7 +73,7 @@ export function ImageBlock({ content, isEditing = false, className }: ImageBlock
         style={width && height ? { width, height } : {}}
       >
         <Image
-          src={src}
+          src={getImageSrc()}
           alt={alt || ''}
           fill={!width || !height}
           width={width ? parseInt(width) : undefined}
@@ -106,16 +131,39 @@ export function ImageBlockEditor({
 }) {
   return (
     <div className={cn('space-y-4', className)}>
-      {/* Image URL */}
+      {/* Desktop Image URL */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">Image URL *</label>
+        <label className="text-sm font-medium">Desktop Image URL *</label>
         <input
           type="url"
-          value={content.src || ''}
-          onChange={(e) => onChange({ src: e.target.value })}
-          placeholder="https://example.com/image.jpg"
+          value={typeof content.src === 'string' ? content.src : (content.src?.desktop || '')}
+          onChange={(e) => onChange({ 
+            src: typeof content.src === 'string' 
+              ? { desktop: e.target.value, mobile: '' }
+              : { ...content.src, desktop: e.target.value }
+          })}
+          placeholder="https://example.com/desktop-image.jpg"
           className="w-full p-2 border rounded-md"
         />
+      </div>
+
+      {/* Mobile Image URL */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Mobile Image URL (Optional)</label>
+        <input
+          type="url"
+          value={typeof content.src === 'string' ? '' : (content.src?.mobile || '')}
+          onChange={(e) => onChange({ 
+            src: typeof content.src === 'string' 
+              ? { desktop: content.src, mobile: e.target.value }
+              : { ...content.src, mobile: e.target.value }
+          })}
+          placeholder="https://example.com/mobile-image.jpg"
+          className="w-full p-2 border rounded-md"
+        />
+        <p className="text-xs text-muted-foreground">
+          If not provided, desktop image will be used on mobile devices
+        </p>
       </div>
 
       {/* Alt text */}
@@ -218,7 +266,7 @@ export function ImageBlockEditor({
       )}
 
       {/* Live preview */}
-      {content.src && (
+      {(content.src && (typeof content.src === 'string' ? content.src : content.src?.desktop)) && (
         <div className="space-y-2">
           <label className="text-sm font-medium">Preview</label>
           <div className="border rounded-md p-4 bg-background">

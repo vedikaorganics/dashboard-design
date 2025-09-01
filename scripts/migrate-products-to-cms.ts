@@ -31,9 +31,13 @@ function convertSectionToBlock(section: ProductSection): ContentBlock {
       type: 'image',
       order: section.order,
       content: {
-        src: section.desktopUrl || section.mobileUrl || '',
+        src: {
+          desktop: section.desktopUrl || section.mobileUrl || '',
+          mobile: section.mobileUrl || ''
+        },
         alt: section.alt || '',
-        caption: section.caption || ''
+        caption: section.caption || '',
+        objectFit: 'cover'
       },
       settings: {
         padding: { top: 16, bottom: 16, left: 16, right: 16 },
