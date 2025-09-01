@@ -182,7 +182,7 @@ export function MediaCard({
             <Button
               variant="secondary"
               size="sm"
-              className="h-8 w-8 p-0 bg-white/90 hover:bg-white"
+              className="h-8 w-8 p-0"
             >
               <MoreHorizontal className="w-3 h-3" />
             </Button>
@@ -316,20 +316,6 @@ export function MediaCard({
         </div>
       )}
 
-      {/* Hover overlay for additional info */}
-      <div className={cn(
-        "absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 transition-opacity duration-200",
-        isHovered ? "opacity-100" : "opacity-0"
-      )}>
-        <div className="text-white text-xs space-y-1">
-          {asset.alt && (
-            <p className="font-medium truncate">{asset.alt}</p>
-          )}
-          {asset.caption && (
-            <p className="opacity-90 truncate">{asset.caption}</p>
-          )}
-        </div>
-      </div>
     </div>
   )
 }
