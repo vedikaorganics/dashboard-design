@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { MediaAsset } from '@/types/cms'
 import { useMedia } from '@/hooks/cms/use-media'
@@ -13,8 +14,13 @@ import { MediaGallery } from '@/components/cms/media-library/MediaGallery'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { toast } from 'sonner'
 
-export default function CMSMediaPage() {
-  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
+function CMSMediaPageContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  
+  // Get folder ID from URL query params, fallback to URL state for browser back/forward
+  const urlFolderId = searchParams.get('folderId')
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(urlFolderId)
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
@@ -44,7 +50,7 @@ export default function CMSMediaPage() {
     search: search || undefined,
     type: typeFilter === 'all' ? undefined : typeFilter,
     page: currentPage,
-    limit: viewMode === 'gallery' ? 48 : 24
+    limit: 24
   })
 
   // Formatting functions
@@ -158,6 +164,15 @@ export default function CMSMediaPage() {
     }
   }, [assets, assetDimensions])
 
+  // Sync folder ID with URL changes (for browser back/forward navigation)
+  useEffect(() => {
+    const urlFolderId = searchParams.get('folderId')
+    if (urlFolderId !== currentFolderId) {
+      setCurrentFolderId(urlFolderId)
+      setCurrentPage(1) // Reset page when folder changes via browser navigation
+    }
+  }, [searchParams, currentFolderId])
+
   // Handle folder creation
   const handleCreateFolder = useCallback(async (name: string) => {
     const folder = await createFolder(name, currentFolderId || undefined)
@@ -242,9 +257,22 @@ export default function CMSMediaPage() {
   }, [])
 
   const handleFolderChange = useCallback((folderId: string | null) => {
+    // Update URL with folder ID for browser history support
+    const params = new URLSearchParams(searchParams.toString())
+    if (folderId) {
+      params.set('folderId', folderId)
+    } else {
+      params.delete('folderId')
+    }
+    
+    const newUrl = params.toString() 
+      ? `/cms/media?${params.toString()}`
+      : '/cms/media'
+    
+    router.push(newUrl)
     setCurrentFolderId(folderId)
     setCurrentPage(1)
-  }, [])
+  }, [router, searchParams])
 
   // Handle asset delete
   const handleAssetDelete = useCallback(async (assetId: string) => {
@@ -428,5 +456,25 @@ export default function CMSMediaPage() {
         </TooltipProvider>
       </div>
     </DashboardLayout>
+  )
+}
+
+function MediaLibraryFallback() {
+  return (
+    <DashboardLayout title="Media Library">
+      <div className="-m-4 -mt-6 md:-m-8 h-[calc(100vh-4rem)]">
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+        </div>
+      </div>
+    </DashboardLayout>
+  )
+}
+
+export default function CMSMediaPage() {
+  return (
+    <Suspense fallback={<MediaLibraryFallback />}>
+      <CMSMediaPageContent />
+    </Suspense>
   )
 }
