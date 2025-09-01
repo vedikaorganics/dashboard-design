@@ -22,8 +22,15 @@ import { Checkbox } from "@/components/ui/checkbox"
 
 
 const getRoleBadge = (role: string) => {
-  const isAdmin = role?.toLowerCase() === 'admin'
-  return <Badge variant={isAdmin ? "default" : "outline"}>{role || '-'}</Badge>
+  const roleMap: Record<string, { variant: string; className: string }> = {
+    'admin': { variant: 'outline', className: 'bg-destructive/20 text-destructive border-destructive/50' },
+    'manager': { variant: 'outline', className: 'bg-warning/20 text-warning border-warning/50' },
+    'staff': { variant: 'outline', className: 'bg-info/20 text-info border-info/50' },
+    'support': { variant: 'outline', className: 'bg-success/20 text-success border-success/50' }
+  }
+  
+  const config = roleMap[role?.toLowerCase()] || { variant: 'outline', className: '' }
+  return <Badge variant={config.variant as any} className={config.className}>{role || '-'}</Badge>
 }
 
 
@@ -71,7 +78,7 @@ function StaffPageContent() {
             </Avatar>
             <div>
               <div>{staff.fullName || staff.name || '-'}</div>
-              <div className="text-sm text-muted-foreground">{staff.email || '-'}</div>
+              <div className="text-xs text-muted-foreground">{staff.email || '-'}</div>
             </div>
           </div>
         )
@@ -81,6 +88,12 @@ function StaffPageContent() {
       accessorKey: "role",
       header: "Role",
       cell: ({ row }) => getRoleBadge(row.getValue("role")),
+      sortingFn: (rowA, rowB) => {
+        const roleOrder: Record<string, number> = { 'admin': 0, 'manager': 1, 'staff': 2, 'support': 3 }
+        const roleA = (rowA.getValue("role") as string)?.toLowerCase() || 'zzz'
+        const roleB = (rowB.getValue("role") as string)?.toLowerCase() || 'zzz'
+        return (roleOrder[roleA] ?? 999) - (roleOrder[roleB] ?? 999)
+      },
     },
     {
       accessorKey: "isActive",
@@ -88,7 +101,10 @@ function StaffPageContent() {
       cell: ({ row }) => {
         const isActive = row.getValue("isActive")
         return (
-          <Badge variant={isActive ? "default" : "secondary"}>
+          <Badge 
+            variant="outline" 
+            className={isActive ? "bg-success/20 text-success border-success/50" : "bg-muted/50 text-muted-foreground border-muted"}
+          >
             {isActive ? "Active" : "Inactive"}
           </Badge>
         )

@@ -1,6 +1,7 @@
 "use client"
 
-import { Home, Settings, ShoppingCart, Users, Star, Target, Package, Gift, UserCheck } from "lucide-react"
+import { Home, Settings, ShoppingCart, Users, Star, Target, Package, Gift, UserCheck, FileText, Image as ImageIcon, Layout } from "lucide-react"
+import { useEffect, useState } from "react"
 
 import {
   Sidebar,
@@ -70,6 +71,27 @@ const managementItems = [
   },
 ]
 
+const cmsItems = [
+  {
+    title: "Pages",
+    url: "/cms/pages",
+    icon: FileText,
+    roles: ["admin", "member"], // Both roles can access
+  },
+  {
+    title: "Products",
+    url: "/cms/products",
+    icon: Package,
+    roles: ["admin", "member"], // Both roles can access
+  },
+  {
+    title: "Media Library",
+    url: "/cms/media",
+    icon: ImageIcon,
+    roles: ["admin", "member"], // Both roles can access
+  },
+]
+
 const systemItems = [
   {
     title: "Settings",
@@ -84,6 +106,11 @@ export function AppSidebar() {
   const userRole = user?.role || "member"
   const { state } = useSidebar()
   const { theme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Helper function to determine if a navigation item is active
   const isActive = (url: string) => {
@@ -98,8 +125,15 @@ export function AppSidebar() {
     item.roles.includes(userRole)
   )
 
-  // Determine which logo to use based on theme
-  const logoSrc = theme === "dark" ? "/vedika-logo-dark.png" : "/vedika-logo-light.png"
+  // Filter CMS items based on user role
+  const filteredCMSItems = cmsItems.filter(item => 
+    item.roles.includes(userRole)
+  )
+
+  // Use theme-aware logo only after component is mounted to avoid hydration mismatch
+  const logoSrc = mounted 
+    ? (theme === "dark" ? "/vedika-logo-dark.png" : "/vedika-logo-light.png")
+    : "/vedika-logo-light.png" // Default during SSR
 
   return (
     <Sidebar collapsible="icon">
@@ -143,6 +177,24 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {filteredManagementItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
+                    <Link href={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Content</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {filteredCMSItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
                     <Link href={item.url}>

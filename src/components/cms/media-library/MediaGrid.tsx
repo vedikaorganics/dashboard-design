@@ -1,0 +1,531 @@
+'use client'
+
+import { useState } from 'react'
+import Image from 'next/image'
+import { 
+  MoreHorizontal, 
+  Download, 
+  Edit, 
+  Trash2, 
+  Eye, 
+  Copy,
+  FileVideo,
+  FileText
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { MediaAsset } from '@/types/cms'
+import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
+
+interface MediaGridProps {
+  assets: MediaAsset[]
+  view: 'grid' | 'list'
+  selectedAssets: MediaAsset[]
+  onAssetSelect: (asset: MediaAsset) => void
+  onAssetDelete: (assetId: string) => void
+  onAssetUpdate: (assetId: string, data: {
+    alt?: string
+    caption?: string
+    tags?: string[]
+  }) => Promise<MediaAsset | null>
+}
+
+export function MediaGrid({
+  assets,
+  view,
+  selectedAssets,
+  onAssetSelect,
+  onAssetDelete,
+  onAssetUpdate
+}: MediaGridProps) {
+  const [editingAsset, setEditingAsset] = useState<MediaAsset | null>(null)
+  const [previewAsset, setPreviewAsset] = useState<MediaAsset | null>(null)
+  const [editForm, setEditForm] = useState({
+    alt: '',
+    caption: '',
+    tags: ''
+  })
+
+  const handleEditAsset = (asset: MediaAsset) => {
+    setEditingAsset(asset)
+    setEditForm({
+      alt: asset.alt || '',
+      caption: asset.caption || '',
+      tags: asset.tags?.join(', ') || ''
+    })
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingAsset) return
+
+    const updated = await onAssetUpdate(editingAsset._id, {
+      alt: editForm.alt,
+      caption: editForm.caption,
+      tags: editForm.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+    })
+
+    if (updated) {
+      toast.success('Asset updated successfully')
+      setEditingAsset(null)
+    }
+  }
+
+  const handleCopyUrl = (url: string) => {
+    navigator.clipboard.writeText(url)
+    toast.success('URL copied to clipboard')
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(new Date(date))
+  }
+
+  const isSelected = (asset: MediaAsset) => {
+    return selectedAssets.some(selected => selected._id === asset._id)
+  }
+
+  const renderAssetThumbnail = (asset: MediaAsset, className?: string) => {
+    if (asset.type === 'image') {
+      return (
+        <Image
+          src={asset.thumbnailUrl}
+          alt={asset.alt || asset.filename}
+          fill
+          className={cn("object-cover", className)}
+          onError={(e) => {
+            const target = e.target as HTMLImageElement
+            target.style.display = 'none'
+          }}
+        />
+      )
+    } else if (asset.type === 'video') {
+      return (
+        <div className="flex items-center justify-center h-full bg-muted">
+          <FileVideo className="w-12 h-12 text-muted-foreground" />
+        </div>
+      )
+    } else {
+      return (
+        <div className="flex items-center justify-center h-full bg-muted">
+          <FileText className="w-12 h-12 text-muted-foreground" />
+        </div>
+      )
+    }
+  }
+
+  if (view === 'list') {
+    return (
+      <>
+        <div className="divide-y">
+          {assets.map((asset) => (
+            <div
+              key={asset._id}
+              className={cn(
+                "flex items-center space-x-4 p-4 hover:bg-muted/50 cursor-pointer",
+                isSelected(asset) && "bg-primary/10 border-l-4 border-l-primary"
+              )}
+              onClick={() => onAssetSelect(asset)}
+            >
+              {/* Thumbnail */}
+              <div className="relative w-12 h-12 bg-muted rounded overflow-hidden flex-shrink-0">
+                {renderAssetThumbnail(asset)}
+              </div>
+
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate">{asset.filename}</p>
+                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                  <span>{formatFileSize(asset.size)}</span>
+                  <span>{formatDate(asset.createdAt)}</span>
+                  {asset.dimensions && (
+                    <span>{asset.dimensions.width} × {asset.dimensions.height}</span>
+                  )}
+                  <Badge variant="secondary">{asset.type}</Badge>
+                </div>
+              </div>
+
+              {/* Tags */}
+              {asset.tags && asset.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {asset.tags.slice(0, 3).map((tag, index) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                  {asset.tags.length > 3 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{asset.tags.length - 3}
+                    </Badge>
+                  )}
+                </div>
+              )}
+
+              {/* Actions */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setPreviewAsset(asset)}>
+                    <Eye className="w-4 h-4 mr-2" />
+                    Preview
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleEditAsset(asset)}>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleCopyUrl(asset.url)}>
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy URL
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href={asset.url} download={asset.filename}>
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => onAssetDelete(asset._id)}
+                    className="text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          ))}
+        </div>
+
+        {/* Edit Dialog */}
+        <Dialog open={!!editingAsset} onOpenChange={() => setEditingAsset(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Asset</DialogTitle>
+            </DialogHeader>
+            {editingAsset && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="alt">Alt Text</Label>
+                  <Input
+                    id="alt"
+                    value={editForm.alt}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, alt: e.target.value }))}
+                    placeholder="Describe this image..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="caption">Caption</Label>
+                  <Textarea
+                    id="caption"
+                    value={editForm.caption}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, caption: e.target.value }))}
+                    placeholder="Optional caption..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tags">Tags</Label>
+                  <Input
+                    id="tags"
+                    value={editForm.tags}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, tags: e.target.value }))}
+                    placeholder="Comma-separated tags..."
+                  />
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={() => setEditingAsset(null)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSaveEdit}>
+                    Save Changes
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Preview Dialog */}
+        <Dialog open={!!previewAsset} onOpenChange={() => setPreviewAsset(null)}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>{previewAsset?.filename}</DialogTitle>
+            </DialogHeader>
+            {previewAsset && (
+              <div className="space-y-4">
+                <div className="relative w-full h-96 bg-muted rounded overflow-hidden">
+                  {previewAsset.type === 'image' ? (
+                    <Image
+                      src={previewAsset.url}
+                      alt={previewAsset.alt || previewAsset.filename}
+                      fill
+                      className="object-contain"
+                    />
+                  ) : previewAsset.type === 'video' ? (
+                    <video controls className="w-full h-full">
+                      <source src={previewAsset.url} />
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <FileText className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">
+                          Preview not available for this file type
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p><strong>Size:</strong> {formatFileSize(previewAsset.size)}</p>
+                    <p><strong>Type:</strong> {previewAsset.type}</p>
+                    {previewAsset.dimensions && (
+                      <p><strong>Dimensions:</strong> {previewAsset.dimensions.width} × {previewAsset.dimensions.height}</p>
+                    )}
+                  </div>
+                  <div>
+                    <p><strong>Created:</strong> {formatDate(previewAsset.createdAt)}</p>
+                    <p><strong>Updated:</strong> {formatDate(previewAsset.updatedAt)}</p>
+                  </div>
+                </div>
+                {previewAsset.caption && (
+                  <div>
+                    <p><strong>Caption:</strong> {previewAsset.caption}</p>
+                  </div>
+                )}
+                {previewAsset.tags && previewAsset.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {previewAsset.tags.map((tag, index) => (
+                      <Badge key={index} variant="outline">{tag}</Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </>
+    )
+  }
+
+  // Grid view
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4">
+      {assets.map((asset) => (
+        <div
+          key={asset._id}
+          className={cn(
+            "relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all",
+            isSelected(asset) ? "border-primary shadow-md" : "border-transparent hover:border-muted-foreground/20"
+          )}
+          onClick={() => onAssetSelect(asset)}
+        >
+          {/* Thumbnail */}
+          <div className="relative aspect-square bg-muted">
+            {renderAssetThumbnail(asset)}
+            
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors">
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                    <Button variant="secondary" size="sm">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setPreviewAsset(asset)}>
+                      <Eye className="w-4 h-4 mr-2" />
+                      Preview
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleEditAsset(asset)}>
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleCopyUrl(asset.url)}>
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy URL
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <a href={asset.url} download={asset.filename}>
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => onAssetDelete(asset._id)}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+
+            {/* Type badge */}
+            <div className="absolute bottom-2 left-2">
+              <Badge variant="secondary" className="text-xs capitalize">
+                {asset.type}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Info */}
+          <div className="p-2">
+            <p className="text-sm font-medium truncate" title={asset.filename}>
+              {asset.filename}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {formatFileSize(asset.size)}
+            </p>
+          </div>
+        </div>
+      ))}
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingAsset} onOpenChange={() => setEditingAsset(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Asset</DialogTitle>
+          </DialogHeader>
+          {editingAsset && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="alt">Alt Text</Label>
+                <Input
+                  id="alt"
+                  value={editForm.alt}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, alt: e.target.value }))}
+                  placeholder="Describe this image..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="caption">Caption</Label>
+                <Textarea
+                  id="caption"
+                  value={editForm.caption}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, caption: e.target.value }))}
+                  placeholder="Optional caption..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="tags">Tags</Label>
+                <Input
+                  id="tags"
+                  value={editForm.tags}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, tags: e.target.value }))}
+                  placeholder="Comma-separated tags..."
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setEditingAsset(null)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveEdit}>
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Dialog */}
+      <Dialog open={!!previewAsset} onOpenChange={() => setPreviewAsset(null)}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>{previewAsset?.filename}</DialogTitle>
+          </DialogHeader>
+          {previewAsset && (
+            <div className="space-y-4">
+              <div className="relative w-full h-96 bg-muted rounded overflow-hidden">
+                {previewAsset.type === 'image' ? (
+                  <Image
+                    src={previewAsset.url}
+                    alt={previewAsset.alt || previewAsset.filename}
+                    fill
+                    className="object-contain"
+                  />
+                ) : previewAsset.type === 'video' ? (
+                  <video controls className="w-full h-full">
+                    <source src={previewAsset.url} />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <FileText className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">
+                        Preview not available for this file type
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p><strong>Size:</strong> {formatFileSize(previewAsset.size)}</p>
+                  <p><strong>Type:</strong> {previewAsset.type}</p>
+                  {previewAsset.dimensions && (
+                    <p><strong>Dimensions:</strong> {previewAsset.dimensions.width} × {previewAsset.dimensions.height}</p>
+                  )}
+                </div>
+                <div>
+                  <p><strong>Created:</strong> {formatDate(previewAsset.createdAt)}</p>
+                  <p><strong>Updated:</strong> {formatDate(previewAsset.updatedAt)}</p>
+                </div>
+              </div>
+              {previewAsset.caption && (
+                <div>
+                  <p><strong>Caption:</strong> {previewAsset.caption}</p>
+                </div>
+              )}
+              {previewAsset.tags && previewAsset.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {previewAsset.tags.map((tag, index) => (
+                    <Badge key={index} variant="outline">{tag}</Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
