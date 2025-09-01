@@ -157,7 +157,7 @@ export function MediaCard({
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => onSelect(asset)}
+      onClick={() => onPreview(asset)}
     >
       {/* Selection checkbox */}
       <div className={cn(
@@ -177,25 +177,6 @@ export function MediaCard({
         "absolute top-2 right-2 z-10 flex space-x-1 transition-all duration-200",
         isHovered ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
       )}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="h-8 w-8 p-0 bg-white/90 hover:bg-white"
-              onClick={(e) => {
-                e.stopPropagation()
-                onPreview(asset)
-              }}
-            >
-              <Eye className="w-3 h-3" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Preview</p>
-          </TooltipContent>
-        </Tooltip>
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
             <Button
@@ -207,10 +188,6 @@ export function MediaCard({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onPreview(asset)}>
-              <Eye className="w-4 h-4 mr-2" />
-              Preview
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onEdit(asset)}>
               <Edit className="w-4 h-4 mr-2" />
               Edit

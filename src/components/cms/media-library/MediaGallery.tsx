@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/tooltip'
 import { MediaAsset } from '@/types/cms'
 import { cn } from '@/lib/utils'
+import { getVideoMp4Url } from '@/lib/cloudflare'
 
 interface MediaGalleryProps {
   assets: MediaAsset[]
@@ -272,18 +273,16 @@ export function MediaGallery({
                   height={currentAsset.dimensions?.height || 600}
                   className="object-contain max-w-[90vw] max-h-[90vh]"
                   priority
+                  unoptimized
                 />
               </div>
             ) : currentAsset.type === 'video' ? (
-              <video
+              <iframe
                 key={currentAsset._id}
-                src={currentAsset.url}
-                className="max-w-[90vw] max-h-[90vh] object-contain"
-                controls={false}
-                autoPlay={isPlaying}
-                muted={isMuted}
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
+                src={currentAsset.metadata?.cloudflareId ? `https://iframe.videodelivery.net/${currentAsset.metadata.cloudflareId}` : currentAsset.url}
+                className="max-w-[90vw] max-h-[90vh] w-full h-[70vh] border-0"
+                allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+                allowFullScreen
               />
             ) : null}
           </div>
@@ -350,44 +349,6 @@ export function MediaGallery({
             </div>
           )}
 
-          {/* Video Controls */}
-          {currentAsset.type === 'video' && (
-            <div className={cn(
-              "absolute bottom-4 left-4 right-4 z-40 bg-black/60 backdrop-blur-sm rounded-lg p-4 transition-opacity duration-300",
-              showControls ? "opacity-100" : "opacity-0"
-            )}>
-              <div className="flex items-center space-x-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={togglePlayPause}
-                  className="text-white hover:bg-white/20 h-8 w-8 p-0"
-                >
-                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsMuted(!isMuted)}
-                  className="text-white hover:bg-white/20 h-8 w-8 p-0"
-                >
-                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </Button>
-                
-                <div className="flex items-center space-x-2 flex-1 max-w-32">
-                  <Slider
-                    value={volume}
-                    onValueChange={setVolume}
-                    max={100}
-                    step={1}
-                    className="flex-1"
-                  />
-                  <span className="text-white text-xs w-8">{volume[0]}%</span>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Info Panel */}
           {showInfo && (

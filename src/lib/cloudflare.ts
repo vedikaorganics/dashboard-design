@@ -196,6 +196,11 @@ export function getVideoEmbedUrl(videoUid: string): string {
   return `https://videodelivery.net/${videoUid}`
 }
 
+// Get video MP4 URL for direct HTML5 video playback
+export function getVideoMp4Url(videoUid: string): string {
+  return `https://videodelivery.net/${videoUid}/downloads/default.mp4`
+}
+
 // Get video HLS stream URL
 export function getVideoStreamUrl(videoUid: string): string {
   return `https://videodelivery.net/${videoUid}/manifest/video.m3u8`
