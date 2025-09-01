@@ -36,7 +36,7 @@ import {
 } from '@/components/ui/tooltip'
 import { MediaAsset } from '@/types/cms'
 import { cn } from '@/lib/utils'
-import { getVideoMp4Url } from '@/lib/cloudflare'
+import { getVideoMp4Url, getImageVariant } from '@/lib/cloudflare'
 
 interface MediaGalleryProps {
   assets: MediaAsset[]
@@ -267,7 +267,9 @@ export function MediaGallery({
                 style={{ transform: `scale(${zoom})` }}
               >
                 <Image
-                  src={currentAsset.url}
+                  src={currentAsset.type === 'image' && currentAsset.metadata?.variants ? 
+                    currentAsset.metadata.variants.find(v => v.includes('/public')) || currentAsset.metadata.variants[0] : 
+                    currentAsset.url}
                   alt={currentAsset.alt || currentAsset.filename}
                   width={currentAsset.dimensions?.width || 800}
                   height={currentAsset.dimensions?.height || 600}
