@@ -241,10 +241,19 @@ export function MediaCard({
             </DropdownMenuItem>
             <DropdownMenuItem onClick={(e) => {
               e.stopPropagation()
-              window.open(asset.url, '_blank')
+              if (asset.type === 'video') {
+                // For videos, open the preview instead since direct URLs don't work
+                onPreview(asset)
+              } else {
+                window.open(asset.url, '_blank')
+              }
             }}>
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Open in new tab
+              {asset.type === 'video' ? (
+                <Play className="w-4 h-4 mr-2" />
+              ) : (
+                <ExternalLink className="w-4 h-4 mr-2" />
+              )}
+              {asset.type === 'video' ? 'Play video' : 'Open in new tab'}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={(e) => {
               e.stopPropagation()
