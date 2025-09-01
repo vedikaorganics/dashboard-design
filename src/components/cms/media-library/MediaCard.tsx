@@ -5,7 +5,6 @@ import Image from 'next/image'
 import { 
   MoreHorizontal, 
   Download, 
-  Edit, 
   Trash2, 
   Eye, 
   Copy,
@@ -104,6 +103,31 @@ export function MediaCard({
     onCopyUrl(asset.url)
     toast.success('URL copied to clipboard')
   }, [asset.url, onCopyUrl])
+
+  const handleDownload = useCallback(async () => {
+    try {
+      // Fetch the file as a blob
+      const response = await fetch(asset.url)
+      const blob = await response.blob()
+      
+      // Create a blob URL and download link
+      const blobUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = asset.filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      // Clean up the blob URL
+      window.URL.revokeObjectURL(blobUrl)
+      
+      toast.success('Download started')
+    } catch (error) {
+      console.error('Download failed:', error)
+      toast.error('Download failed')
+    }
+  }, [asset.url, asset.filename])
 
   const renderThumbnail = () => {
     if (asset.type === 'image') {
@@ -208,25 +232,33 @@ export function MediaCard({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(asset)}>
-              <Edit className="w-4 h-4 mr-2" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleCopyUrl}>
+            <DropdownMenuItem onClick={(e) => {
+              e.stopPropagation()
+              handleCopyUrl()
+            }}>
               <Copy className="w-4 h-4 mr-2" />
               Copy URL
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => window.open(asset.url, '_blank')}>
+            <DropdownMenuItem onClick={(e) => {
+              e.stopPropagation()
+              window.open(asset.url, '_blank')
+            }}>
               <ExternalLink className="w-4 h-4 mr-2" />
               Open in new tab
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => {
+              e.stopPropagation()
+              handleDownload()
+            }}>
               <Download className="w-4 h-4 mr-2" />
               Download
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
-              onClick={() => onDelete(asset._id)}
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(asset._id)
+              }}
               className="text-destructive"
             >
               <Trash2 className="w-4 h-4 mr-2" />
