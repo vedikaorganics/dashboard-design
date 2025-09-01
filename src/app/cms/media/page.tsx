@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { MediaAsset } from '@/types/cms'
 import { useMedia } from '@/hooks/cms/use-media'
@@ -24,6 +24,7 @@ export default function CMSMediaPage() {
   const [showGallery, setShowGallery] = useState(false)
   const [galleryIndex, setGalleryIndex] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
+  const [assetDimensions, setAssetDimensions] = useState<Record<string, { width: number; height: number }>>({})
   
   const { showDetails, selectedAsset, openDetails, closeDetails, setShowDetails } = useMediaDetails()
 
@@ -87,6 +88,33 @@ export default function CMSMediaPage() {
       console.error('Upload error:', error)
     }
   }, [currentFolderId, refresh])
+
+  // Fetch dimensions for assets that don't have them
+  useEffect(() => {
+    const fetchMissingDimensions = async () => {
+      for (const asset of assets) {
+        if (!asset.dimensions && asset.metadata?.cloudflareId && !assetDimensions[asset._id]) {
+          try {
+            const response = await fetch(`/api/cms/media/dimensions?cloudflareId=${asset.metadata.cloudflareId}&type=${asset.type}`)
+            const result = await response.json()
+            
+            if (result.success && result.data.dimensions) {
+              setAssetDimensions(prev => ({
+                ...prev,
+                [asset._id]: result.data.dimensions
+              }))
+            }
+          } catch (error) {
+            console.warn('Failed to fetch dimensions for asset:', asset._id, error)
+          }
+        }
+      }
+    }
+
+    if (assets.length > 0) {
+      fetchMissingDimensions()
+    }
+  }, [assets, assetDimensions])
 
   // Handle folder creation
   const handleCreateFolder = useCallback(async (name: string) => {
@@ -228,7 +256,7 @@ export default function CMSMediaPage() {
       )
     } else if (viewMode === 'list') {
       return (
-        <div className="divide-y pl-4">
+        <div className="space-y-2 pl-4">
           {assets.map((asset) => (
             <div key={asset._id} className="flex items-center space-x-4 hover:bg-muted/50">
               <div className="w-16 h-16 flex-shrink-0">
@@ -248,6 +276,9 @@ export default function CMSMediaPage() {
                 <p className="font-medium truncate">{asset.filename}</p>
                 <p className="text-sm text-muted-foreground">
                   {asset.type.toUpperCase()} • {Math.round(asset.size / 1024)} KB
+                  {(asset.dimensions || assetDimensions[asset._id]) && 
+                    ` • ${(asset.dimensions || assetDimensions[asset._id]).width}×${(asset.dimensions || assetDimensions[asset._id]).height}`
+                  }
                 </p>
               </div>
             </div>
