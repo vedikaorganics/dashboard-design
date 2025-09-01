@@ -262,7 +262,7 @@ export function MediaLibrary({
                   <DialogHeader>
                     <DialogTitle>Upload Media</DialogTitle>
                   </DialogHeader>
-                  <MediaUploader onUpload={handleUpload} accept={accept} />
+                  <MediaUploader onUpload={handleUpload} accept={accept === 'document' ? 'all' : accept} />
                 </DialogContent>
               </Dialog>
             </div>

@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 
 interface MediaUploaderProps {
   onUpload: (files: File[]) => Promise<void>
-  accept?: 'image' | 'video' | 'document' | 'all'
+  accept?: 'image' | 'video' | 'all'
   multiple?: boolean
   maxSize?: number // in MB
 }
@@ -18,7 +18,7 @@ export function MediaUploader({
   onUpload, 
   accept = 'all',
   multiple = true,
-  maxSize = 10 
+  maxSize = 100 
 }: MediaUploaderProps) {
   const [files, setFiles] = useState<File[]>([])
   const [uploading, setUploading] = useState(false)
@@ -31,19 +31,10 @@ export function MediaUploader({
         return { 'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'] }
       case 'video':
         return { 'video/*': ['.mp4', '.webm', '.ogg', '.mov'] }
-      case 'document':
-        return { 
-          'application/pdf': ['.pdf'],
-          'application/msword': ['.doc'],
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-          'text/plain': ['.txt']
-        }
       default:
         return {
           'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'],
-          'video/*': ['.mp4', '.webm', '.ogg', '.mov'],
-          'application/pdf': ['.pdf'],
-          'text/plain': ['.txt']
+          'video/*': ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv']
         }
     }
   }
@@ -164,8 +155,7 @@ export function MediaUploader({
             <p className="text-sm text-muted-foreground">
               {accept === 'image' && 'Images only'}
               {accept === 'video' && 'Videos only'}
-              {accept === 'document' && 'Documents only'}
-              {accept === 'all' && 'Images, videos, and documents'}
+              {accept === 'all' && 'Images and videos'}
               {' • Max size: '}{maxSize}MB
               {multiple && ' • Multiple files allowed'}
             </p>

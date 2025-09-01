@@ -3,6 +3,7 @@ import { getDatabase } from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
 import { MediaAsset, MediaFolder, MediaAssetListResponse, UploadMediaRequest } from '@/types/cms'
 import { getCurrentUserId } from '@/lib/auth-utils'
+import { uploadImageToCloudflare, uploadVideoToCloudflare, getImageVariant, getVideoThumbnail } from '@/lib/cloudflare'
 
 // GET /api/cms/media - List media assets and folders
 export async function GET(request: NextRequest) {
@@ -82,19 +83,19 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/cms/media - Upload media asset (placeholder for multipart form handling)
+// POST /api/cms/media - Upload media asset to Cloudflare
 export async function POST(request: NextRequest) {
   try {
-    // NOTE: This is a simplified version. In a real implementation, you'd handle
-    // multipart form data with libraries like formidable or multer
-    // For now, we'll expect a JSON body with the file URL already processed
+    const formData = await request.formData()
+    const file = formData.get('file') as File
+    const alt = formData.get('alt') as string
+    const caption = formData.get('caption') as string
+    const tags = formData.get('tags') as string
+    const folderId = formData.get('folderId') as string
     
-    const body = await request.json()
-    const { url, filename, type, size, dimensions, alt, caption, tags, folderId } = body
-    
-    if (!url || !filename || !type) {
+    if (!file) {
       return NextResponse.json(
-        { success: false, error: 'Missing required fields: url, filename, type' },
+        { success: false, error: 'No file provided' },
         { status: 400 }
       )
     }
@@ -103,29 +104,66 @@ export async function POST(request: NextRequest) {
     const collection = db.collection('cms_media_assets')
     
     const now = new Date()
+    const userId = await getCurrentUserId(request)
     
-    // Generate thumbnail URL based on type
-    let thumbnailUrl = url
-    if (type === 'image') {
-      // In a real implementation, you'd generate actual thumbnails
-      thumbnailUrl = url // For now, use the same URL
+    let cloudflareResult
+    let url: string
+    let thumbnailUrl: string
+    let cloudflareId: string
+    let type: 'image' | 'video'
+    
+    // Determine file type and upload to appropriate Cloudflare service
+    if (file.type.startsWith('image/')) {
+      type = 'image'
+      cloudflareResult = await uploadImageToCloudflare(file, {
+        alt: alt || '',
+        caption: caption || ''
+      })
+      url = cloudflareResult.url
+      thumbnailUrl = getImageVariant(cloudflareResult.id, 'thumbnail')
+      cloudflareId = cloudflareResult.id
+    } else if (file.type.startsWith('video/')) {
+      type = 'video'
+      cloudflareResult = await uploadVideoToCloudflare(file, {
+        name: file.name,
+        requireSignedURLs: false // Set to true if you want signed URLs
+      })
+      url = `https://videodelivery.net/${cloudflareResult.uid}`
+      
+      // Use proper thumbnail URL with time parameter for better generation
+      thumbnailUrl = getVideoThumbnail(cloudflareResult.uid, 1)
+      cloudflareId = cloudflareResult.uid
+    } else {
+      return NextResponse.json(
+        { success: false, error: 'Unsupported file type. Only images and videos are allowed.' },
+        { status: 400 }
+      )
     }
     
     const asset: Omit<MediaAsset, '_id'> = {
       url,
       thumbnailUrl,
-      type: type as MediaAsset['type'],
-      filename,
-      size: size || 0,
-      dimensions: dimensions || undefined,
+      type,
+      filename: file.name,
+      size: file.size,
+      dimensions: undefined, // Could be extracted from image/video metadata
       alt: alt || '',
       caption: caption || '',
-      tags: tags || [],
+      tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
       folderId: folderId || undefined,
       metadata: {
-        mimeType: `${type}/*`, // Simplified mime type
-        uploadedBy: await getCurrentUserId(request),
-        originalName: filename
+        mimeType: file.type,
+        uploadedBy: userId,
+        originalName: file.name,
+        cloudflareId, // Store Cloudflare ID for deletion
+        ...(type === 'video' && {
+          streamUrl: `https://videodelivery.net/${cloudflareId}/manifest/video.m3u8`,
+          dashUrl: `https://videodelivery.net/${cloudflareId}/manifest/video.mpd`,
+          status: (cloudflareResult as any).status
+        }),
+        ...(type === 'image' && {
+          variants: (cloudflareResult as any).variants
+        })
       },
       createdAt: now,
       updatedAt: now

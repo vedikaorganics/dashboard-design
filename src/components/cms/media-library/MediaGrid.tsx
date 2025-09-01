@@ -129,8 +129,38 @@ export function MediaGrid({
       )
     } else if (asset.type === 'video') {
       return (
-        <div className="flex items-center justify-center h-full bg-muted">
-          <FileVideo className="w-12 h-12 text-muted-foreground" />
+        <div className="relative h-full bg-muted">
+          {asset.thumbnailUrl ? (
+            <Image
+              src={asset.thumbnailUrl}
+              alt={`Video thumbnail: ${asset.alt || asset.filename}`}
+              fill
+              className={cn("object-cover", className)}
+              onError={(e) => {
+                // Fallback to video icon if thumbnail fails to load
+                const target = e.target as HTMLImageElement
+                target.style.display = 'none'
+              }}
+              onLoad={() => {
+                // Hide the fallback icon when thumbnail loads successfully
+                const fallbackIcon = (document.querySelector(`[data-video-fallback="${asset._id}"]`) as HTMLElement)
+                if (fallbackIcon) fallbackIcon.style.display = 'none'
+              }}
+            />
+          ) : null}
+          <div 
+            className="flex items-center justify-center h-full bg-muted"
+            data-video-fallback={asset._id}
+            style={asset.thumbnailUrl ? { position: 'absolute', inset: 0 } : {}}
+          >
+            <FileVideo className="w-12 h-12 text-muted-foreground" />
+          </div>
+          {/* Video play overlay */}
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+            <div className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center">
+              <div className="w-3 h-3 border-l-4 border-l-black border-y-2 border-y-transparent ml-1"></div>
+            </div>
+          </div>
         </div>
       )
     } else {

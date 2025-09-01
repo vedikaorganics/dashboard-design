@@ -104,6 +104,12 @@ export interface MediaAsset {
     mimeType: string
     uploadedBy: string
     originalName: string
+    cloudflareId: string
+    streamUrl?: string
+    dashUrl?: string
+    status?: any
+    variants?: string[]
+    duration?: string
   }
   createdAt: Date
   updatedAt: Date
