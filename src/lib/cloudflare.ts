@@ -221,6 +221,90 @@ export function getVideoThumbnailWithSize(videoUid: string, width: number = 320,
   return `https://videodelivery.net/${videoUid}/thumbnails/thumbnail.jpg?time=${timeSeconds}s&width=${width}&height=${height}`
 }
 
+// Get image metadata from Cloudflare Images API
+export async function getImageMetadata(imageId: string): Promise<{
+  width: number
+  height: number
+  format: string
+  fileSize: number
+} | null> {
+  try {
+    const response = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/images/v1/${imageId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${CLOUDFLARE_API_TOKEN}`,
+        },
+      }
+    )
+
+    if (!response.ok) {
+      console.error(`Failed to fetch image metadata: ${response.status} ${response.statusText}`)
+      return null
+    }
+
+    const result = await response.json()
+    
+    if (!result.success || !result.result) {
+      console.error('Cloudflare Images API error:', result.errors)
+      return null
+    }
+
+    const metadata = result.result
+    return {
+      width: metadata.width || 0,
+      height: metadata.height || 0,
+      format: metadata.format || 'unknown',
+      fileSize: metadata.fileSize || 0
+    }
+  } catch (error) {
+    console.error('Error fetching image metadata:', error)
+    return null
+  }
+}
+
+// Get video metadata from Cloudflare Stream API
+export async function getVideoMetadata(videoUid: string): Promise<{
+  width: number
+  height: number
+  duration: number
+  ready: boolean
+} | null> {
+  try {
+    const response = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/stream/${videoUid}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${CLOUDFLARE_API_TOKEN}`,
+        },
+      }
+    )
+
+    if (!response.ok) {
+      console.error(`Failed to fetch video metadata: ${response.status} ${response.statusText}`)
+      return null
+    }
+
+    const result = await response.json()
+    
+    if (!result.success || !result.result) {
+      console.error('Cloudflare Stream API error:', result.errors)
+      return null
+    }
+
+    const metadata = result.result
+    return {
+      width: metadata.input?.width || metadata.playback?.width || 0,
+      height: metadata.input?.height || metadata.playback?.height || 0,
+      duration: metadata.duration || 0,
+      ready: metadata.status?.state === 'ready'
+    }
+  } catch (error) {
+    console.error('Error fetching video metadata:', error)
+    return null
+  }
+}
+
 // Debug function to test image URL accessibility
 export async function testImageUrl(imageId: string, variant: string = 'public'): Promise<{
   url: string

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Image from 'next/image'
 import { 
   MoreHorizontal, 
@@ -62,7 +62,27 @@ export function MediaCard({
 }: MediaCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [imageError, setImageError] = useState(false)
+  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null)
 
+  // Fetch dimensions from API route
+  useEffect(() => {
+    const fetchDimensions = async () => {
+      if (!asset.metadata?.cloudflareId) return
+      
+      try {
+        const response = await fetch(`/api/cms/media/dimensions?cloudflareId=${asset.metadata.cloudflareId}&type=${asset.type}`)
+        const result = await response.json()
+        
+        if (result.success && result.data.dimensions) {
+          setDimensions(result.data.dimensions)
+        }
+      } catch (error) {
+        console.warn('Failed to fetch dimensions for asset:', asset._id, error)
+      }
+    }
+
+    fetchDimensions()
+  }, [asset._id, asset.type, asset.metadata?.cloudflareId])
 
   const formatFileSize = useCallback((bytes: number) => {
     if (bytes === 0) return '0 Bytes'
@@ -268,7 +288,7 @@ export function MediaCard({
 
             {/* Metadata */}
             <div className={cn(
-              "flex items-center justify-between text-muted-foreground",
+              "flex flex-col space-y-1 text-muted-foreground",
               size === 'sm' ? "text-[9px]" : "text-xs"
             )}>
               <div className="flex items-center space-x-1">
@@ -276,9 +296,9 @@ export function MediaCard({
                 <span>{formatFileSize(asset.size)}</span>
               </div>
               
-              {asset.dimensions && size !== 'sm' && (
+              {dimensions && (
                 <div className="flex items-center space-x-1">
-                  <span>{asset.dimensions.width}×{asset.dimensions.height}</span>
+                  <span>{dimensions.width}×{dimensions.height}</span>
                 </div>
               )}
             </div>

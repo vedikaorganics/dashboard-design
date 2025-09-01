@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
       type,
       filename: file.name,
       size: file.size,
-      dimensions: undefined, // Could be extracted from image/video metadata
+      dimensions: undefined, // Dimensions will be fetched dynamically from Cloudflare
       alt: alt || '',
       caption: caption || '',
       tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
