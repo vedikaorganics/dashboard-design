@@ -47,6 +47,48 @@ export default function CMSMediaPage() {
     limit: viewMode === 'gallery' ? 48 : 24
   })
 
+  // Formatting functions
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    }).format(new Date(date))
+  }
+
+  const formatTime = (date: Date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(new Date(date))
+  }
+
+  const formatRelativeDate = (date: Date) => {
+    const now = new Date()
+    const targetDate = new Date(date)
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000)
+    const targetDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate())
+
+    if (targetDay.getTime() === today.getTime()) {
+      return 'Today'
+    } else if (targetDay.getTime() === yesterday.getTime()) {
+      return 'Yesterday'
+    } else if (now.getTime() - targetDay.getTime() < 7 * 24 * 60 * 60 * 1000) {
+      return new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(targetDate)
+    } else {
+      return formatDate(targetDate)
+    }
+  }
+
   // Handle file upload
   const handleUpload = useCallback(async (files: File[]) => {
     const uploadPromises = files.map(async (file) => {
@@ -274,7 +316,7 @@ export default function CMSMediaPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{asset.filename}</p>
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <div className="flex items-center space-x-3 text-sm text-muted-foreground">
                   <div className="flex items-center space-x-1">
                     {asset.type === 'image' ? (
                       <svg className="w-4 h-4 text-info" fill="currentColor" viewBox="0 0 20 20">
@@ -289,16 +331,18 @@ export default function CMSMediaPage() {
                         <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
                       </svg>
                     )}
-                    <span>•</span>
                   </div>
-                  <span>{Math.round(asset.size / 1024)} KB</span>
+                  <span>{formatFileSize(asset.size)}</span>
                   {(asset.dimensions || assetDimensions[asset._id]) && (
-                    <>
-                      <span>•</span>
-                      <span>{(asset.dimensions || assetDimensions[asset._id]).width}×{(asset.dimensions || assetDimensions[asset._id]).height}</span>
-                    </>
+                    <span>{(asset.dimensions || assetDimensions[asset._id]).width}×{(asset.dimensions || assetDimensions[asset._id]).height}</span>
                   )}
                 </div>
+              </div>
+
+              {/* Time and Date - Right side */}
+              <div className="flex-shrink-0 text-sm text-muted-foreground mr-4 text-right">
+                <div>{formatTime(asset.createdAt)}</div>
+                <div className="text-xs">{formatRelativeDate(asset.createdAt)}</div>
               </div>
             </div>
           ))}

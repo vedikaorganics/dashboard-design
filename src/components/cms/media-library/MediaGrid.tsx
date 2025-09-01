@@ -103,10 +103,33 @@ export function MediaGrid({
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
+      day: 'numeric'
+    }).format(new Date(date))
+  }
+
+  const formatTime = (date: Date) => {
+    return new Intl.DateTimeFormat('en-US', {
       hour: '2-digit',
       minute: '2-digit'
     }).format(new Date(date))
+  }
+
+  const formatRelativeDate = (date: Date) => {
+    const now = new Date()
+    const targetDate = new Date(date)
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000)
+    const targetDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate())
+
+    if (targetDay.getTime() === today.getTime()) {
+      return 'Today'
+    } else if (targetDay.getTime() === yesterday.getTime()) {
+      return 'Yesterday'
+    } else if (now.getTime() - targetDay.getTime() < 7 * 24 * 60 * 60 * 1000) {
+      return new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(targetDate)
+    } else {
+      return formatDate(targetDate)
+    }
   }
 
   const isSelected = (asset: MediaAsset) => {
@@ -193,13 +216,8 @@ export function MediaGrid({
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{asset.filename}</p>
-                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                  <span>{formatFileSize(asset.size)}</span>
-                  <span>{formatDate(asset.createdAt)}</span>
-                  {asset.dimensions && (
-                    <span>{asset.dimensions.width} × {asset.dimensions.height}</span>
-                  )}
-                  <div className="flex items-center justify-center">
+                <div className="flex items-center space-x-3 text-sm text-muted-foreground">
+                  <div className="flex items-center space-x-1">
                     {asset.type === 'image' ? (
                       <svg className="w-4 h-4 text-info" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
@@ -214,7 +232,17 @@ export function MediaGrid({
                       </svg>
                     )}
                   </div>
+                  <span>{formatFileSize(asset.size)}</span>
+                  {asset.dimensions && (
+                    <span>{asset.dimensions.width} × {asset.dimensions.height}</span>
+                  )}
                 </div>
+              </div>
+
+              {/* Time and Date - Right side */}
+              <div className="flex-shrink-0 text-sm text-muted-foreground mr-4 text-right">
+                <div>{formatTime(asset.createdAt)}</div>
+                <div className="text-xs">{formatRelativeDate(asset.createdAt)}</div>
               </div>
 
               {/* Tags */}

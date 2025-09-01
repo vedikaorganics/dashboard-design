@@ -50,7 +50,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 
-export type ViewMode = 'grid' | 'list' | 'gallery'
+export type ViewMode = 'grid' | 'list'
 export type SortBy = 'name' | 'date' | 'size' | 'type'
 export type SortOrder = 'asc' | 'desc'
 
@@ -212,17 +212,9 @@ export function MediaHeader({
               variant={viewMode === 'list' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => onViewModeChange('list')}
-              className="h-8 px-2 rounded-none"
-            >
-              <LayoutList className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'gallery' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => onViewModeChange('gallery')}
               className="h-8 px-2 rounded-l-none"
             >
-              <Images className="w-4 h-4" />
+              <LayoutList className="w-4 h-4" />
             </Button>
           </div>
 
