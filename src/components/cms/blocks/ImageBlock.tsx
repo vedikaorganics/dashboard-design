@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
-import { ImageBlockContent } from '@/types/cms'
+import { ImageBlockContent, getMediaUrl } from '@/types/cms'
 import { cn } from '@/lib/utils'
 
 interface ImageBlockProps {
@@ -42,8 +42,8 @@ export function ImageBlock({ content, isEditing = false, className }: ImageBlock
     if (!src) return ''
     
     // Use mobile version on mobile if available, otherwise fallback to desktop
-    if (isMobile && src.mobile) return src.mobile
-    return src.desktop || ''
+    if (isMobile && src.mobile) return getMediaUrl(src.mobile)
+    return getMediaUrl(src.desktop)
   }
 
   // If editing and no desktop image, show placeholder
@@ -136,15 +136,15 @@ export function ImageBlockEditor({
         <label className="text-sm font-medium">Desktop Image URL *</label>
         <input
           type="url"
-          value={typeof content.src === 'string' ? content.src : (content.src?.desktop || '')}
+          value={typeof content.src === 'string' ? content.src : (content.src?.desktop ? getMediaUrl(content.src.desktop) : '')}
           onChange={(e) => onChange({ 
             src: typeof content.src === 'string' 
-              ? { desktop: e.target.value, mobile: '' }
-              : { ...content.src, desktop: e.target.value }
+              ? { desktop: { url: e.target.value }, mobile: { url: '' } }
+              : { ...content.src, desktop: { url: e.target.value } }
           })}
-          placeholder="https://example.com/desktop-image.jpg"
           className="w-full p-2 border rounded-md"
         />
+        <p className="text-xs text-muted-foreground">https://example.com/desktop-image.jpg</p>
       </div>
 
       {/* Mobile Image URL */}
@@ -152,17 +152,16 @@ export function ImageBlockEditor({
         <label className="text-sm font-medium">Mobile Image URL (Optional)</label>
         <input
           type="url"
-          value={typeof content.src === 'string' ? '' : (content.src?.mobile || '')}
+          value={typeof content.src === 'string' ? '' : (content.src?.mobile ? getMediaUrl(content.src.mobile) : '')}
           onChange={(e) => onChange({ 
             src: typeof content.src === 'string' 
-              ? { desktop: content.src, mobile: e.target.value }
-              : { ...content.src, mobile: e.target.value }
+              ? { desktop: { url: content.src }, mobile: { url: e.target.value } }
+              : { ...content.src, mobile: { url: e.target.value } }
           })}
-          placeholder="https://example.com/mobile-image.jpg"
           className="w-full p-2 border rounded-md"
         />
         <p className="text-xs text-muted-foreground">
-          If not provided, desktop image will be used on mobile devices
+          Example: https://example.com/mobile-image.jpg - If not provided, desktop image will be used on mobile devices
         </p>
       </div>
 
@@ -200,9 +199,9 @@ export function ImageBlockEditor({
           type="url"
           value={content.link || ''}
           onChange={(e) => onChange({ link: e.target.value })}
-          placeholder="https://example.com"
           className="w-full p-2 border rounded-md"
         />
+        <p className="text-xs text-muted-foreground">Example: https://example.com</p>
       </div>
 
       {/* Settings */}

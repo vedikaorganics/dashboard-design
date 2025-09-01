@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { 
@@ -18,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ContentBlock } from '@/types/cms'
+import { getMediaUrl } from '@/types/cms'
 import { cn } from '@/lib/utils'
 
 interface SortableBlockItemProps {
@@ -37,6 +39,7 @@ export function SortableBlockItem({
   onDuplicate,
   onDelete
 }: SortableBlockItemProps) {
+  const [imageError, setImageError] = useState(false)
   const {
     attributes,
     listeners,
@@ -160,6 +163,43 @@ export function SortableBlockItem({
     }
   }
 
+  const getBlockMediaUrl = (block: ContentBlock): string | null => {
+    const content = block.content as any
+    
+    switch (block.type) {
+      case 'video-cta':
+        return content?.video?.desktop ? getMediaUrl(content.video.desktop) : null
+      case 'sliding-images-cta':
+        return content?.slides?.[0]?.image?.desktop ? getMediaUrl(content.slides[0].image.desktop) : null
+      case 'image':
+        return content?.src?.desktop ? getMediaUrl(content.src.desktop) : null
+      case 'gallery':
+        return content?.images?.[0]?.src?.desktop ? getMediaUrl(content.images[0].src.desktop) : null
+      case 'video':
+        return content?.src?.desktop ? getMediaUrl(content.src.desktop) : null
+      case 'testimonials':
+        return content?.testimonials?.[0]?.avatar ? getMediaUrl(content.testimonials[0].avatar) : null
+      default:
+        return null
+    }
+  }
+
+  const renderMediaThumbnail = () => {
+    const mediaUrl = getBlockMediaUrl(block)
+    if (!mediaUrl || imageError) return null
+
+    return (
+      <div className="w-8 h-8 rounded overflow-hidden bg-muted">
+        <img
+          src={mediaUrl}
+          alt=""
+          className="w-full h-full object-cover"
+          onError={() => setImageError(true)}
+        />
+      </div>
+    )
+  }
+
   return (
     <div
       ref={setNodeRef}
@@ -187,9 +227,13 @@ export function SortableBlockItem({
               <GripVertical className="w-4 h-4 text-muted-foreground" />
             </div>
 
-            {/* Block icon */}
+            {/* Block icon or thumbnail */}
             <div className="flex-shrink-0 mt-0.5">
-              {getBlockIcon(block.type)}
+              {renderMediaThumbnail() || (
+                <div className="w-8 h-8 flex items-center justify-center">
+                  {getBlockIcon(block.type)}
+                </div>
+              )}
             </div>
 
             {/* Block content */}

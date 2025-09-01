@@ -208,9 +208,6 @@ function CMSMediaPageContent() {
     setShowGallery(true)
   }, [assets])
   
-  const handleAssetEdit = useCallback((asset: MediaAsset) => {
-    openDetails(asset)
-  }, [openDetails])
   
   const handleCopyUrl = useCallback((url: string) => {
     navigator.clipboard.writeText(url)
@@ -316,7 +313,6 @@ function CMSMediaPageContent() {
               isSelected={selectedAssets.some(a => a._id === asset._id)}
               onSelect={handleAssetSelect}
               onPreview={handleAssetPreview}
-              onEdit={handleAssetEdit}
               onDelete={handleAssetDelete}
               onCopyUrl={handleCopyUrl}
               size="sm"
@@ -335,8 +331,7 @@ function CMSMediaPageContent() {
                   isSelected={selectedAssets.some(a => a._id === asset._id)}
                   onSelect={handleAssetSelect}
                   onPreview={handleAssetPreview}
-                  onEdit={handleAssetEdit}
-                  onDelete={handleAssetDelete}
+                      onDelete={handleAssetDelete}
                   onCopyUrl={handleCopyUrl}
                   size="sm"
                   className="w-16 h-16"
@@ -386,7 +381,6 @@ function CMSMediaPageContent() {
               isSelected={selectedAssets.some(a => a._id === asset._id)}
               onSelect={handleAssetSelect}
               onPreview={handleAssetPreview}
-              onEdit={handleAssetEdit}
               onDelete={handleAssetDelete}
               onCopyUrl={handleCopyUrl}
               size="lg"

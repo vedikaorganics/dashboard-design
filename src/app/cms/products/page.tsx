@@ -146,11 +146,18 @@ export default function CMSProductsPage() {
                     
                     {/* Actions */}
                     <div className="flex items-center justify-end">
-                      <Link href={`/shop/products/${product.id}`} onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Eye className="w-3 h-3" />
-                        </Button>
-                      </Link>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          window.open(`/shop/products/${product.id}`, '_blank')
+                        }}
+                      >
+                        <Eye className="w-3 h-3" />
+                      </Button>
                     </div>
                   </div>
                 </Link>

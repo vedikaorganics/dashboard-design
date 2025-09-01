@@ -145,8 +145,8 @@ export type BlockContent =
 
 export interface VideoCTABlockContent {
   video: {
-    desktop: string
-    mobile?: string
+    desktop: { url: string; assetId?: string; filename?: string }
+    mobile?: { url: string; assetId?: string; filename?: string }
   }
   heading: string
   text: string
@@ -162,8 +162,8 @@ export interface VideoCTABlockContent {
 export interface SlidingImagesCTABlockContent {
   slides: Array<{
     image: {
-      desktop: string
-      mobile?: string
+      desktop: { url: string; assetId?: string }
+      mobile?: { url: string; assetId?: string }
     }
     heading: string
     text: string
@@ -186,8 +186,8 @@ export interface TextBlockContent {
 
 export interface ImageBlockContent {
   src: {
-    desktop: string
-    mobile?: string
+    desktop: { url: string; assetId?: string; filename?: string }
+    mobile?: { url: string; assetId?: string; filename?: string }
   }
   alt: string
   caption?: string
@@ -200,8 +200,8 @@ export interface ImageBlockContent {
 export interface GalleryBlockContent {
   images: Array<{
     src: {
-      desktop: string
-      mobile?: string
+      desktop: { url: string; assetId?: string }
+      mobile?: { url: string; assetId?: string }
     }
     alt: string
     caption?: string
@@ -215,12 +215,12 @@ export interface GalleryBlockContent {
 export interface VideoBlockContent {
   type: "upload" | "youtube" | "vimeo"
   src: {
-    desktop: string
-    mobile?: string
+    desktop: { url: string; assetId?: string; filename?: string }
+    mobile?: { url: string; assetId?: string; filename?: string }
   }
   poster?: {
-    desktop: string
-    mobile?: string
+    desktop: { url: string; assetId?: string; filename?: string }
+    mobile?: { url: string; assetId?: string; filename?: string }
   }
   controls: boolean
   autoplay: boolean
@@ -247,7 +247,7 @@ export interface TestimonialsBlockContent {
     text: string
     author: string
     role?: string
-    avatar?: string
+    avatar?: { url: string; assetId?: string; filename?: string }
     rating?: number
   }>
   layout: "grid" | "carousel" | "single"
@@ -425,6 +425,32 @@ export interface BlockDefinition {
     onChange: (content: BlockContent) => void
     onSettingsChange: (settings: BlockSettings) => void
   }>
+}
+
+// Media utility functions for backwards compatibility
+export const createMediaRef = (url: string, assetId?: string, filename?: string): { url: string; assetId?: string; filename?: string } => ({
+  url,
+  assetId,
+  filename
+})
+
+export const getMediaUrl = (mediaRef: string | { url: string; assetId?: string; filename?: string }): string => {
+  if (typeof mediaRef === 'string') return mediaRef
+  return mediaRef.url
+}
+
+export const getMediaAssetId = (mediaRef: string | { url: string; assetId?: string; filename?: string }): string | undefined => {
+  if (typeof mediaRef === 'string') return undefined
+  return mediaRef.assetId
+}
+
+export const getMediaFilename = (mediaRef: string | { url: string; assetId?: string; filename?: string }): string | undefined => {
+  if (typeof mediaRef === 'string') return undefined
+  return mediaRef.filename
+}
+
+export const isMediaAsset = (mediaRef: string | { url: string; assetId?: string; filename?: string }): mediaRef is { url: string; assetId?: string; filename?: string } => {
+  return typeof mediaRef === 'object' && mediaRef !== null && 'url' in mediaRef
 }
 
 // Utility types

@@ -4,14 +4,13 @@ import { useState, useCallback, useEffect } from 'react'
 import Image from 'next/image'
 import { 
   MoreHorizontal, 
-  Download, 
+  Download,
   Trash2, 
   Eye, 
   Copy,
   FileVideo,
   FileText,
   Play,
-  Clock,
   HardDrive,
   Calendar,
   Tag,
@@ -27,11 +26,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { MediaAsset } from '@/types/cms'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -40,12 +34,12 @@ interface MediaCardProps {
   asset: MediaAsset
   isSelected: boolean
   onSelect: (asset: MediaAsset) => void
-  onPreview: (asset: MediaAsset) => void
-  onEdit: (asset: MediaAsset) => void
-  onDelete: (assetId: string) => void
-  onCopyUrl: (url: string) => void
+  onPreview?: (asset: MediaAsset) => void
+  onDelete?: (assetId: string) => void
+  onCopyUrl?: (url: string) => void
   className?: string
   size?: 'sm' | 'md' | 'lg'
+  showActions?: boolean
 }
 
 export function MediaCard({
@@ -53,11 +47,11 @@ export function MediaCard({
   isSelected,
   onSelect,
   onPreview,
-  onEdit,
   onDelete,
   onCopyUrl,
   className,
-  size = 'md'
+  size = 'md',
+  showActions = true
 }: MediaCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [imageError, setImageError] = useState(false)
@@ -100,7 +94,7 @@ export function MediaCard({
   }, [])
 
   const handleCopyUrl = useCallback(() => {
-    onCopyUrl(asset.url)
+    onCopyUrl?.(asset.url)
     toast.success('URL copied to clipboard')
   }, [asset.url, onCopyUrl])
 
@@ -109,7 +103,7 @@ export function MediaCard({
       // Fetch the file as a blob
       const response = await fetch(asset.url)
       const blob = await response.blob()
-      
+
       // Create a blob URL and download link
       const blobUrl = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -118,10 +112,10 @@ export function MediaCard({
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      
+
       // Clean up the blob URL
       window.URL.revokeObjectURL(blobUrl)
-      
+
       toast.success('Download started')
     } catch (error) {
       console.error('Download failed:', error)
@@ -201,7 +195,7 @@ export function MediaCard({
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => onPreview(asset)}
+      onClick={() => onPreview?.(asset)}
     >
       {/* Selection checkbox */}
       <div className={cn(
@@ -217,6 +211,7 @@ export function MediaCard({
       </div>
 
       {/* Quick actions */}
+      {showActions && (
       <div className={cn(
         "absolute top-2 right-2 z-10 flex space-x-1 transition-all duration-200",
         isHovered ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
@@ -231,51 +226,52 @@ export function MediaCard({
               <MoreHorizontal className="w-3 h-3" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={(e) => {
-              e.stopPropagation()
-              handleCopyUrl()
-            }}>
-              <Copy className="w-4 h-4 mr-2" />
-              Copy URL
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={(e) => {
-              e.stopPropagation()
-              if (asset.type === 'video') {
-                // For videos, open the preview instead since direct URLs don't work
-                onPreview(asset)
-              } else {
-                window.open(asset.url, '_blank')
-              }
-            }}>
-              {asset.type === 'video' ? (
-                <Play className="w-4 h-4 mr-2" />
-              ) : (
-                <ExternalLink className="w-4 h-4 mr-2" />
-              )}
-              {asset.type === 'video' ? 'Play video' : 'Open in new tab'}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={(e) => {
-              e.stopPropagation()
-              handleDownload()
-            }}>
-              <Download className="w-4 h-4 mr-2" />
-              Download
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              onClick={(e) => {
-                e.stopPropagation()
-                onDelete(asset._id)
-              }}
-              className="text-destructive"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={(e) => {
+                    e.stopPropagation()
+                    handleCopyUrl()
+                }}>
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy URL
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => {
+                    e.stopPropagation()
+                    if (asset.type === 'video') {
+                        // For videos, open the preview instead since direct URLs don't work
+                        onPreview?.(asset)
+                    } else {
+                        window.open(asset.url, '_blank')
+                    }
+                }}>
+                    {asset.type === 'video' ? (
+                        <Play className="w-4 h-4 mr-2" />
+                    ) : (
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                    )}
+                    {asset.type === 'video' ? 'Play video' : 'Open in new tab'}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => {
+                    e.stopPropagation()
+                    handleDownload()
+                }}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Download
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        onDelete?.(asset._id)
+                    }}
+                    className="text-destructive"
+                >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
 
       {/* Thumbnail */}
       <div className={cn(
@@ -330,7 +326,7 @@ export function MediaCard({
                     </svg>
                   ) : asset.type === 'video' ? (
                     <svg className={cn(
-                      "text-red-500", 
+                      "text-red-500",
                       size === 'sm' ? "w-5 h-5" : "w-6 h-6"
                     )} fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832L12 11.202a1 1 0 000-1.664L9.555 7.168z" clipRule="evenodd" />

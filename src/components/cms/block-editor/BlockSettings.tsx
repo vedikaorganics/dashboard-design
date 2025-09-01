@@ -8,7 +8,9 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ContentBlock, BlockSettings as BlockSettingsType } from '@/types/cms'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { ContentBlock, BlockSettings as BlockSettingsType, getMediaUrl, createMediaRef } from '@/types/cms'
+import { MediaInput } from '@/components/cms/media-library/MediaInput'
 
 interface BlockSettingsProps {
   block: ContentBlock
@@ -30,77 +32,78 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
       case 'video-cta':
         const videoCTAContent = block.content as any
         return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="video-desktop">Desktop Video URL</Label>
-              <Input
-                id="video-desktop"
-                value={videoCTAContent.video?.desktop || ''}
-                onChange={(e) => updateBlockContent({ 
+          <TooltipProvider>
+            <div className="space-y-4">
+              <MediaInput
+                label="Desktop Video"
+                value={videoCTAContent.video?.desktop}
+                onChange={(value) => updateBlockContent({ 
                   video: { 
                     ...videoCTAContent.video, 
-                    desktop: e.target.value 
+                    desktop: value 
                   }
                 })}
-                placeholder="https://..."
+                accept="video"
+                placeholder="Select video or enter URL..."
+                required={true}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="video-mobile">Mobile Video URL (Optional)</Label>
-              <Input
-                id="video-mobile"
-                value={videoCTAContent.video?.mobile || ''}
-                onChange={(e) => updateBlockContent({ 
+              <MediaInput
+                label="Mobile Video (Optional)"
+                value={videoCTAContent.video?.mobile}
+                onChange={(value) => updateBlockContent({ 
                   video: { 
                     ...videoCTAContent.video, 
-                    mobile: e.target.value 
+                    mobile: value 
                   }
                 })}
-                placeholder="https://... (optional)"
+                accept="video"
+                placeholder="Select video or enter URL..."
+                required={false}
+                allowClear={true}
               />
+              <div className="space-y-2">
+                <Label htmlFor="heading">Heading</Label>
+                <Input
+                  id="heading"
+                  value={videoCTAContent.heading || ''}
+                  onChange={(e) => updateBlockContent({ heading: e.target.value })}
+                  placeholder="Enter heading..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="text">Text</Label>
+                <Textarea
+                  id="text"
+                  value={videoCTAContent.text || ''}
+                  onChange={(e) => updateBlockContent({ text: e.target.value })}
+                  placeholder="Enter description text..."
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cta-text">CTA Button Text</Label>
+                <Input
+                  id="cta-text"
+                  value={videoCTAContent.cta?.text || ''}
+                  onChange={(e) => updateBlockContent({ 
+                    cta: { ...videoCTAContent.cta, text: e.target.value }
+                  })}
+                  placeholder="Learn More"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cta-link">CTA Button Link</Label>
+                <Input
+                  id="cta-link"
+                  value={videoCTAContent.cta?.link || ''}
+                  onChange={(e) => updateBlockContent({ 
+                    cta: { ...videoCTAContent.cta, link: e.target.value }
+                  })}
+                  placeholder="https://..."
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="heading">Heading</Label>
-              <Input
-                id="heading"
-                value={videoCTAContent.heading || ''}
-                onChange={(e) => updateBlockContent({ heading: e.target.value })}
-                placeholder="Enter heading..."
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="text">Text</Label>
-              <Textarea
-                id="text"
-                value={videoCTAContent.text || ''}
-                onChange={(e) => updateBlockContent({ text: e.target.value })}
-                placeholder="Enter description text..."
-                rows={3}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cta-text">CTA Button Text</Label>
-              <Input
-                id="cta-text"
-                value={videoCTAContent.cta?.text || ''}
-                onChange={(e) => updateBlockContent({ 
-                  cta: { ...videoCTAContent.cta, text: e.target.value }
-                })}
-                placeholder="Learn More"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cta-link">CTA Button Link</Label>
-              <Input
-                id="cta-link"
-                value={videoCTAContent.cta?.link || ''}
-                onChange={(e) => updateBlockContent({ 
-                  cta: { ...videoCTAContent.cta, link: e.target.value }
-                })}
-                placeholder="https://..."
-              />
-            </div>
-          </div>
+          </TooltipProvider>
         )
 
       case 'sliding-images-cta':
@@ -1048,79 +1051,80 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
       case 'image':
         const imageContent = block.content as any
         return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="src-desktop">Desktop Image URL</Label>
-              <Input
-                id="src-desktop"
-                value={imageContent.src?.desktop || ''}
-                onChange={(e) => updateBlockContent({ 
+          <TooltipProvider>
+            <div className="space-y-4">
+              <MediaInput
+                label="Desktop Image"
+                value={imageContent.src?.desktop}
+                onChange={(value) => updateBlockContent({ 
                   src: { 
                     ...imageContent.src, 
-                    desktop: e.target.value 
+                    desktop: value 
                   }
                 })}
-                placeholder="https://..."
+                accept="image"
+                placeholder="Select image or enter URL..."
+                required={true}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="src-mobile">Mobile Image URL (Optional)</Label>
-              <Input
-                id="src-mobile"
-                value={imageContent.src?.mobile || ''}
-                onChange={(e) => updateBlockContent({ 
+              <MediaInput
+                label="Mobile Image (Optional)"
+                value={imageContent.src?.mobile}
+                onChange={(value) => updateBlockContent({ 
                   src: { 
                     ...imageContent.src, 
-                    mobile: e.target.value 
+                    mobile: value 
                   }
                 })}
-                placeholder="https://... (optional)"
+                accept="image"
+                placeholder="Select image or enter URL..."
+                required={false}
+                allowClear={true}
               />
+              <div className="space-y-2">
+                <Label htmlFor="alt">Alt Text</Label>
+                <Input
+                  id="alt"
+                  value={imageContent.alt || ''}
+                  onChange={(e) => updateBlockContent({ alt: e.target.value })}
+                  placeholder="Describe the image..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="caption">Caption</Label>
+                <Input
+                  id="caption"
+                  value={imageContent.caption || ''}
+                  onChange={(e) => updateBlockContent({ caption: e.target.value })}
+                  placeholder="Optional caption..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="link">Link URL</Label>
+                <Input
+                  id="link"
+                  value={imageContent.link || ''}
+                  onChange={(e) => updateBlockContent({ link: e.target.value })}
+                  placeholder="https://... (optional)"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="objectFit">Object Fit</Label>
+                <Select
+                  value={imageContent.objectFit || 'cover'}
+                  onValueChange={(value) => updateBlockContent({ objectFit: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cover">Cover</SelectItem>
+                    <SelectItem value="contain">Contain</SelectItem>
+                    <SelectItem value="fill">Fill</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="alt">Alt Text</Label>
-              <Input
-                id="alt"
-                value={imageContent.alt || ''}
-                onChange={(e) => updateBlockContent({ alt: e.target.value })}
-                placeholder="Describe the image..."
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="caption">Caption</Label>
-              <Input
-                id="caption"
-                value={imageContent.caption || ''}
-                onChange={(e) => updateBlockContent({ caption: e.target.value })}
-                placeholder="Optional caption..."
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="link">Link URL</Label>
-              <Input
-                id="link"
-                value={imageContent.link || ''}
-                onChange={(e) => updateBlockContent({ link: e.target.value })}
-                placeholder="https://... (optional)"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="objectFit">Object Fit</Label>
-              <Select
-                value={imageContent.objectFit || 'cover'}
-                onValueChange={(value) => updateBlockContent({ objectFit: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cover">Cover</SelectItem>
-                  <SelectItem value="contain">Contain</SelectItem>
-                  <SelectItem value="fill">Fill</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          </TooltipProvider>
         )
 
       case 'spacer':

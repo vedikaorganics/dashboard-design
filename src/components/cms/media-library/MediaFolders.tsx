@@ -9,12 +9,14 @@ interface MediaFoldersProps {
   folders: MediaFolder[]
   currentFolderId: string | null
   onFolderSelect: (folderId: string | null) => void
+  compact?: boolean
 }
 
 export function MediaFolders({
   folders,
   currentFolderId,
-  onFolderSelect
+  onFolderSelect,
+  compact = false
 }: MediaFoldersProps) {
   // Build folder tree structure
   const buildFolderTree = (folders: MediaFolder[]): FolderNode[] => {

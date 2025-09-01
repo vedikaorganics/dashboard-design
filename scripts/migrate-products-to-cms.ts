@@ -32,8 +32,8 @@ function convertSectionToBlock(section: ProductSection): ContentBlock {
       order: section.order,
       content: {
         src: {
-          desktop: section.desktopUrl || section.mobileUrl || '',
-          mobile: section.mobileUrl || ''
+          desktop: { url: section.desktopUrl || section.mobileUrl || '' },
+          mobile: { url: section.mobileUrl || '' }
         },
         alt: section.alt || '',
         caption: section.caption || '',

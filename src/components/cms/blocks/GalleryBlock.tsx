@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight, X, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { GalleryBlockContent } from '@/types/cms'
+import { GalleryBlockContent, getMediaUrl } from '@/types/cms'
 import { cn } from '@/lib/utils'
 
 interface GalleryBlockProps {
@@ -43,8 +43,8 @@ export function GalleryBlock({ content, isEditing = false, className }: GalleryB
     if (!imageSrc) return ''
     
     // Use mobile version on mobile if available, otherwise fallback to desktop
-    if (isMobile && imageSrc.mobile) return imageSrc.mobile
-    return imageSrc.desktop || ''
+    if (isMobile && imageSrc.mobile) return getMediaUrl(imageSrc.mobile)
+    return getMediaUrl(imageSrc.desktop)
   }
 
   // If editing and no images, show placeholder
@@ -241,7 +241,7 @@ export function GalleryBlockEditor({
   const addImage = () => {
     const newImages = [
       ...(content.images || []),
-      { src: { desktop: '', mobile: '' }, alt: '', caption: '' }
+      { src: { desktop: { url: '' }, mobile: { url: '' } }, alt: '', caption: '' }
     ]
     onChange({ images: newImages })
   }
@@ -349,30 +349,30 @@ export function GalleryBlockEditor({
                     <label className="text-xs font-medium">Desktop Image URL</label>
                     <input
                       type="url"
-                      value={typeof image.src === 'string' ? image.src : (image.src?.desktop || '')}
+                      value={typeof image.src === 'string' ? image.src : (image.src?.desktop ? getMediaUrl(image.src.desktop) : '')}
                       onChange={(e) => updateImage(index, { 
                         src: typeof image.src === 'string' 
-                          ? { desktop: e.target.value, mobile: '' }
-                          : { ...image.src, desktop: e.target.value }
+                          ? { desktop: { url: e.target.value }, mobile: { url: '' } }
+                          : { ...image.src, desktop: { url: e.target.value } }
                       })}
-                      placeholder="https://example.com/desktop-image.jpg"
                       className="w-full p-2 border rounded text-sm"
                     />
+                    <p className="text-xs text-muted-foreground">Example: https://example.com/desktop-image.jpg</p>
                   </div>
 
                   <div className="space-y-2">
                     <label className="text-xs font-medium">Mobile Image URL (Optional)</label>
                     <input
                       type="url"
-                      value={typeof image.src === 'string' ? '' : (image.src?.mobile || '')}
+                      value={typeof image.src === 'string' ? '' : (image.src?.mobile ? getMediaUrl(image.src.mobile) : '')}
                       onChange={(e) => updateImage(index, { 
                         src: typeof image.src === 'string' 
-                          ? { desktop: image.src, mobile: e.target.value }
-                          : { ...image.src, mobile: e.target.value }
+                          ? { desktop: { url: image.src }, mobile: { url: e.target.value } }
+                          : { ...image.src, mobile: { url: e.target.value } }
                       })}
-                      placeholder="https://example.com/mobile-image.jpg"
                       className="w-full p-2 border rounded text-sm"
                     />
+                    <p className="text-xs text-muted-foreground">Example: https://example.com/mobile-image.jpg</p>
                   </div>
                 </div>
                 
@@ -403,7 +403,7 @@ export function GalleryBlockEditor({
               {(image.src && (typeof image.src === 'string' ? image.src : image.src?.desktop)) && (
                 <div className="relative w-24 h-24 rounded border overflow-hidden bg-muted">
                   <Image
-                    src={typeof image.src === 'string' ? image.src : (image.src?.desktop || '')}
+                    src={typeof image.src === 'string' ? image.src : (image.src?.desktop ? getMediaUrl(image.src.desktop) : '')}
                     alt={image.alt || 'Preview'}
                     fill
                     className="object-cover"
