@@ -289,7 +289,7 @@ export function MediaCard({
                     </svg>
                   ) : asset.type === 'video' ? (
                     <svg className={cn(
-                      "text-warning", 
+                      "text-red-500", 
                       size === 'sm' ? "w-5 h-5" : "w-6 h-6"
                     )} fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832L12 11.202a1 1 0 000-1.664L9.555 7.168z" clipRule="evenodd" />
