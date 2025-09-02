@@ -13,14 +13,23 @@ import { MediaFolders } from '@/components/cms/media-library/MediaFolders'
 import { MediaGallery } from '@/components/cms/media-library/MediaGallery'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { toast } from 'sonner'
+import { 
+  analyzeFolderUrl, 
+  encodeFolderPath, 
+  resolveFolderIdToPath, 
+  normalizeFolderPath 
+} from '@/lib/media-path-utils'
 
 function CMSMediaPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   
-  // Get folder ID from URL query params, fallback to URL state for browser back/forward
-  const urlFolderId = searchParams.get('folderId')
-  const [currentFolderId, setCurrentFolderId] = useState<string | null>(urlFolderId)
+  // Analyze current URL to determine folder location
+  const urlInfo = analyzeFolderUrl(searchParams)
+  const [currentFolderPath, setCurrentFolderPath] = useState<string>(urlInfo.currentPath || '/')
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(urlInfo.currentFolderId)
+  const [needsLegacyMigration, setNeedsLegacyMigration] = useState(urlInfo.needsUrlUpdate)
+  
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
@@ -46,7 +55,9 @@ function CMSMediaPageContent() {
     deleteAsset,
     updateAsset
   } = useMedia({
-    folderId: currentFolderId || 'root',
+    // Use path-based querying if we have a path, otherwise fall back to folder ID
+    folderPath: currentFolderPath !== '/' ? currentFolderPath : undefined,
+    folderId: currentFolderPath === '/' && currentFolderId ? currentFolderId : undefined,
     search: search || undefined,
     type: typeFilter === 'all' ? undefined : typeFilter,
     page: currentPage,
@@ -109,8 +120,13 @@ function CMSMediaPageContent() {
       formData.append('alt', file.name.split('.')[0]) // Remove extension for alt text
       formData.append('caption', '')
       formData.append('tags', '')
-      if (currentFolderId) {
-        formData.append('folderId', currentFolderId)
+      
+      // Resolve current folder path to ID for upload
+      if (currentFolderPath !== '/') {
+        const currentFolder = folders.find(f => normalizeFolderPath(f.path) === currentFolderPath)
+        if (currentFolder) {
+          formData.append('folderId', currentFolder._id)
+        }
       }
       
       // Upload directly to API
@@ -135,7 +151,7 @@ function CMSMediaPageContent() {
       toast.error(error instanceof Error ? error.message : 'Failed to upload files')
       console.error('Upload error:', error)
     }
-  }, [currentFolderId, refresh])
+  }, [currentFolderPath, folders, refresh])
 
   // Fetch dimensions for assets that don't have them
   useEffect(() => {
@@ -164,22 +180,61 @@ function CMSMediaPageContent() {
     }
   }, [assets, assetDimensions])
 
-  // Sync folder ID with URL changes (for browser back/forward navigation)
+  // Handle legacy URL migration and sync with URL changes
   useEffect(() => {
-    const urlFolderId = searchParams.get('folderId')
-    if (urlFolderId !== currentFolderId) {
-      setCurrentFolderId(urlFolderId)
-      setCurrentPage(1) // Reset page when folder changes via browser navigation
+    const urlInfo = analyzeFolderUrl(searchParams)
+    
+    // If we have a legacy folder ID URL and folders are loaded, migrate to path-based URL
+    if (urlInfo.isLegacyUrl && urlInfo.currentFolderId && folders.length > 0) {
+      const folderPath = resolveFolderIdToPath(urlInfo.currentFolderId, folders)
+      if (folderPath) {
+        const params = new URLSearchParams(searchParams.toString())
+        params.delete('folderId')
+        if (folderPath !== '/') {
+          params.set('path', encodeFolderPath(folderPath))
+        } else {
+          params.delete('path')
+        }
+        
+        const newUrl = params.toString() 
+          ? `/cms/media?${params.toString()}`
+          : '/cms/media'
+        
+        router.replace(newUrl)
+        setCurrentFolderPath(folderPath)
+        setCurrentFolderId(null)
+        setNeedsLegacyMigration(false)
+        return
+      }
     }
-  }, [searchParams, currentFolderId])
+    
+    // Sync state with URL changes (browser back/forward navigation)
+    if (!urlInfo.isLegacyUrl) {
+      const newPath = urlInfo.currentPath || '/'
+      if (newPath !== currentFolderPath) {
+        setCurrentFolderPath(newPath)
+        setCurrentFolderId(null)
+        setCurrentPage(1) // Reset page when folder changes via browser navigation
+      }
+    }
+  }, [searchParams, currentFolderPath, folders, router])
 
   // Handle folder creation
   const handleCreateFolder = useCallback(async (name: string) => {
-    const folder = await createFolder(name, currentFolderId || undefined)
+    // For path-based creation, we need to resolve current path to folder ID
+    let parentFolderId: string | undefined
+    
+    if (currentFolderPath !== '/') {
+      // Find the current folder ID from the path
+      const currentFolder = folders.find(f => normalizeFolderPath(f.path) === currentFolderPath)
+      parentFolderId = currentFolder?._id
+    }
+    
+    const folder = await createFolder(name, parentFolderId)
     if (folder) {
       toast.success('Folder created successfully')
     }
-  }, [createFolder, currentFolderId])
+  }, [createFolder, currentFolderPath, folders])
 
   // Selection management
   const handleAssetSelect = useCallback((asset: MediaAsset) => {
@@ -253,21 +308,27 @@ function CMSMediaPageContent() {
     setCurrentPage(1)
   }, [])
 
-  const handleFolderChange = useCallback((folderId: string | null) => {
-    // Update URL with folder ID for browser history support
+  const handleFolderChange = useCallback((folderPath: string) => {
+    // Update URL with folder path for browser history support
     const params = new URLSearchParams(searchParams.toString())
-    if (folderId) {
-      params.set('folderId', folderId)
+    const normalizedPath = normalizeFolderPath(folderPath)
+    
+    if (normalizedPath !== '/') {
+      params.set('path', encodeFolderPath(normalizedPath))
     } else {
-      params.delete('folderId')
+      params.delete('path')
     }
+    
+    // Remove any legacy folderId parameter
+    params.delete('folderId')
     
     const newUrl = params.toString() 
       ? `/cms/media?${params.toString()}`
       : '/cms/media'
     
     router.push(newUrl)
-    setCurrentFolderId(folderId)
+    setCurrentFolderPath(normalizedPath)
+    setCurrentFolderId(null)
     setCurrentPage(1)
   }, [router, searchParams])
 
@@ -423,7 +484,7 @@ function CMSMediaPageContent() {
           sidebar={
             <MediaFolders
               folders={folders}
-              currentFolderId={currentFolderId}
+              currentFolderPath={currentFolderPath}
               onFolderSelect={handleFolderChange}
             />
           }

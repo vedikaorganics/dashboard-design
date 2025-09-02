@@ -45,7 +45,7 @@ export function MediaLibrary({
   selectedAssets = [],
   accept = 'all'
 }: MediaLibraryProps) {
-  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
+  const [currentFolderPath, setCurrentFolderPath] = useState<string>('/')
   const [view, setView] = useState<'grid' | 'list'>('grid')
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
@@ -66,7 +66,7 @@ export function MediaLibrary({
     deleteAsset,
     updateAsset
   } = useMedia({
-    folderId: currentFolderId || 'root',
+    folderPath: currentFolderPath !== '/' ? currentFolderPath : undefined,
     search: search || undefined,
     type: typeFilter === 'all' ? undefined : typeFilter,
     page: currentPage,
@@ -86,7 +86,7 @@ export function MediaLibrary({
         type: file.type.startsWith('image/') ? 'image' : 
               file.type.startsWith('video/') ? 'video' : 'document',
         size: file.size,
-        folderId: currentFolderId || undefined,
+        folderId: currentFolderPath !== '/' ? folders.find(f => f.path === currentFolderPath)?._id : undefined,
         alt: file.name.split('.')[0] // Remove extension for alt text
       })
     })
@@ -99,19 +99,20 @@ export function MediaLibrary({
       toast.error('Failed to upload files')
       console.error('Upload error:', error)
     }
-  }, [uploadMedia, currentFolderId])
+  }, [uploadMedia, currentFolderPath, folders])
 
   // Handle folder creation
   const handleCreateFolder = useCallback(async () => {
     if (!newFolderName.trim()) return
 
-    const folder = await createFolder(newFolderName.trim(), currentFolderId || undefined)
+    const currentFolder = currentFolderPath !== '/' ? folders.find(f => f.path === currentFolderPath) : null
+    const folder = await createFolder(newFolderName.trim(), currentFolder?._id)
     if (folder) {
       toast.success('Folder created successfully')
       setNewFolderName('')
       setShowNewFolder(false)
     }
-  }, [newFolderName, createFolder, currentFolderId])
+  }, [newFolderName, createFolder, currentFolderPath, folders])
 
   // Handle pagination
   const handlePageChange = useCallback((page: number) => {
@@ -129,8 +130,8 @@ export function MediaLibrary({
     setCurrentPage(1)
   }, [])
 
-  const handleFolderChange = useCallback((folderId: string | null) => {
-    setCurrentFolderId(folderId)
+  const handleFolderChange = useCallback((folderPath: string) => {
+    setCurrentFolderPath(folderPath)
     setCurrentPage(1)
   }, [])
 
@@ -274,7 +275,7 @@ export function MediaLibrary({
             <div className="w-64 border-r bg-muted/20">
               <MediaFolders
                 folders={folders}
-                currentFolderId={currentFolderId}
+                currentFolderPath={currentFolderPath}
                 onFolderSelect={handleFolderChange}
               />
             </div>

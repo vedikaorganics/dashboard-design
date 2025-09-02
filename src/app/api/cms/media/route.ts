@@ -4,6 +4,7 @@ import { ObjectId } from 'mongodb'
 import { MediaAsset, MediaFolder, MediaAssetListResponse, UploadMediaRequest } from '@/types/cms'
 import { getCurrentUserId } from '@/lib/auth-utils'
 import { uploadImageToCloudflare, uploadVideoToCloudflare, getImageVariant, getVideoThumbnail } from '@/lib/cloudflare'
+import { resolvePathToFolderId, normalizeFolderPath } from '@/lib/media-path-utils'
 
 // GET /api/cms/media - List media assets and folders
 export async function GET(request: NextRequest) {
@@ -12,6 +13,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '24')
     const folderId = searchParams.get('folderId')
+    const folderPath = searchParams.get('path')
     const type = searchParams.get('type')
     const search = searchParams.get('search')
     const tags = searchParams.get('tags')
@@ -20,10 +22,24 @@ export async function GET(request: NextRequest) {
     const assetsCollection = db.collection('cms_media_assets')
     const foldersCollection = db.collection('cms_media_folders')
     
+    // Resolve folder identifier (path or ID)
+    let targetFolderId: string | null = null
+    
+    if (folderPath) {
+      // Path-based query - need to resolve path to folder ID
+      // First, get all folders to resolve the path
+      const allFolders = await foldersCollection.find({}).toArray() as unknown as MediaFolder[]
+      targetFolderId = resolvePathToFolderId(folderPath, allFolders)
+    } else if (folderId) {
+      // Legacy folder ID query
+      targetFolderId = folderId === 'root' ? null : folderId
+    }
+    // If neither is provided, targetFolderId remains null (root folder)
+    
     // Build assets query
     const assetsQuery: any = {}
-    if (folderId) {
-      assetsQuery.folderId = folderId === 'root' ? null : folderId
+    if (folderPath !== undefined || folderId !== undefined) {
+      assetsQuery.folderId = targetFolderId
     }
     if (type) assetsQuery.type = type
     if (search) {
@@ -40,8 +56,8 @@ export async function GET(request: NextRequest) {
     
     // Build folders query
     const foldersQuery: any = {}
-    if (folderId) {
-      foldersQuery.parentId = folderId === 'root' ? null : folderId
+    if (folderPath !== undefined || folderId !== undefined) {
+      foldersQuery.parentId = targetFolderId
     }
     
     // Execute queries in parallel

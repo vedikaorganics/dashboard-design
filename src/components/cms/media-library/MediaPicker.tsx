@@ -46,7 +46,7 @@ export function MediaPicker({
   accept = 'all',
   title = 'Select Media'
 }: MediaPickerProps) {
-  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
+  const [currentFolderPath, setCurrentFolderPath] = useState<string>('/')
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>(accept === 'all' ? 'all' : accept)
   const [showUploader, setShowUploader] = useState(false)
@@ -62,7 +62,7 @@ export function MediaPicker({
     refresh,
     createFolder
   } = useMedia({
-    folderId: currentFolderId || 'root',
+    folderPath: currentFolderPath !== '/' ? currentFolderPath : undefined,
     search: search || undefined,
     type: typeFilter === 'all' ? undefined : typeFilter,
     page: currentPage,
@@ -118,8 +118,9 @@ export function MediaPicker({
       formData.append('alt', file.name.split('.')[0]) // Remove extension for alt text
       formData.append('caption', '')
       formData.append('tags', '')
-      if (currentFolderId) {
-        formData.append('folderId', currentFolderId)
+      const currentFolder = currentFolderPath !== '/' ? folders.find(f => f.path === currentFolderPath) : null
+      if (currentFolder) {
+        formData.append('folderId', currentFolder._id)
       }
       
       // Upload directly to API
@@ -153,15 +154,16 @@ export function MediaPicker({
       toast.error(error instanceof Error ? error.message : 'Failed to upload files')
       console.error('Upload error:', error)
     }
-  }, [currentFolderId, refresh, multiple, accept])
+  }, [currentFolderPath, folders, refresh, multiple, accept])
 
   // Handle folder creation
   const handleCreateFolder = useCallback(async (name: string) => {
-    const folder = await createFolder(name, currentFolderId || undefined)
+    const currentFolder = currentFolderPath !== '/' ? folders.find(f => f.path === currentFolderPath) : null
+    const folder = await createFolder(name, currentFolder?._id)
     if (folder) {
       toast.success('Folder created successfully')
     }
-  }, [createFolder, currentFolderId])
+  }, [createFolder, currentFolderPath, folders])
 
   // Filter folders and assets based on accept type
   const filteredAssets = assets.filter(asset => {
@@ -293,8 +295,8 @@ export function MediaPicker({
                 <ScrollArea className="h-64">
                   <MediaFolders
                     folders={folders}
-                    currentFolderId={currentFolderId}
-                    onFolderSelect={setCurrentFolderId}
+                    currentFolderPath={currentFolderPath}
+                    onFolderSelect={setCurrentFolderPath}
                     compact={true}
                   />
                 </ScrollArea>

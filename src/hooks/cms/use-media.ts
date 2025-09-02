@@ -12,6 +12,7 @@ interface UseMediaParams {
   page?: number
   limit?: number
   folderId?: string
+  folderPath?: string
   type?: string
   search?: string
   tags?: string
@@ -64,7 +65,14 @@ export function useMedia(params: UseMediaParams = {}): UseMediaReturn {
       const searchParams = new URLSearchParams()
       if (params.page) searchParams.set('page', params.page.toString())
       if (params.limit) searchParams.set('limit', params.limit.toString())
-      if (params.folderId) searchParams.set('folderId', params.folderId)
+      
+      // Prefer folderPath over folderId if both are provided
+      if (params.folderPath) {
+        searchParams.set('path', params.folderPath)
+      } else if (params.folderId) {
+        searchParams.set('folderId', params.folderId)
+      }
+      
       if (params.type) searchParams.set('type', params.type)
       if (params.search) searchParams.set('search', params.search)
       if (params.tags) searchParams.set('tags', params.tags)
@@ -85,7 +93,7 @@ export function useMedia(params: UseMediaParams = {}): UseMediaReturn {
     } finally {
       setIsLoading(false)
     }
-  }, [params.page, params.limit, params.folderId, params.type, params.search, params.tags])
+  }, [params.page, params.limit, params.folderId, params.folderPath, params.type, params.search, params.tags])
 
   const uploadMedia = useCallback(async (data: {
     url: string

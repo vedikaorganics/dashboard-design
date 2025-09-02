@@ -4,17 +4,18 @@ import { Folder, FolderOpen, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { MediaFolder } from '@/types/cms'
 import { cn } from '@/lib/utils'
+import { normalizeFolderPath } from '@/lib/media-path-utils'
 
 interface MediaFoldersProps {
   folders: MediaFolder[]
-  currentFolderId: string | null
-  onFolderSelect: (folderId: string | null) => void
+  currentFolderPath: string
+  onFolderSelect: (folderPath: string) => void
   compact?: boolean
 }
 
 export function MediaFolders({
   folders,
-  currentFolderId,
+  currentFolderPath,
   onFolderSelect,
   compact = false
 }: MediaFoldersProps) {
@@ -53,7 +54,8 @@ export function MediaFolders({
   const folderTree = buildFolderTree(folders)
 
   const renderFolder = (folder: FolderNode) => {
-    const isSelected = folder._id === currentFolderId
+    const folderPath = normalizeFolderPath(folder.path)
+    const isSelected = folderPath === currentFolderPath
     const hasChildren = folder.children.length > 0
 
     return (
@@ -64,7 +66,7 @@ export function MediaFolders({
             "w-full justify-start h-auto py-2 px-2",
             `ml-${folder.level * 4}`
           )}
-          onClick={() => onFolderSelect(folder._id)}
+          onClick={() => onFolderSelect(folderPath)}
         >
           {isSelected && hasChildren ? (
             <FolderOpen className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -92,9 +94,9 @@ export function MediaFolders({
       
       {/* Root folder */}
       <Button
-        variant={currentFolderId === null ? "secondary" : "ghost"}
+        variant={currentFolderPath === '/' ? "secondary" : "ghost"}
         className="w-full justify-start h-auto py-2 px-2"
-        onClick={() => onFolderSelect(null)}
+        onClick={() => onFolderSelect('/')}
       >
         <Home className="w-4 h-4 mr-2" />
         All Media
