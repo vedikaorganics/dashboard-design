@@ -53,23 +53,15 @@
 - Created `src/components/cms/media-library/MediaBreadcrumb.tsx` with comprehensive breadcrumb functionality
 - Integrates with shadcn/ui breadcrumb components for consistent styling
 - Smart path parsing and segment generation from current folder path
-- Collapsible long paths with ellipsis and dropdown for deep nesting (3 item limit for sidebar)
-- Compact design with smaller icons (3x3) and text for sidebar integration
-- Home icon shows only icon on small screens, full "Home" text on larger screens
-- Integrated directly into MediaFolders component, replacing "Folders" header
+- Collapsible long paths with ellipsis and dropdown for deep nesting (max 5 items for main view)
+- Strategic positioning between search toolbar and main content area (folder tree + media tiles)
+- Full-width layout with proper visual separation via border-bottom
+- Conditional display: only shows when not at root level (hidden at "/" path)
+- Uses MediaLibraryLayout's built-in breadcrumb prop for consistent integration
 - Added to both main page and dialog components with consistent behavior
-- Full responsive design with proper truncation optimized for narrow sidebar width
+- Optimized spacing and visual hierarchy for better user experience
 
-## Phase 3: Enhanced Grid Navigation
-
-### Double-click Folder Navigation in Grid
-- Display folders in main grid view (not just sidebar)
-- Add double-click handler to open folders from grid
-- Show folder icons distinct from file icons
-- Add hover states and visual feedback for folders
-- Maintain existing file display functionality
-
-## Phase 4: Context Menus
+## Phase 3: Context Menus
 
 ### Right-click Context Menus
 - Implement context menu component
@@ -79,7 +71,7 @@
 - Integrate with existing CMS action handlers
 - Keyboard shortcut support (Shift+F10)
 
-## Phase 5: Keyboard Navigation
+## Phase 4: Keyboard Navigation
 
 ### Keyboard Shortcuts
 - **Arrow keys**: Navigate between files/folders in grid
@@ -90,7 +82,7 @@
 - **F2**: Rename selected item
 - Tab navigation for accessibility
 
-## Phase 6: Inline Editing
+## Phase 5: Inline Editing
 
 ### Inline Rename Functionality
 - Click on file/folder name to enter edit mode
@@ -100,7 +92,7 @@
 - Show loading state during save
 - Handle duplicate name errors
 
-## Phase 7: Toolbar Enhancements
+## Phase 6: Toolbar Enhancements
 
 ### Up Navigation Button
 - Add "Up" button to existing toolbar
@@ -114,9 +106,8 @@
 ### File Structure Updates
 ```
 src/components/cms/media-library/
-├── MediaBreadcrumb.tsx          (NEW)
+├── MediaBreadcrumb.tsx          (✅ COMPLETED)
 ├── MediaContextMenu.tsx         (NEW) 
-├── MediaFolderGrid.tsx          (ENHANCE)
 ├── MediaKeyboardHandler.tsx     (NEW)
 ├── MediaInlineEditor.tsx        (NEW)
 └── MediaToolbar.tsx             (ENHANCE)
@@ -144,11 +135,10 @@ src/components/cms/media-library/
 
 1. ~~**High Priority**: Breadcrumb navigation (most visible UX improvement)~~ ✅ **COMPLETED**
 2. ~~**High Priority**: Path-based URLs (cleaner, more intuitive)~~ ✅ **COMPLETED**
-3. **Medium Priority**: Double-click folder navigation (expected behavior)
-4. **Medium Priority**: Context menus (power user features)
-5. **Low Priority**: Keyboard navigation (nice-to-have)
-6. **Low Priority**: Inline editing (convenience feature)
-7. **Low Priority**: Up button (redundant with breadcrumbs)
+3. **Medium Priority**: Context menus (power user features)
+4. **Medium Priority**: Keyboard navigation (accessibility and power user features)
+5. **Low Priority**: Inline editing (convenience feature)
+6. **Low Priority**: Up button (redundant with breadcrumbs)
 
 ## Success Criteria
 
@@ -172,13 +162,14 @@ src/components/cms/media-library/
 - **Performance**: Database-efficient with internal ID resolution
 
 **Phase 2 - Breadcrumb Navigation:**
-- **Sidebar Integration**: Breadcrumb replaces "Folders" header in sidebar for space efficiency
-- **Visual hierarchy**: `🏠 > Products > Images > Summer 2024` (compact format)
+- **Strategic Positioning**: Breadcrumb positioned between search toolbar and main content area (folder tree + media tiles)
+- **Visual hierarchy**: `🏠 > Products > Images > Summer 2024` with smart path display
 - **Clickable navigation**: Direct access to any parent folder level
-- **Smart collapsing**: Handles deep nesting with ellipsis and dropdown (max 3 items in sidebar)
-- **Responsive design**: Compact icons and text, proper truncation for narrow sidebar
-- **Consistent integration**: Works in both main page and dialog modals
+- **Smart collapsing**: Handles deep nesting with ellipsis and dropdown (max 5 items for main view)
+- **Responsive design**: Full-width layout with proper spacing and visual separation
+- **Consistent integration**: Works in both main page and dialog modals using MediaLibraryLayout
+- **Conditional display**: Only shows when not at root level (hidden at "/" path)
 - **Accessibility**: ARIA labels and semantic HTML structure
 
 ### 🔄 Ready for Next Phase
-Phase 3 (Enhanced Grid Navigation) is the next medium-priority item for implementation.
+Phase 3 (Context Menus) is the next medium-priority item for implementation.
