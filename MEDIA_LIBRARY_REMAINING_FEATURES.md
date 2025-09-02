@@ -61,7 +61,26 @@
 - Added to both main page and dialog components with consistent behavior
 - Optimized spacing and visual hierarchy for better user experience
 
-## Phase 3: Context Menus
+## Phase 3: URL Path Integration
+
+### Move Folders to Main URL Path
+- **Current**: `/cms/media?path=/folder1/subfolder`
+- **Desired**: `/cms/media/folder1/subfolder`
+- Integrate folder paths directly into Next.js routing
+- Update dynamic route structure to handle nested folder paths
+- Maintain backward compatibility with existing query parameter URLs
+- Update breadcrumb and navigation to use path-based routing
+- Ensure proper URL encoding for special characters in folder names
+
+### Implementation Requirements
+- Create dynamic route structure: `[...path].tsx` or similar
+- Update URL generation throughout the application
+- Modify browser history handling for back/forward navigation
+- Update folder navigation handlers to use router.push with path segments
+- Ensure bookmark compatibility and SEO benefits
+- Handle edge cases like folders with special characters or deep nesting
+
+## Phase 4: Context Menus
 
 ### Right-click Context Menus
 - Implement context menu component
@@ -71,7 +90,7 @@
 - Integrate with existing CMS action handlers
 - Keyboard shortcut support (Shift+F10)
 
-## Phase 4: Keyboard Navigation
+## Phase 5: Keyboard Navigation
 
 ### Keyboard Shortcuts
 - **Arrow keys**: Navigate between files/folders in grid
@@ -82,7 +101,7 @@
 - **F2**: Rename selected item
 - Tab navigation for accessibility
 
-## Phase 5: Inline Editing
+## Phase 6: Inline Editing
 
 ### Inline Rename Functionality
 - Click on file/folder name to enter edit mode
@@ -92,7 +111,7 @@
 - Show loading state during save
 - Handle duplicate name errors
 
-## Phase 6: Toolbar Enhancements
+## Phase 7: Toolbar Enhancements
 
 ### Up Navigation Button
 - Add "Up" button to existing toolbar
@@ -135,10 +154,11 @@ src/components/cms/media-library/
 
 1. ~~**High Priority**: Breadcrumb navigation (most visible UX improvement)~~ ✅ **COMPLETED**
 2. ~~**High Priority**: Path-based URLs (cleaner, more intuitive)~~ ✅ **COMPLETED**
-3. **Medium Priority**: Context menus (power user features)
-4. **Medium Priority**: Keyboard navigation (accessibility and power user features)
-5. **Low Priority**: Inline editing (convenience feature)
-6. **Low Priority**: Up button (redundant with breadcrumbs)
+3. **High Priority**: URL Path Integration (SEO benefits, cleaner URLs, better user experience)
+4. **Medium Priority**: Context menus (power user features)
+5. **Medium Priority**: Keyboard navigation (accessibility and power user features)
+6. **Low Priority**: Inline editing (convenience feature)
+7. **Low Priority**: Up button (redundant with breadcrumbs)
 
 ## Success Criteria
 
@@ -172,4 +192,4 @@ src/components/cms/media-library/
 - **Accessibility**: ARIA labels and semantic HTML structure
 
 ### 🔄 Ready for Next Phase
-Phase 3 (Context Menus) is the next medium-priority item for implementation.
+Phase 3 (URL Path Integration) is the next high-priority item for implementation.
