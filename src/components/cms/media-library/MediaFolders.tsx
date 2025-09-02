@@ -1,10 +1,11 @@
 'use client'
 
-import { Folder, FolderOpen, Home } from 'lucide-react'
+import { Folder, FolderOpen, Home, Images, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { MediaFolder } from '@/types/cms'
 import { cn } from '@/lib/utils'
-import { normalizeFolderPath } from '@/lib/media-path-utils'
+import { normalizeFolderPath, getParentPath } from '@/lib/media-path-utils'
+import { MediaBreadcrumb } from './MediaBreadcrumb'
 
 interface MediaFoldersProps {
   folders: MediaFolder[]
@@ -89,29 +90,54 @@ export function MediaFolders({
   }
 
   return (
-    <div className="p-4 space-y-1">
-      <h3 className="text-sm font-medium mb-3">Folders</h3>
-      
-      {/* Root folder */}
-      <Button
-        variant={currentFolderPath === '/' ? "secondary" : "ghost"}
-        className="w-full justify-start h-auto py-2 px-2"
-        onClick={() => onFolderSelect('/')}
-      >
-        <Home className="w-4 h-4 mr-2" />
-        All Media
-      </Button>
-
-      {/* Folder tree */}
-      <div className="space-y-1">
-        {folderTree.map(renderFolder)}
-      </div>
-
-      {folders.length === 0 && (
-        <p className="text-sm text-muted-foreground text-center py-8">
-          No folders yet. Create your first folder to organize your media.
-        </p>
+    <div className="space-y-1">
+      {/* Breadcrumb Navigation - only show when not at root */}
+      {currentFolderPath !== '/' && (
+        <MediaBreadcrumb
+          currentPath={currentFolderPath}
+          folders={folders}
+          onNavigate={onFolderSelect}
+          className="px-4 py-2 border-b border-border/40 bg-muted/10"
+          maxItems={3} // Smaller limit for sidebar
+        />
       )}
+      
+      {/* Folder tree */}
+      <div className="p-4 space-y-1">
+        {/* Root folder - only show when at root level */}
+        {currentFolderPath === '/' && (
+          <Button
+            variant="secondary"
+            className="w-full justify-start h-auto py-2 px-2"
+            onClick={() => onFolderSelect('/')}
+          >
+            <Images className="w-4 h-4 mr-2" />
+            All Media
+          </Button>
+        )}
+
+        {/* Parent folder - only show when inside a folder */}
+        {currentFolderPath !== '/' && (
+          <Button
+            variant="outline"
+            className="w-full justify-start h-auto py-2 px-2 mb-2 border-dashed text-muted-foreground hover:text-foreground"
+            onClick={() => onFolderSelect(getParentPath(currentFolderPath))}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+        )}
+
+        {/* Folder list */}
+        <div className="space-y-1">
+          {folderTree.length === 0 && currentFolderPath !== '/' && (
+            <p className="text-sm text-muted-foreground text-center py-4 italic">
+              Empty
+            </p>
+          )}
+          {folderTree.map(renderFolder)}
+        </div>
+      </div>
     </div>
   )
 }

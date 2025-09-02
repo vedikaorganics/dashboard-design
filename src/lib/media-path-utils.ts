@@ -1,5 +1,4 @@
 import { MediaFolder } from '@/types/cms'
-import { ObjectId } from 'mongodb'
 
 /**
  * Utility functions for handling media library path-based navigation

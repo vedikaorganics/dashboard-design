@@ -7,6 +7,7 @@ import { GripVertical } from 'lucide-react'
 interface MediaLibraryLayoutProps {
   sidebar: ReactNode
   header: ReactNode
+  breadcrumb?: ReactNode
   content: ReactNode
   details?: ReactNode
   statusBar?: ReactNode
@@ -15,6 +16,7 @@ interface MediaLibraryLayoutProps {
 export function MediaLibraryLayout({
   sidebar,
   header,
+  breadcrumb,
   content,
   details,
   statusBar
@@ -74,6 +76,13 @@ export function MediaLibraryLayout({
       <div className="flex-shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         {header}
       </div>
+
+      {/* Breadcrumb */}
+      {breadcrumb && (
+        <div className="flex-shrink-0">
+          {breadcrumb}
+        </div>
+      )}
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
