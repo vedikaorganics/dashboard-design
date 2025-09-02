@@ -10,6 +10,7 @@ import { MediaHeader, ViewMode, SortBy, SortOrder } from '@/components/cms/media
 import { MediaCard } from '@/components/cms/media-library/MediaCard'
 import { MediaDetails } from '@/components/cms/media-library/MediaDetails'
 import { MediaFolders } from '@/components/cms/media-library/MediaFolders'
+import { MediaBreadcrumb } from '@/components/cms/media-library/MediaBreadcrumb'
 import { MediaGallery } from '@/components/cms/media-library/MediaGallery'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { toast } from 'sonner'
@@ -491,6 +492,15 @@ function CMSMediaPageContent() {
               onCreateFolder={handleCreateFolder}
             />
           }
+          breadcrumb={currentFolderPath !== '/' ? (
+            <MediaBreadcrumb
+              currentPath={currentFolderPath}
+              folders={folders}
+              onNavigate={handleFolderChange}
+              className="px-6 py-3 border-b bg-background/95"
+              maxItems={5}
+            />
+          ) : undefined}
           sidebar={
             <MediaFolders
               folders={folders}

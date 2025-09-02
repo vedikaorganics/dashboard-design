@@ -26,6 +26,7 @@ import { useMedia } from '@/hooks/cms/use-media'
 import { MediaGrid } from './MediaGrid'
 import { MediaUploader } from './MediaUploader'
 import { MediaFolders } from './MediaFolders'
+import { MediaBreadcrumb } from './MediaBreadcrumb'
 import { toast } from 'sonner'
 
 interface MediaLibraryProps {
@@ -268,6 +269,17 @@ export function MediaLibrary({
               </Dialog>
             </div>
           </div>
+
+          {/* Breadcrumb Navigation */}
+          {currentFolderPath !== '/' && (
+            <MediaBreadcrumb
+              currentPath={currentFolderPath}
+              folders={folders}
+              onNavigate={handleFolderChange}
+              className="px-4 py-3 border-b bg-background/95"
+              maxItems={5}
+            />
+          )}
 
           {/* Content */}
           <div className="flex flex-1 overflow-hidden">

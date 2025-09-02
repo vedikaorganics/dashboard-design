@@ -91,17 +91,6 @@ export function MediaFolders({
 
   return (
     <div className="space-y-1">
-      {/* Breadcrumb Navigation - only show when not at root */}
-      {currentFolderPath !== '/' && (
-        <MediaBreadcrumb
-          currentPath={currentFolderPath}
-          folders={folders}
-          onNavigate={onFolderSelect}
-          className="px-4 py-2 border-b border-border/40 bg-muted/10"
-          maxItems={3} // Smaller limit for sidebar
-        />
-      )}
-      
       {/* Folder tree */}
       <div className="p-4 space-y-1">
         {/* Root folder - only show when at root level */}
