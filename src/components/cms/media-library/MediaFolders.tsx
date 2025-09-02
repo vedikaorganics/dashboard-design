@@ -130,11 +130,6 @@ export function MediaFolders({
 
         {/* Folder list */}
         <div className="space-y-1">
-          {folderTree.length === 0 && currentFolderPath !== '/' && (
-            <p className="text-sm text-muted-foreground text-center py-4 italic">
-              Empty
-            </p>
-          )}
           {folderTree.map(renderFolder)}
         </div>
       </div>

@@ -364,6 +364,16 @@ function CMSMediaPageContent() {
       )
     }
     
+    if (assets.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <p className="text-sm text-muted-foreground text-center py-4 italic">
+            Empty
+          </p>
+        </div>
+      )
+    }
+    
     if (viewMode === 'grid') {
       return (
         <div className="grid gap-3 pl-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}>

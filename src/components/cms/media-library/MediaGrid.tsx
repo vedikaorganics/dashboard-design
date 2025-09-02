@@ -198,8 +198,15 @@ export function MediaGrid({
   if (view === 'list') {
     return (
       <>
-        <div className="divide-y">
-          {assets.map((asset) => (
+        {assets.length === 0 ? (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-sm text-muted-foreground text-center py-4 italic">
+              Empty
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y">
+            {assets.map((asset) => (
             <div
               key={asset._id}
               className={cn(
@@ -297,8 +304,9 @@ export function MediaGrid({
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Edit Dialog */}
         <Dialog open={!!editingAsset} onOpenChange={() => setEditingAsset(null)}>
@@ -415,8 +423,16 @@ export function MediaGrid({
 
   // Grid view
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4">
-      {assets.map((asset) => (
+    <div className="p-4">
+      {assets.length === 0 ? (
+        <div className="flex items-center justify-center h-64">
+          <p className="text-sm text-muted-foreground text-center py-4 italic">
+            Empty
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {assets.map((asset) => (
         <div
           key={asset._id}
           className={cn(
@@ -486,8 +502,9 @@ export function MediaGrid({
               {formatFileSize(asset.size)}
             </p>
           </div>
+          ))}
         </div>
-      ))}
+      )}
 
       {/* Edit Dialog */}
       <Dialog open={!!editingAsset} onOpenChange={() => setEditingAsset(null)}>
