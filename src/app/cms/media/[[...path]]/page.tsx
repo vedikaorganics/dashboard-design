@@ -80,7 +80,9 @@ function CMSMediaPageContent({ params }: { params: Promise<{ path?: string[] }> 
     search: search || undefined,
     type: typeFilter === 'all' ? undefined : typeFilter,
     page: currentPage,
-    limit: 24
+    limit: 24,
+    sortBy: sortBy,
+    sortOrder: sortOrder
   })
 
   // Formatting functions

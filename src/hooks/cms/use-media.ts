@@ -16,6 +16,8 @@ interface UseMediaParams {
   type?: string
   search?: string
   tags?: string
+  sortBy?: string
+  sortOrder?: string
 }
 
 interface UseMediaReturn {
@@ -76,6 +78,8 @@ export function useMedia(params: UseMediaParams = {}): UseMediaReturn {
       if (params.type) searchParams.set('type', params.type)
       if (params.search) searchParams.set('search', params.search)
       if (params.tags) searchParams.set('tags', params.tags)
+      if (params.sortBy) searchParams.set('sortBy', params.sortBy)
+      if (params.sortOrder) searchParams.set('sortOrder', params.sortOrder)
 
       const response = await fetch(`/api/cms/media?${searchParams}`)
       const result: MediaAssetListResponse = await response.json()
@@ -93,7 +97,7 @@ export function useMedia(params: UseMediaParams = {}): UseMediaReturn {
     } finally {
       setIsLoading(false)
     }
-  }, [params.page, params.limit, params.folderId, params.folderPath, params.type, params.search, params.tags])
+  }, [params.page, params.limit, params.folderId, params.folderPath, params.type, params.search, params.tags, params.sortBy, params.sortOrder])
 
   const uploadMedia = useCallback(async (data: {
     url: string

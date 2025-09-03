@@ -17,6 +17,8 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type')
     const search = searchParams.get('search')
     const tags = searchParams.get('tags')
+    const sortBy = searchParams.get('sortBy') || 'date'
+    const sortOrder = searchParams.get('sortOrder') || 'desc'
     
     const db = await getDatabase()
     const assetsCollection = db.collection('cms_media_assets')
@@ -60,11 +62,19 @@ export async function GET(request: NextRequest) {
       foldersQuery.parentId = targetFolderId
     }
     
+    // Build sort object
+    const sortField = sortBy === 'date' ? 'createdAt' : 
+                     sortBy === 'name' ? 'filename' :
+                     sortBy === 'size' ? 'size' :
+                     sortBy === 'type' ? 'type' : 'createdAt'
+    const sortDirection = sortOrder === 'asc' ? 1 : -1
+    const sortObject = { [sortField]: sortDirection }
+    
     // Execute queries in parallel
     const [assets, totalAssets, folders] = await Promise.all([
       assetsCollection
         .find(assetsQuery)
-        .sort({ createdAt: -1 })
+        .sort(sortObject)
         .skip((page - 1) * limit)
         .limit(limit)
         .toArray(),
