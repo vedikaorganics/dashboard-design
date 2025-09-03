@@ -3,7 +3,7 @@ import { getDatabase } from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
 import { MediaAsset, MediaFolder, MediaAssetListResponse, UploadMediaRequest } from '@/types/cms'
 import { getCurrentUserId } from '@/lib/auth-utils'
-import { uploadImageToCloudflare, uploadVideoToCloudflare, getImageVariant, getVideoThumbnail } from '@/lib/cloudflare'
+import { uploadImageToCloudflare, uploadVideoToCloudflare, getImageVariant, getVideoThumbnail, getVideoEmbedUrl, getVideoStreamUrl, getVideoDashUrl } from '@/lib/cloudflare'
 import { resolvePathToFolderId, normalizeFolderPath } from '@/lib/media-path-utils'
 
 // GET /api/cms/media - List media assets and folders
