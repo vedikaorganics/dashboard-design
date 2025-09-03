@@ -1,18 +1,4 @@
-import { BlockDefinition, ContentBlock, BlockContent, BlockSettings } from '@/types/cms'
-
-// Default block settings
-export const defaultBlockSettings: BlockSettings = {
-  padding: { top: 16, bottom: 16, left: 16, right: 16 },
-  margin: { top: 0, bottom: 0, left: 0, right: 0 },
-  backgroundColor: 'transparent',
-  customClasses: '',
-  animation: {
-    type: 'fade',
-    direction: 'up',
-    duration: 500,
-    delay: 0
-  }
-}
+import { BlockDefinition, ContentBlock, BlockContent } from '@/types/cms'
 
 // Block type registry - will be populated with actual components later
 export const blockRegistry: Record<string, BlockDefinition> = {}
@@ -194,15 +180,13 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
 // Helper function to create a new block
 export function createBlock(
   type: ContentBlock['type'],
-  content?: Partial<BlockContent>,
-  settings?: Partial<BlockSettings>
+  content?: Partial<BlockContent>
 ): ContentBlock {
   return {
     id: generateBlockId(),
     type,
     order: 0,
     content: { ...getDefaultBlockContent(type), ...content } as BlockContent,
-    settings: { ...defaultBlockSettings, ...settings },
     responsive: {
       desktop: { visible: true },
       tablet: { visible: true },

@@ -26,27 +26,11 @@ export interface ContentBlock {
         "testimonials" | "faq" | "cta" | "spacer" | "custom-html" | 
         "banner" | "accordion" | "tabs" | "columns"
   order: number
-  settings: BlockSettings
   content: BlockContent
   responsive: ResponsiveSettings
   visibility: VisibilitySettings
 }
 
-export interface BlockSettings {
-  padding?: { top?: number; bottom?: number; left?: number; right?: number }
-  margin?: { top?: number; bottom?: number; left?: number; right?: number }
-  backgroundColor?: string
-  backgroundImage?: string
-  customClasses?: string
-  animation?: AnimationSettings
-}
-
-export interface AnimationSettings {
-  type?: "fade" | "slide" | "zoom" | "bounce"
-  direction?: "up" | "down" | "left" | "right"
-  duration?: number
-  delay?: number
-}
 
 export interface ResponsiveSettings {
   desktop: { visible: boolean; width?: string }
@@ -418,12 +402,10 @@ export interface BlockDefinition {
   description: string
   category: "content" | "media" | "layout" | "ecommerce" | "interactive"
   defaultContent: BlockContent
-  defaultSettings: BlockSettings
   component: React.ComponentType<{ block: ContentBlock; isEditing?: boolean }>
   editor: React.ComponentType<{ 
     block: ContentBlock
     onChange: (content: BlockContent) => void
-    onSettingsChange: (settings: BlockSettings) => void
   }>
 }
 

@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { ContentBlock, BlockSettings as BlockSettingsType, getMediaUrl, createMediaRef } from '@/types/cms'
+import { ContentBlock, getMediaUrl, createMediaRef } from '@/types/cms'
 import { MediaInput } from '@/components/cms/media-library/MediaInput'
 
 interface BlockSettingsProps {

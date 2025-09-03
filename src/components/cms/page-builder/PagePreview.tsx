@@ -68,28 +68,11 @@ export function PagePreview({
       return null
     }
 
-    // Apply block settings
-    const blockStyle = {
-      padding: block.settings?.padding ? 
-        `${block.settings.padding.top}px ${block.settings.padding.right}px ${block.settings.padding.bottom}px ${block.settings.padding.left}px` : 
-        undefined,
-      margin: block.settings?.margin ?
-        `${block.settings.margin.top}px ${block.settings.margin.right}px ${block.settings.margin.bottom}px ${block.settings.margin.left}px` :
-        undefined,
-      backgroundColor: block.settings?.backgroundColor !== 'transparent' ? 
-        block.settings?.backgroundColor : 
-        undefined,
-      backgroundImage: block.settings?.backgroundImage ? 
-        `url(${block.settings.backgroundImage})` : 
-        undefined,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat'
-    }
+    // Block styling will be handled by individual block components
+    const blockStyle = {}
 
     const blockClassName = cn(
       'block-preview',
-      block.settings?.customClasses,
       // Hide on specific devices if configured
       !responsive.desktop?.visible && device === 'desktop' && 'hidden',
       !responsive.tablet?.visible && device === 'tablet' && 'hidden',
