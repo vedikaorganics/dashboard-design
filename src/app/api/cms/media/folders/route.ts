@@ -33,11 +33,13 @@ export async function POST(request: NextRequest) {
     }
     
     // Build folder path
-    let path = name
+    let path = `/${name}`
     if (parentId) {
       const parentFolder = await collection.findOne({ _id: new ObjectId(parentId) })
       if (parentFolder) {
-        path = `${parentFolder.path}/${name}`
+        // Ensure parent path starts with / and build nested path
+        const parentPath = parentFolder.path.startsWith('/') ? parentFolder.path : `/${parentFolder.path}`
+        path = `${parentPath}/${name}`
       }
     }
     

@@ -108,6 +108,9 @@ export async function POST(request: NextRequest) {
     const caption = formData.get('caption') as string
     const tags = formData.get('tags') as string
     const folderId = formData.get('folderId') as string
+    const folderPath = formData.get('folderPath') as string
+    
+    console.log(`API Upload Debug: Received folderId="${folderId}" folderPath="${folderPath}" for file ${file?.name}`)
     
     if (!file) {
       return NextResponse.json(
@@ -117,7 +120,8 @@ export async function POST(request: NextRequest) {
     }
     
     const db = await getDatabase()
-    const collection = db.collection('cms_media_assets')
+    const assetsCollection = db.collection('cms_media_assets')
+    const foldersCollection = db.collection('cms_media_folders')
     
     const now = new Date()
     const userId = await getCurrentUserId(request)
@@ -156,6 +160,27 @@ export async function POST(request: NextRequest) {
       )
     }
     
+    // Resolve folder identifier - prefer folderId, fallback to folderPath resolution
+    let finalFolderId: string | undefined
+    
+    if (folderId && folderId.trim()) {
+      finalFolderId = folderId
+      console.log(`API Upload Debug: Using provided folderId="${finalFolderId}"`)
+    } else if (folderPath && folderPath.trim()) {
+      // Server-side folder resolution using the same logic as client-side
+      console.log(`API Upload Debug: Resolving folderPath="${folderPath}" to folderId`)
+      const allFolders = await foldersCollection.find({}).toArray() as unknown as MediaFolder[]
+      const resolvedFolderId = resolvePathToFolderId(folderPath, allFolders)
+      if (resolvedFolderId) {
+        finalFolderId = resolvedFolderId
+        console.log(`API Upload Debug: Resolved folderPath to folderId="${finalFolderId}"`)
+      } else {
+        console.warn(`API Upload Debug: Could not resolve folderPath="${folderPath}" to folderId`)
+      }
+    }
+    
+    console.log(`API Upload Debug: Final folderId being saved="${finalFolderId}"`)
+    
     const asset: Omit<MediaAsset, '_id'> = {
       url,
       thumbnailUrl,
@@ -166,7 +191,7 @@ export async function POST(request: NextRequest) {
       alt: alt || '',
       caption: caption || '',
       tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
-      folderId: folderId || undefined,
+      folderId: finalFolderId,
       metadata: {
         mimeType: file.type,
         uploadedBy: userId,
@@ -185,8 +210,8 @@ export async function POST(request: NextRequest) {
       updatedAt: now
     }
     
-    const result = await collection.insertOne(asset)
-    const createdAsset = await collection.findOne({ _id: result.insertedId })
+    const result = await assetsCollection.insertOne(asset)
+    const createdAsset = await assetsCollection.findOne({ _id: result.insertedId })
     
     return NextResponse.json({
       success: true,

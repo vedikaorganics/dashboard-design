@@ -1,15 +1,11 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { 
   Search, 
   Upload, 
-  FolderPlus, 
-  Grid3X3, 
-  List, 
-  Images, 
+  FolderPlus,
   SlidersHorizontal,
-  ChevronDown,
   X,
   Download,
   Trash2,
@@ -21,7 +17,6 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
   DialogContent,
@@ -108,9 +103,10 @@ export function MediaHeader({
   onUpload,
   onCreateFolder
 }: MediaHeaderProps) {
-  const [showUploader, setShowUploader] = useState(false)
   const [showFolderDialog, setShowFolderDialog] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
 
   const handleCreateFolder = useCallback(() => {
     if (newFolderName.trim()) {
@@ -184,7 +180,7 @@ export function MediaHeader({
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 {/* Date Range Filter */}
                 <div>
                   <label className="text-sm font-medium mb-1 block">Date Range</label>
@@ -200,7 +196,7 @@ export function MediaHeader({
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 {/* File Size Filter */}
                 <div>
                   <label className="text-sm font-medium mb-1 block">File Size</label>
@@ -215,7 +211,7 @@ export function MediaHeader({
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 {/* Tags Filter */}
                 <div>
                   <label className="text-sm font-medium mb-1 block">Tags</label>
@@ -225,7 +221,7 @@ export function MediaHeader({
               <DropdownMenuSeparator />
               <div className="p-2">
                 <Button
-                  variant="ghost" 
+                  variant="ghost"
                   size="sm"
                   onClick={() => {
                     onTypeFilterChange('all')
@@ -255,12 +251,29 @@ export function MediaHeader({
           {/* Upload Button */}
           <Button
             size="sm"
-            onClick={() => setShowUploader(true)}
+            onClick={() => fileInputRef.current?.click()}
             className="h-9"
           >
             <Upload className="w-4 h-4 mr-2" />
             Upload Files
           </Button>
+
+          {/* Hidden File Input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,video/*"
+            onChange={(e) => {
+              if (e.target.files) {
+                const files = Array.from(e.target.files)
+                onUpload(files)
+                // Reset the input so the same file can be selected again
+                e.target.value = ''
+              }
+            }}
+            className="hidden"
+          />
 
           {/* View Controls */}
           <div className="hidden md:flex items-center border rounded-md">
@@ -356,36 +369,6 @@ export function MediaHeader({
       )}
 
 
-      {/* Upload Dialog */}
-      <Dialog open={showUploader} onOpenChange={setShowUploader}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Upload Files</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="relative border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center cursor-pointer hover:border-muted-foreground/40 transition-colors">
-              <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-              <p className="text-sm">Drag and drop files here, or click to browse</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Supports images and videos up to 100MB each
-              </p>
-              <input
-                type="file"
-                multiple
-                accept="image/*,video/*"
-                onChange={(e) => {
-                  if (e.target.files) {
-                    const files = Array.from(e.target.files)
-                    onUpload(files)
-                    setShowUploader(false)
-                  }
-                }}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              />
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Create Folder Dialog */}
       <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>

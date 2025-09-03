@@ -64,8 +64,21 @@ export function resolvePathToFolderId(path: string | null, folders: MediaFolder[
     return null
   }
   
-  // Find folder with matching path
-  const folder = folders.find(f => normalizeFolderPath(f.path) === normalizedPath)
+  // Try to find folder with exact normalized path match first
+  let folder = folders.find(f => normalizeFolderPath(f.path) === normalizedPath)
+  
+  // If not found, try backward compatibility matches
+  if (!folder) {
+    // Try without leading slash (for legacy paths like "coconut")
+    const pathWithoutSlash = normalizedPath.substring(1)
+    folder = folders.find(f => f.path === pathWithoutSlash)
+    
+    // If still not found, try adding leading slash to stored paths
+    if (!folder) {
+      folder = folders.find(f => `/${f.path}` === normalizedPath)
+    }
+  }
+  
   return folder?._id || null
 }
 

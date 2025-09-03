@@ -18,6 +18,7 @@ import {
   analyzeFolderUrl, 
   encodeFolderPath, 
   resolveFolderIdToPath, 
+  resolvePathToFolderId,
   normalizeFolderPath,
   extractFolderPathFromParams,
   buildMediaUrl
@@ -139,11 +140,25 @@ function CMSMediaPageContent({ params }: { params: Promise<{ path?: string[] }> 
       formData.append('caption', '')
       formData.append('tags', '')
       
-      // Resolve current folder path to ID for upload
+      // Handle folder assignment for upload
       if (currentFolderPath !== '/') {
-        const currentFolder = folders.find(f => normalizeFolderPath(f.path) === currentFolderPath)
-        if (currentFolder) {
-          formData.append('folderId', currentFolder._id)
+        // First try to resolve path to ID if folders are loaded
+        let folderId: string | null = null
+        
+        if (folders && folders.length > 0) {
+          folderId = resolvePathToFolderId(currentFolderPath, folders)
+          console.log(`Upload Debug: Path "${currentFolderPath}" resolved to folderId "${folderId}" (${folders.length} folders available)`)
+        } else {
+          console.log('Upload Debug: Folders not loaded yet, will use folderPath fallback')
+        }
+        
+        if (folderId) {
+          formData.append('folderId', folderId)
+          console.log('Upload Debug: Added folderId to FormData')
+        } else {
+          // Fallback: send the current folder path directly for server-side resolution
+          console.log(`Upload Debug: Could not resolve folderId, sending folderPath "${currentFolderPath}"`)
+          formData.append('folderPath', currentFolderPath)
         }
       }
       
@@ -249,9 +264,9 @@ function CMSMediaPageContent({ params }: { params: Promise<{ path?: string[] }> 
     let parentFolderId: string | undefined
     
     if (currentFolderPath !== '/') {
-      // Find the current folder ID from the path
-      const currentFolder = folders.find(f => normalizeFolderPath(f.path) === currentFolderPath)
-      parentFolderId = currentFolder?._id
+      // Use the enhanced path resolution for consistency
+      const resolvedId = resolvePathToFolderId(currentFolderPath, folders)
+      parentFolderId = resolvedId || undefined
     }
     
     const folder = await createFolder(name, parentFolderId)
