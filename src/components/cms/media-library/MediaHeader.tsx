@@ -13,7 +13,7 @@ import {
   Tag,
   MoreHorizontal,
   LayoutGrid,
-  LayoutList
+  Menu
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -276,22 +276,32 @@ export function MediaHeader({
           />
 
           {/* View Controls */}
-          <div className="hidden md:flex items-center border rounded-md">
+          <div className="hidden md:flex items-center bg-muted/30 border rounded-lg p-1">
             <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => onViewModeChange('grid')}
-              className="h-8 px-2 rounded-r-none"
+              className={cn(
+                "h-7 w-7 p-0 rounded-md transition-all duration-200",
+                viewMode === 'grid' 
+                  ? "bg-background shadow-sm text-foreground" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+              )}
             >
               <LayoutGrid className="w-4 h-4" />
             </Button>
             <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => onViewModeChange('list')}
-              className="h-8 px-2 rounded-l-none"
+              className={cn(
+                "h-7 w-7 p-0 rounded-md transition-all duration-200",
+                viewMode === 'list' 
+                  ? "bg-background shadow-sm text-foreground" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+              )}
             >
-              <LayoutList className="w-4 h-4" />
+              <Menu className="w-4 h-4" />
             </Button>
           </div>
 
