@@ -83,7 +83,6 @@ export async function PUT(
       if (body.title !== undefined) updateData.title = body.title
       if (body.blocks !== undefined) updateData.blocks = body.blocks
       if (body.seo !== undefined) updateData.seo = { ...currentContent.seo, ...body.seo }
-      if (body.settings !== undefined) updateData.settings = { ...currentContent.settings, ...body.settings }
       if (body.status !== undefined) updateData.status = body.status
       if (body.scheduledPublishAt !== undefined) updateData.scheduledPublishAt = body.scheduledPublishAt
       
@@ -124,7 +123,6 @@ export async function PUT(
         ...(body.title !== undefined && { title: body.title }),
         ...(body.blocks !== undefined && { blocks: body.blocks }),
         ...(body.seo !== undefined && { seo: { ...currentContent.seo, ...body.seo } }),
-        ...(body.settings !== undefined && { settings: { ...currentContent.settings, ...body.settings } }),
         ...(body.scheduledPublishAt !== undefined && { scheduledPublishAt: body.scheduledPublishAt }),
         
         // New draft version

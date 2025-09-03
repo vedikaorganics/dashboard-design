@@ -212,15 +212,13 @@ export function PagePreview({
                 </div>
               )}
 
-              {/* Page header (if enabled) */}
-              {content.settings?.headerEnabled !== false && (
-                <div className="p-4 bg-white border-b">
-                  <div className="text-sm font-medium">Site Header</div>
-                  <div className="text-xs text-muted-foreground">
-                    Navigation, logo, etc. would appear here
-                  </div>
+              {/* Page header */}
+              <div className="p-4 bg-white border-b">
+                <div className="text-sm font-medium">Site Header</div>
+                <div className="text-xs text-muted-foreground">
+                  Navigation, logo, etc. would appear here
                 </div>
-              )}
+              </div>
 
               {/* Blocks */}
               <div className="min-h-screen">
@@ -238,15 +236,13 @@ export function PagePreview({
                 )}
               </div>
 
-              {/* Page footer (if enabled) */}
-              {content.settings?.footerEnabled !== false && (
-                <div className="p-4 bg-gray-50 border-t mt-auto">
-                  <div className="text-sm font-medium">Site Footer</div>
-                  <div className="text-xs text-muted-foreground">
-                    Footer content would appear here
-                  </div>
+              {/* Page footer */}
+              <div className="p-4 bg-gray-50 border-t mt-auto">
+                <div className="text-sm font-medium">Site Footer</div>
+                <div className="text-xs text-muted-foreground">
+                  Footer content would appear here
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>

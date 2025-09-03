@@ -66,12 +66,7 @@ export default function ProductContentPage() {
         // Always save content changes first (drafts update in-place)
         result = await updateContent(existingContent.slug, {
           blocks,
-          seo: seoSettings,
-          settings: {
-            layout: 'contained' as const,
-            headerEnabled: true,
-            footerEnabled: true
-          }
+          seo: seoSettings
         })
         
         // If user wants to publish, use dedicated publish endpoint
@@ -87,11 +82,6 @@ export default function ProductContentPage() {
           title: product.title,
           blocks,
           seo: seoSettings,
-          settings: {
-            layout: 'contained' as const,
-            headerEnabled: true,
-            footerEnabled: true
-          },
           status
         }
         result = await createContent(contentData)

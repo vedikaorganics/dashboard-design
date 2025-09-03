@@ -8,10 +8,7 @@
     "start": "next start --port 3001",
     "lint": "eslint",
     "create-indexes": "node scripts/create-indexes.js",
-    "test-performance": "node scripts/test-performance.js",
-    "migrate-cms": "npx tsx scripts/migrate-products-to-cms.ts",
-    "migrate-cms:live": "npx tsx scripts/migrate-products-to-cms.ts --live",
-    "migrate-cms:rollback": "npx tsx scripts/migrate-products-to-cms.ts rollback"
+    "test-performance": "node scripts/test-performance.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

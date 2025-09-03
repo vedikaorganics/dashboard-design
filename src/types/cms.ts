@@ -12,7 +12,6 @@ export interface CMSContent {
   scheduledPublishAt?: Date
   blocks: ContentBlock[]
   seo: SEOMetadata
-  settings: PageSettings
   version: number
   createdBy: string
   updatedBy: string
@@ -63,13 +62,6 @@ export interface SEOMetadata {
   structuredData?: any
 }
 
-export interface PageSettings {
-  layout?: "full-width" | "contained" | "sidebar-left" | "sidebar-right"
-  customCSS?: string
-  customJS?: string
-  headerEnabled?: boolean
-  footerEnabled?: boolean
-}
 
 
 export interface MediaAsset {
@@ -366,7 +358,6 @@ export interface CreateContentRequest {
   title: string
   blocks?: ContentBlock[]
   seo?: SEOMetadata
-  settings?: PageSettings
   status?: "draft" | "published"
   version?: number
 }
@@ -375,7 +366,6 @@ export interface UpdateContentRequest {
   title?: string
   blocks?: ContentBlock[]
   seo?: SEOMetadata
-  settings?: PageSettings
   status?: "draft" | "published" | "archived"
   publishedAt?: Date
   scheduledPublishAt?: Date

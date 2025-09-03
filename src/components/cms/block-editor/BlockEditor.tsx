@@ -104,8 +104,7 @@ export function BlockEditor({
 
     const newBlock = createBlock(
       blockToDuplicate.type,
-      blockToDuplicate.content,
-      blockToDuplicate.settings
+      blockToDuplicate.content
     )
     
     const blockIndex = blocks.findIndex(block => block.id === blockId)

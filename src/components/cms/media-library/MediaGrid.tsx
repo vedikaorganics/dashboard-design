@@ -502,6 +502,7 @@ export function MediaGrid({
               {formatFileSize(asset.size)}
             </p>
           </div>
+        </div>
           ))}
         </div>
       )}

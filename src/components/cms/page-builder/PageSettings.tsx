@@ -27,11 +27,6 @@ export function PageSettings({ content, onUpdate, onClose }: PageSettingsProps) 
     })
   }
 
-  const updateSettings = (updates: any) => {
-    onUpdate({
-      settings: { ...content.settings, ...updates }
-    })
-  }
 
   return (
     <div className="flex flex-col h-full">
@@ -46,10 +41,9 @@ export function PageSettings({ content, onUpdate, onClose }: PageSettingsProps) 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
         <div className="border-b">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="seo">SEO</TabsTrigger>
-            <TabsTrigger value="advanced">Advanced</TabsTrigger>
           </TabsList>
         </div>
 
@@ -95,49 +89,6 @@ export function PageSettings({ content, onUpdate, onClose }: PageSettingsProps) 
                     <SelectItem value="section">Page Section</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Layout settings */}
-            <div className="space-y-4">
-              <h4 className="text-sm font-medium">Layout</h4>
-              
-              <div className="space-y-2">
-                <Label htmlFor="layout">Page Layout</Label>
-                <Select
-                  value={content.settings?.layout || 'contained'}
-                  onValueChange={(value) => updateSettings({ layout: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="full-width">Full Width</SelectItem>
-                    <SelectItem value="contained">Container (Max Width)</SelectItem>
-                    <SelectItem value="sidebar-left">Left Sidebar</SelectItem>
-                    <SelectItem value="sidebar-right">Right Sidebar</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="header"
-                  checked={content.settings?.headerEnabled !== false}
-                  onCheckedChange={(checked) => updateSettings({ headerEnabled: checked })}
-                />
-                <Label htmlFor="header">Show site header</Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="footer"
-                  checked={content.settings?.footerEnabled !== false}
-                  onCheckedChange={(checked) => updateSettings({ footerEnabled: checked })}
-                />
-                <Label htmlFor="footer">Show site footer</Label>
               </div>
             </div>
 
@@ -297,87 +248,6 @@ export function PageSettings({ content, onUpdate, onClose }: PageSettingsProps) 
             </div>
           </TabsContent>
 
-          <TabsContent value="advanced" className="p-4 space-y-6 mt-0">
-            {/* Custom CSS/JS */}
-            <div className="space-y-4">
-              <h4 className="text-sm font-medium">Custom Code</h4>
-              
-              <div className="space-y-2">
-                <Label htmlFor="custom-css">Custom CSS</Label>
-                <Textarea
-                  id="custom-css"
-                  value={content.settings?.customCSS || ''}
-                  onChange={(e) => updateSettings({ customCSS: e.target.value })}
-                  placeholder="/* Custom CSS for this page */"
-                  rows={6}
-                  className="font-mono text-sm"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="custom-js">Custom JavaScript</Label>
-                <Textarea
-                  id="custom-js"
-                  value={content.settings?.customJS || ''}
-                  onChange={(e) => updateSettings({ customJS: e.target.value })}
-                  placeholder="// Custom JavaScript for this page"
-                  rows={6}
-                  className="font-mono text-sm"
-                />
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Version info */}
-            <div className="space-y-4">
-              <h4 className="text-sm font-medium">Version Information</h4>
-              
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground">Created</Label>
-                  <div>{new Date(content.createdAt).toLocaleString()}</div>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground">Updated</Label>
-                  <div>{new Date(content.updatedAt).toLocaleString()}</div>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground">Version</Label>
-                  <div>v{content.version}</div>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground">ID</Label>
-                  <div className="font-mono text-xs break-all">{content._id}</div>
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Danger zone */}
-            <div className="space-y-4">
-              <h4 className="text-sm font-medium text-destructive">Danger Zone</h4>
-              
-              <div className="p-4 border border-destructive/20 rounded-lg bg-destructive/5">
-                <p className="text-sm text-destructive mb-3">
-                  Delete this page permanently. This action cannot be undone.
-                </p>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => {
-                    if (confirm('Are you sure you want to delete this page? This action cannot be undone.')) {
-                      // Handle delete - would need to be passed as prop
-                      console.log('Delete page')
-                    }
-                  }}
-                >
-                  Delete Page
-                </Button>
-              </div>
-            </div>
-          </TabsContent>
         </div>
       </Tabs>
     </div>

@@ -204,7 +204,7 @@ export default function ProductContentPage() {
       </div>
 
       {/* Content Blocks */}
-      <div className={`${productContent.settings?.layout === 'full-width' ? '' : 'container mx-auto px-4'} py-8`}>
+      <div className="container mx-auto px-4 py-8">
         <div className="space-y-6">
           {productContent.blocks && productContent.blocks.length > 0 ? (
             productContent.blocks

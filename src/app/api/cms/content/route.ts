@@ -140,11 +140,6 @@ export async function POST(request: NextRequest) {
         description: '',
         keywords: []
       },
-      settings: body.settings || {
-        layout: 'contained',
-        headerEnabled: true,
-        footerEnabled: true
-      },
       // Always start with version 1
       version: 1,
       createdBy: userId,
