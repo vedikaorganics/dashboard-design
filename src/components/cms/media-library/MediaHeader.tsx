@@ -111,7 +111,6 @@ export function MediaHeader({
   const [showUploader, setShowUploader] = useState(false)
   const [showFolderDialog, setShowFolderDialog] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
 
   const handleCreateFolder = useCallback(() => {
     if (newFolderName.trim()) {
@@ -151,28 +150,93 @@ export function MediaHeader({
             )}
           </div>
 
-          {/* Type Filter */}
-          <Select value={typeFilter} onValueChange={onTypeFilterChange}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="All types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All types</SelectItem>
-              <SelectItem value="image">Images</SelectItem>
-              <SelectItem value="video">Videos</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Advanced Filters Toggle */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className={cn(showAdvancedFilters && "bg-muted")}
-          >
-            <SlidersHorizontal className="w-4 h-4 mr-2" />
-            Filters
-          </Button>
+          {/* Filters Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(typeFilter !== 'all' && "bg-muted")}
+              >
+                <SlidersHorizontal className="w-4 h-4 mr-2" />
+                Filters
+                {typeFilter !== 'all' && (
+                  <Badge variant="secondary" className="ml-2 h-4 px-1.5">
+                    1
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-80">
+              <DropdownMenuLabel>Filter Media</DropdownMenuLabel>
+              <div className="p-2 space-y-3">
+                {/* Type Filter */}
+                <div>
+                  <label className="text-sm font-medium mb-1 block">File Type</label>
+                  <Select value={typeFilter} onValueChange={onTypeFilterChange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="All types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All types</SelectItem>
+                      <SelectItem value="image">Images</SelectItem>
+                      <SelectItem value="video">Videos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Date Range Filter */}
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Date Range</label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="week">This week</SelectItem>
+                      <SelectItem value="month">This month</SelectItem>
+                      <SelectItem value="year">This year</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* File Size Filter */}
+                <div>
+                  <label className="text-sm font-medium mb-1 block">File Size</label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="small">Small (&lt; 1MB)</SelectItem>
+                      <SelectItem value="medium">Medium (1-10MB)</SelectItem>
+                      <SelectItem value="large">Large (&gt; 10MB)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Tags Filter */}
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Tags</label>
+                  <Input placeholder="Enter tags..." />
+                </div>
+              </div>
+              <DropdownMenuSeparator />
+              <div className="p-2">
+                <Button
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => {
+                    onTypeFilterChange('all')
+                  }}
+                  className="w-full"
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Right Side - Actions */}
@@ -291,58 +355,6 @@ export function MediaHeader({
         </div>
       )}
 
-      {/* Advanced Filters Panel */}
-      {showAdvancedFilters && (
-        <div className="p-4 bg-muted/50 border rounded-lg space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium">Advanced Filters</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowAdvancedFilters(false)}
-              className="h-6 w-6 p-0"
-            >
-              <X className="w-3 h-3" />
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div>
-              <label className="text-sm font-medium mb-1 block">Date Range</label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Any time" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="today">Today</SelectItem>
-                  <SelectItem value="week">This week</SelectItem>
-                  <SelectItem value="month">This month</SelectItem>
-                  <SelectItem value="year">This year</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium mb-1 block">File Size</label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Any size" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="small">Small (&lt; 1MB)</SelectItem>
-                  <SelectItem value="medium">Medium (1-10MB)</SelectItem>
-                  <SelectItem value="large">Large (&gt; 10MB)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium mb-1 block">Tags</label>
-              <Input placeholder="Enter tags..." />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Upload Dialog */}
       <Dialog open={showUploader} onOpenChange={setShowUploader}>
