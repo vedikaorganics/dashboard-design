@@ -3,7 +3,7 @@
 import React, { useState, useCallback } from 'react'
 import Image from 'next/image'
 import { 
-  X, 
+  X,
   Download, 
   ExternalLink, 
   Copy, 
@@ -147,14 +147,6 @@ export function MediaDetails({ asset, onClose, onUpdate, onDelete }: MediaDetail
       <div className="flex-shrink-0 p-4 border-b">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-lg truncate mr-3">Asset Details</h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="h-8 w-8 p-0"
-          >
-            <X className="w-4 h-4" />
-          </Button>
         </div>
       </div>
 

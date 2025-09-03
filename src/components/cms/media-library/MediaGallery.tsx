@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import Image from 'next/image'
 import { 
-  X, 
+  X,
   ChevronLeft, 
   ChevronRight,
   Download,
@@ -58,7 +58,6 @@ export function MediaGallery({
   const [isMuted, setIsMuted] = useState(false)
   const [volume, setVolume] = useState([50])
   const [zoom, setZoom] = useState(1)
-  const [showControls, setShowControls] = useState(true)
   const [showInfo, setShowInfo] = useState(false)
 
   const currentAsset = assets[currentIndex]
@@ -107,6 +106,7 @@ export function MediaGallery({
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, currentIndex, assets.length, isPlaying, showInfo])
 
+
   const goToPrevious = useCallback(() => {
     setCurrentIndex(prev => prev > 0 ? prev - 1 : assets.length - 1)
     setZoom(1)
@@ -133,6 +133,7 @@ export function MediaGallery({
     setZoom(1)
   }, [])
 
+
   const formatFileSize = useCallback((bytes: number) => {
     if (bytes === 0) return '0 Bytes'
     const k = 1024
@@ -146,17 +147,16 @@ export function MediaGallery({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogOverlay className="bg-black/90" />
-      <DialogContent className="max-w-none w-screen h-screen p-0 border-none bg-transparent shadow-none rounded-none outline-none focus:outline-none focus:ring-0">
+      <DialogContent 
+        className="max-w-none w-screen h-screen p-0 border-none bg-transparent shadow-none rounded-none outline-none focus:outline-none focus:ring-0"
+        showCloseButton={false}
+      >
         <VisuallyHidden.Root>
           <DialogTitle>Media Gallery</DialogTitle>
         </VisuallyHidden.Root>
         {/* Main Content - Full screen centered */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div 
-            className="relative w-full h-full flex items-center justify-center"
-            onMouseEnter={() => setShowControls(true)}
-            onMouseLeave={() => setShowControls(false)}
-          >
+          <div className="relative w-full h-full flex items-center justify-center">
             {currentAsset.type === 'image' ? (
               <div 
                 className="relative transition-transform duration-200"
@@ -187,10 +187,7 @@ export function MediaGallery({
         </div>
 
         {/* Header */}
-        <div className={cn(
-          "absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent p-4 transition-opacity duration-300",
-          showControls ? "opacity-100" : "opacity-0"
-        )}>
+        <div className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent p-4">
           <div className="flex items-center justify-between text-white">
             <div className="flex items-center space-x-4">
               <h2 className="text-lg font-medium truncate max-w-md">
@@ -268,10 +265,7 @@ export function MediaGallery({
               variant="ghost"
               size="lg"
               onClick={goToPrevious}
-              className={cn(
-                "absolute left-4 top-1/2 transform -translate-y-1/2 z-40 text-white hover:bg-white/20 rounded-full h-12 w-12 p-0 transition-opacity duration-300",
-                showControls ? "opacity-100" : "opacity-0"
-              )}
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 z-40 text-white hover:bg-white/20 rounded-full h-12 w-12 p-0"
             >
               <ChevronLeft className="w-6 h-6" />
             </Button>
@@ -280,10 +274,7 @@ export function MediaGallery({
               variant="ghost"
               size="lg"
               onClick={goToNext}
-              className={cn(
-                "absolute right-4 top-1/2 transform -translate-y-1/2 z-40 text-white hover:bg-white/20 rounded-full h-12 w-12 p-0 transition-opacity duration-300",
-                showControls ? "opacity-100" : "opacity-0"
-              )}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 z-40 text-white hover:bg-white/20 rounded-full h-12 w-12 p-0"
             >
               <ChevronRight className="w-6 h-6" />
             </Button>
@@ -292,10 +283,7 @@ export function MediaGallery({
 
         {/* Image Controls */}
         {currentAsset.type === 'image' && (
-          <div className={cn(
-            "absolute bottom-20 left-1/2 transform -translate-x-1/2 z-40 flex items-center space-x-2 bg-black/60 backdrop-blur-sm rounded-full px-4 py-2 transition-opacity duration-300",
-            showControls ? "opacity-100" : "opacity-0"
-          )}>
+          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-40 flex items-center space-x-2 bg-black/60 backdrop-blur-sm rounded-full px-4 py-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -411,10 +399,7 @@ export function MediaGallery({
 
         {/* Filmstrip Navigation */}
         {assets.length > 1 && (
-          <div className={cn(
-            "absolute bottom-4 left-1/2 transform -translate-x-1/2 z-40 transition-opacity duration-300",
-            showControls ? "opacity-100" : "opacity-0"
-          )}>
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-40">
             <div className="flex items-center space-x-2 bg-black/60 backdrop-blur-sm rounded-full px-3 py-2 max-w-md overflow-x-auto">
               {assets.slice(Math.max(0, currentIndex - 3), currentIndex + 4).map((asset, index) => {
                 const actualIndex = Math.max(0, currentIndex - 3) + index
