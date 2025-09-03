@@ -40,6 +40,7 @@ interface MediaCardProps {
   className?: string
   size?: 'sm' | 'md' | 'lg'
   showActions?: boolean
+  showCheckbox?: boolean
 }
 
 export function MediaCard({
@@ -51,7 +52,8 @@ export function MediaCard({
   onCopyUrl,
   className,
   size = 'md',
-  showActions = true
+  showActions = true,
+  showCheckbox = true
 }: MediaCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [imageError, setImageError] = useState(false)
@@ -190,25 +192,27 @@ export function MediaCard({
       className={cn(
         "group relative bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer",
         "flex flex-col", // Ensure proper flex layout
-        isSelected && "ring-2 ring-primary ring-offset-2",
+        isSelected && "ring-2 ring-primary",
         className
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => onPreview?.(asset)}
+      onClick={() => showCheckbox ? onPreview?.(asset) : onSelect(asset)}
     >
       {/* Selection checkbox */}
-      <div className={cn(
-        "absolute top-2 left-2 z-10 transition-all duration-200",
-        isSelected || isHovered ? "opacity-100 scale-100" : "opacity-0 scale-90"
-      )}>
-        <Checkbox
-          checked={isSelected}
-          onCheckedChange={() => onSelect(asset)}
-          onClick={(e) => e.stopPropagation()}
-          className="bg-white/90 border-2"
-        />
-      </div>
+      {showCheckbox && (
+        <div className={cn(
+          "absolute top-2 left-2 z-10 transition-all duration-200",
+          isSelected || isHovered ? "opacity-100 scale-100" : "opacity-0 scale-90"
+        )}>
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={() => onSelect(asset)}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white/90 border-2"
+          />
+        </div>
+      )}
 
       {/* Quick actions */}
       {showActions && (

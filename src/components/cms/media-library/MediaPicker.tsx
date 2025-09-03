@@ -10,6 +10,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogPortal,
+  DialogOverlay,
 } from '@/components/ui/dialog'
 import {
   Select,
@@ -207,23 +209,24 @@ export function MediaPicker({
     }
     
     return (
-      <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))' }}>
+      <div className="grid grid-cols-4 gap-4">
         {filteredAssets.map((asset) => (
           <div key={asset._id} className="relative">
             <MediaCard
               asset={asset}
               isSelected={internalSelection.some(a => a._id === asset._id)}
               onSelect={handleAssetSelect}
-              size="sm"
+              size="lg"
               showActions={false}
+              showCheckbox={false}
               className={cn(
                 'cursor-pointer transition-all',
                 internalSelection.some(a => a._id === asset._id) && 'ring-2 ring-primary'
               )}
             />
             {internalSelection.some(a => a._id === asset._id) && (
-              <div className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                <Check className="w-3 h-3 text-primary-foreground" />
+              <div className="absolute top-2 right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                <Check className="w-4 h-4 text-primary-foreground" />
               </div>
             )}
           </div>
@@ -235,7 +238,9 @@ export function MediaPicker({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+        <DialogPortal>
+          <DialogOverlay className="z-[60]" />
+          <DialogContent className="max-w-[90vw] w-[1200px] max-h-[95vh] overflow-hidden z-[60] sm:max-w-[90vw]">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               {title}
@@ -305,8 +310,10 @@ export function MediaPicker({
             
             {/* Main Content */}
             <div className="flex-1 pl-4">
-              <ScrollArea className="h-96">
-                {renderContent()}
+              <ScrollArea className="h-[600px]">
+                <div className="pt-2">
+                  {renderContent()}
+                </div>
               </ScrollArea>
               
               {/* Pagination */}
@@ -358,12 +365,15 @@ export function MediaPicker({
               </Button>
             </div>
           </div>
-        </DialogContent>
+          </DialogContent>
+        </DialogPortal>
       </Dialog>
 
       {/* Upload Dialog */}
       <Dialog open={showUploader} onOpenChange={setShowUploader}>
-        <DialogContent>
+        <DialogPortal>
+          <DialogOverlay className="z-[70]" />
+          <DialogContent className="z-[70]">
           <DialogHeader>
             <DialogTitle>Upload Media</DialogTitle>
           </DialogHeader>
@@ -372,7 +382,8 @@ export function MediaPicker({
             accept={accept === 'document' ? 'all' : accept}
             multiple={true}
           />
-        </DialogContent>
+          </DialogContent>
+        </DialogPortal>
       </Dialog>
     </>
   )
