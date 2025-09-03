@@ -350,78 +350,58 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
         const videoContent = block.content as any
         return (
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="type">Video Type</Label>
-              <Select
-                value={videoContent.type || 'upload'}
-                onValueChange={(value) => updateBlockContent({ type: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="upload">Upload</SelectItem>
-                  <SelectItem value="youtube">YouTube</SelectItem>
-                  <SelectItem value="vimeo">Vimeo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="src-mobile">Mobile Video URL</Label>
-              <Input
-                id="src-mobile"
-                value={videoContent.src?.mobile || ''}
-                onChange={(e) => updateBlockContent({ 
-                  src: { 
-                    ...videoContent.src, 
-                    mobile: e.target.value 
-                  }
-                })}
-                placeholder="https://..."
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="src-desktop">Desktop Video URL (Optional)</Label>
-              <Input
-                id="src-desktop"
-                value={videoContent.src?.desktop || ''}
-                onChange={(e) => updateBlockContent({ 
-                  src: { 
-                    ...videoContent.src, 
-                    desktop: e.target.value 
-                  }
-                })}
-                placeholder="https://... (optional)"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="poster-mobile">Mobile Poster Image URL</Label>
-              <Input
-                id="poster-mobile"
-                value={videoContent.poster?.mobile || ''}
-                onChange={(e) => updateBlockContent({ 
-                  poster: { 
-                    ...videoContent.poster, 
-                    mobile: e.target.value 
-                  }
-                })}
-                placeholder="https://... (optional)"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="poster-desktop">Desktop Poster Image URL (Optional)</Label>
-              <Input
-                id="poster-desktop"
-                value={videoContent.poster?.desktop || ''}
-                onChange={(e) => updateBlockContent({ 
-                  poster: { 
-                    ...videoContent.poster, 
-                    desktop: e.target.value 
-                  }
-                })}
-                placeholder="https://... (optional)"
-              />
-            </div>
+            <MediaInput
+              label="Mobile Video"
+              value={videoContent.src?.mobile}
+              onChange={(value) => updateBlockContent({ 
+                src: { 
+                  ...videoContent.src, 
+                  mobile: value 
+                }
+              })}
+              accept="video"
+              placeholder="Select video or enter URL..."
+              required={true}
+            />
+            <MediaInput
+              label="Desktop Video (Optional)"
+              value={videoContent.src?.desktop}
+              onChange={(value) => updateBlockContent({ 
+                src: { 
+                  ...videoContent.src, 
+                  desktop: value 
+                }
+              })}
+              accept="video"
+              placeholder="Select video or enter URL..."
+              required={false}
+            />
+            <MediaInput
+              label="Mobile Poster Image"
+              value={videoContent.poster?.mobile}
+              onChange={(value) => updateBlockContent({ 
+                poster: { 
+                  ...videoContent.poster, 
+                  mobile: value 
+                }
+              })}
+              accept="image"
+              placeholder="Select image or enter URL..."
+              required={false}
+            />
+            <MediaInput
+              label="Desktop Poster Image (Optional)"
+              value={videoContent.poster?.desktop}
+              onChange={(value) => updateBlockContent({ 
+                poster: { 
+                  ...videoContent.poster, 
+                  desktop: value 
+                }
+              })}
+              accept="image"
+              placeholder="Select image or enter URL..."
+              required={false}
+            />
           </div>
         )
 
