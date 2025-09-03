@@ -122,82 +122,71 @@ export default function CMSPagesPage() {
   return (
     <DashboardLayout title="Pages">
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Pages</h1>
-            <p className="text-muted-foreground">
-              Manage your website pages and content
-            </p>
+        {/* Filters and Actions */}
+        <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="w-full md:w-80">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  placeholder="Search pages..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full md:w-40">
+                <SelectValue placeholder="All statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="published">Published</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="archived">Archived</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={pageTypeFilter} onValueChange={setPageTypeFilter}>
+              <SelectTrigger className="w-full md:w-40">
+                <SelectValue placeholder="All page types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All page types</SelectItem>
+                <SelectItem value="predefined">Predefined Pages</SelectItem>
+                <SelectItem value="custom">Custom Pages</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <Link href="/cms/pages/new">
-            <Button>
+            <Button className="w-full md:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               New Page
             </Button>
           </Link>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                placeholder="Search pages..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full md:w-40">
-              <SelectValue placeholder="All statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="published">Published</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="archived">Archived</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={pageTypeFilter} onValueChange={setPageTypeFilter}>
-            <SelectTrigger className="w-full md:w-40">
-              <SelectValue placeholder="All page types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All page types</SelectItem>
-              <SelectItem value="predefined">Predefined Pages</SelectItem>
-              <SelectItem value="custom">Custom Pages</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         {/* Missing predefined pages */}
         {missingPredefinedPages.length > 0 && (
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-lg font-semibold">Setup Required Pages</h2>
-              <p className="text-sm text-muted-foreground">
-                These essential pages haven't been created yet. Click to create them with pre-configured settings.
-              </p>
-            </div>
-            <div className="grid gap-3">
-              {missingPredefinedPages.map((predefinedPage) => (
-                <div key={predefinedPage.slug} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h4 className="font-medium">{predefinedPage.title}</h4>
-                    <p className="text-sm text-muted-foreground">{predefinedPage.description}</p>
-                  </div>
-                  <Link href={`/cms/pages/new?predefined=${predefinedPage.slug}`}>
-                    <Button size="sm">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create
+          <div className="bg-muted/30 border border-dashed rounded-lg p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-muted-foreground mb-1">
+                  Missing essential pages
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {missingPredefinedPages.length} predefined page{missingPredefinedPages.length !== 1 ? 's' : ''} haven't been created yet
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {missingPredefinedPages.map((predefinedPage) => (
+                  <Link key={predefinedPage.slug} href={`/cms/pages/new?predefined=${predefinedPage.slug}`}>
+                    <Button size="sm" variant="outline" className="text-xs">
+                      {predefinedPage.title}
                     </Button>
                   </Link>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         )}
