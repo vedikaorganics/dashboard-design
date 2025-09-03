@@ -272,10 +272,13 @@ function extractVideoIdFromUrl(url: string): string {
   return match ? match[1] : url
 }
 
-// Get video MP4 URL for direct HTML5 video playback (legacy - may not work with customer URLs)
+// Get video MP4 URL for direct HTML5 video playback
 export function getVideoMp4Url(videoUid: string): string {
-  // Note: Direct MP4 downloads may not be available with customer-specific URLs
-  // Use HLS/DASH streaming instead for better compatibility
+  // If it's already a complete URL, extract the video ID
+  if (isCompleteVideoUrl(videoUid)) {
+    const videoId = extractVideoIdFromUrl(videoUid)
+    return `${getStreamBaseUrl()}/${videoId}/downloads/default.mp4`
+  }
   return `${getStreamBaseUrl()}/${videoUid}/downloads/default.mp4`
 }
 

@@ -28,6 +28,7 @@ import { MediaFolders } from './MediaFolders'
 import { MediaUploader } from './MediaUploader'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { getVideoMp4Url } from '@/lib/cloudflare'
 
 interface MediaPickerProps {
   isOpen: boolean
@@ -97,7 +98,18 @@ export function MediaPicker({
 
   // Handle confirm selection
   const handleConfirm = useCallback(() => {
-    onSelect(internalSelection)
+    // Transform video assets to use correct MP4 URLs
+    const transformedSelection = internalSelection.map(asset => {
+      if (asset.type === 'video') {
+        return {
+          ...asset,
+          url: getVideoMp4Url(asset.metadata?.cloudflareId || asset.url)
+        }
+      }
+      return asset
+    })
+    
+    onSelect(transformedSelection)
     onClose()
   }, [internalSelection, onSelect, onClose])
 
