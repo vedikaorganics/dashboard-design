@@ -28,7 +28,6 @@ import { MediaFolders } from './MediaFolders'
 import { MediaUploader } from './MediaUploader'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { getVideoMp4Url } from '@/lib/cloudflare'
 
 interface MediaPickerProps {
   isOpen: boolean
@@ -98,12 +97,14 @@ export function MediaPicker({
 
   // Handle confirm selection
   const handleConfirm = useCallback(() => {
-    // Transform video assets to use correct MP4 URLs
+    // For video assets, use the HLS streaming URL from metadata if available, otherwise fallback to url
     const transformedSelection = internalSelection.map(asset => {
       if (asset.type === 'video') {
+        // Use the HLS streaming URL that was pre-generated on the server during upload
+        const hlsUrl = asset.metadata?.streamUrl || asset.url
         return {
           ...asset,
-          url: getVideoMp4Url(asset.metadata?.cloudflareId || asset.url)
+          url: hlsUrl
         }
       }
       return asset

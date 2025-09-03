@@ -156,8 +156,8 @@ interface TextBlockContent {
 // Video CTA Block Content Structure  
 interface VideoCTABlockContent {
   video: {
-    mobile: { url: string }
-    desktop?: { url: string }
+    mobile: { url: string }      // HLS streaming URL from Cloudflare Stream
+    desktop?: { url: string }    // HLS streaming URL from Cloudflare Stream (optional)
   }
   overlay: boolean
   overlayOpacity?: number
@@ -168,6 +168,22 @@ interface VideoCTABlockContent {
     link: string
   }
   height: "small" | "medium" | "large" | "full"
+}
+
+// Video Block Content Structure
+interface VideoBlockContent {
+  src: {
+    mobile: { url: string }      // HLS streaming URL from Cloudflare Stream
+    desktop?: { url: string }    // HLS streaming URL from Cloudflare Stream (optional)
+  }
+  poster?: {
+    mobile: { url: string }      // Poster image URL
+    desktop?: { url: string }    // Desktop poster image (optional)
+  }
+  controls?: boolean            // Show video controls
+  autoplay?: boolean           // Auto-play video
+  loop?: boolean               // Loop video playback
+  muted?: boolean              // Mute video by default
 }
 ```
 
@@ -557,6 +573,28 @@ function VideoCTABlock({ content }: { content: VideoCTABlockContent }) {
   )
 }
 
+// Video Block
+function VideoBlock({ content }: { content: VideoBlockContent }) {
+  const videoSrc = content.src.desktop?.url || content.src.mobile.url
+  const posterSrc = content.poster?.desktop?.url || content.poster?.mobile?.url
+  
+  return (
+    <section className="video-block">
+      <video
+        src={videoSrc}
+        poster={posterSrc}
+        controls={content.controls ?? true}
+        autoPlay={content.autoplay ?? false}
+        loop={content.loop ?? false}
+        muted={content.muted ?? false}
+        className="w-full h-auto"
+      >
+        Your browser does not support the video tag.
+      </video>
+    </section>
+  )
+}
+
 // Product Grid Block
 function ProductGridBlock({ content }: { content: ProductGridBlockContent }) {
   const [products, setProducts] = useState([])
@@ -653,8 +691,14 @@ export function ResponsiveImage({
 
 ### Video Integration
 
+All video blocks provide HLS streaming URLs for adaptive video playback:
+
 ```tsx
-// Video component with Cloudflare Stream
+// HLS Video Player with hls.js for cross-browser support
+'use client'
+
+import { useEffect, useRef } from 'react'
+
 export function CloudflareVideo({ 
   src, 
   poster, 
@@ -663,24 +707,103 @@ export function CloudflareVideo({
   loop = false,
   muted = false 
 }: VideoBlockContent) {
+  const videoRef = useRef<HTMLVideoElement>(null)
   const videoSrc = src.desktop?.url || src.mobile.url
   const posterSrc = poster?.desktop?.url || poster?.mobile?.url
   
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !videoSrc) return
+    
+    // Check if HLS is supported natively (Safari)
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = videoSrc
+    } 
+    // For other browsers, use hls.js
+    else if (typeof window !== 'undefined') {
+      import('hls.js').then(({ default: Hls }) => {
+        if (Hls.isSupported()) {
+          const hls = new Hls()
+          hls.loadSource(videoSrc)
+          hls.attachMedia(video)
+          
+          return () => {
+            hls.destroy()
+          }
+        }
+      })
+    }
+  }, [videoSrc])
+  
   return (
     <video
-      src={videoSrc}
+      ref={videoRef}
       poster={posterSrc}
       controls={controls}
       autoPlay={autoplay}
       loop={loop}
       muted={muted}
-      className="cloudflare-video"
+      className="cloudflare-video w-full h-auto"
     >
       Your browser does not support the video tag.
     </video>
   )
 }
+
+// Responsive video component for different screen sizes
+export function ResponsiveVideo({ 
+  src, 
+  poster,
+  className = "",
+  ...videoProps 
+}: {
+  src: { mobile: { url: string }, desktop?: { url: string } }
+  poster?: { mobile: { url: string }, desktop?: { url: string } }
+  className?: string
+  controls?: boolean
+  autoPlay?: boolean
+  loop?: boolean
+  muted?: boolean
+}) {
+  return (
+    <video
+      className={`w-full h-auto ${className}`}
+      poster={poster?.desktop?.url || poster?.mobile?.url}
+      {...videoProps}
+    >
+      {/* Desktop video source */}
+      {src.desktop && (
+        <source 
+          src={src.desktop.url} 
+          media="(min-width: 768px)"
+          type="video/mp4"
+        />
+      )}
+      
+      {/* Mobile video source */}
+      <source 
+        src={src.mobile.url} 
+        type="video/mp4"
+      />
+      
+      Your browser does not support the video tag.
+    </video>
+  )
+}
 ```
+
+**Video Features:**
+
+1. **HLS Streaming URLs** - All video content provides adaptive HLS streaming URLs
+2. **Poster Image Support** - Video blocks include thumbnail/preview images  
+3. **Responsive Sources** - Different video streams for mobile/desktop if needed
+4. **HTML5 Video Compatible** - URLs work with HTML5 video players that support HLS
+
+**Note:** Videos use HLS streaming format (`.m3u8`) which requires a compatible player like:
+- Native iOS Safari (built-in HLS support)
+- hls.js for other browsers
+- video.js with HLS plugin
+- Other HLS-compatible video players
 
 ## API Endpoints for Frontend
 

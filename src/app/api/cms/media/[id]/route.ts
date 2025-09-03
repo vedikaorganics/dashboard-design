@@ -119,12 +119,20 @@ export async function DELETE(
     // Delete from Cloudflare first
     try {
       const cloudflareId = asset.metadata?.cloudflareId
+      console.log(`Attempting to delete ${asset.type} with cloudflareId: ${cloudflareId}`)
+      
       if (cloudflareId) {
         if (asset.type === 'image') {
+          console.log('Deleting image from Cloudflare...')
           await deleteImageFromCloudflare(cloudflareId)
+          console.log('Image deleted from Cloudflare successfully')
         } else if (asset.type === 'video') {
+          console.log('Deleting video from Cloudflare...')
           await deleteVideoFromCloudflare(cloudflareId)
+          console.log('Video deleted from Cloudflare successfully')
         }
+      } else {
+        console.log('No cloudflareId found, skipping Cloudflare deletion')
       }
     } catch (cloudflareError) {
       console.error('Error deleting from Cloudflare:', cloudflareError)

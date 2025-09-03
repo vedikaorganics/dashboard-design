@@ -187,24 +187,21 @@ export async function deleteVideoFromCloudflare(videoUid: string): Promise<void>
 }
 
 // Get image variants for different sizes
+import { getCloudflareStreamCustomerCode } from './env'
+
 export function getImageVariant(imageId: string, variant: 'public' | 'thumbnail' | 'hero' = 'public'): string {
   return `https://imagedelivery.net/${CLOUDFLARE_IMAGES_ACCOUNT_HASH}/${imageId}/${variant}`
 }
 
 // Get Cloudflare Stream customer subdomain base URL
 function getStreamBaseUrl(): string {
-  const customerCode = process.env.CLOUDFLARE_STREAM_CUSTOMER_CODE
-  if (!customerCode) {
-    // Fallback to legacy videodelivery.net URLs if customer code not set
-    console.warn('CLOUDFLARE_STREAM_CUSTOMER_CODE not set, using legacy videodelivery.net URLs')
-    return 'https://videodelivery.net'
-  }
+  const customerCode = getCloudflareStreamCustomerCode()
   return `https://customer-${customerCode}.cloudflarestream.com`
 }
 
 // Helper function to determine if a URL is already a complete video URL
 export function isCompleteVideoUrl(url: string): boolean {
-  return url.includes('cloudflarestream.com') || url.includes('videodelivery.net')
+  return url.includes('cloudflarestream.com')
 }
 
 // Get video embed URL for iframe embeds
@@ -214,12 +211,7 @@ export function getVideoEmbedUrl(videoUid: string): string {
     return videoUid
   }
   
-  const baseUrl = getStreamBaseUrl()
-  if (baseUrl.includes('videodelivery.net')) {
-    // Legacy format: use iframe.videodelivery.net for embed
-    return `https://iframe.videodelivery.net/${videoUid}`
-  }
-  return `${baseUrl}/${videoUid}/iframe`
+  return `${getStreamBaseUrl()}/${videoUid}/iframe`
 }
 
 // Get video HLS stream URL
@@ -264,10 +256,9 @@ export function getVideoThumbnailWithSize(videoUid: string, width: number = 320,
 
 // Helper function to extract video ID from complete URLs
 function extractVideoIdFromUrl(url: string): string {
-  // Handle various URL formats:
-  // https://videodelivery.net/abc123
-  // https://iframe.videodelivery.net/abc123  
+  // Handle customer-specific URL format:
   // https://customer-xxx.cloudflarestream.com/abc123/iframe
+  // https://customer-xxx.cloudflarestream.com/abc123/downloads/default.mp4
   const match = url.match(/\/([a-f0-9]+)(?:\/|$)/)
   return match ? match[1] : url
 }
