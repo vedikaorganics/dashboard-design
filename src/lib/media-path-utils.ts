@@ -2,6 +2,7 @@ import { MediaFolder } from '@/types/cms'
 
 /**
  * Utility functions for handling media library path-based navigation
+ * Supports both query parameter URLs (legacy) and path-based URLs (new)
  */
 
 /**
@@ -198,4 +199,64 @@ export function analyzeFolderUrl(searchParams: URLSearchParams): {
     needsUrlUpdate: false,
     isLegacyUrl: false
   }
+}
+
+/**
+ * NEW FUNCTIONS FOR PATH-BASED URL ROUTING
+ */
+
+/**
+ * Converts URL path segments to folder path
+ * @param segments - Array of URL segments (e.g., ['folder1', 'subfolder'])
+ * @returns Folder path (e.g., '/folder1/subfolder')
+ */
+export function pathSegmentsToFolderPath(segments: string[] | undefined): string {
+  if (!segments || segments.length === 0) {
+    return '/'
+  }
+  
+  // Decode each segment and join
+  const decodedSegments = segments.map(segment => decodeURIComponent(segment))
+  return '/' + decodedSegments.join('/')
+}
+
+/**
+ * Converts folder path to URL segments
+ * @param path - Folder path (e.g., '/folder1/subfolder')
+ * @returns Array of encoded segments (e.g., ['folder1', 'subfolder'])
+ */
+export function folderPathToSegments(path: string): string[] {
+  if (!path || path === '/') {
+    return []
+  }
+  
+  // Remove leading slash and split
+  const segments = path.replace(/^\/+/, '').split('/')
+  // Encode each segment for URL safety
+  return segments.map(segment => encodeURIComponent(segment))
+}
+
+/**
+ * Builds media URL for path-based routing
+ * @param folderPath - Folder path (e.g., '/folder1/subfolder')
+ * @returns URL path (e.g., '/cms/media/folder1/subfolder')
+ */
+export function buildMediaUrl(folderPath: string): string {
+  if (!folderPath || folderPath === '/') {
+    return '/cms/media'
+  }
+  
+  const segments = folderPathToSegments(folderPath)
+  return `/cms/media/${segments.join('/')}`
+}
+
+/**
+ * Extracts folder path from dynamic route params
+ * @param params - Next.js route params with path array
+ * @returns Normalized folder path
+ */
+export function extractFolderPathFromParams(params: { path?: string[] }): string {
+  const segments = params.path
+  const folderPath = pathSegmentsToFolderPath(segments)
+  return normalizeFolderPath(folderPath)
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, Suspense } from 'react'
+import { useState, useCallback, useEffect, Suspense, use } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { MediaAsset } from '@/types/cms'
@@ -18,18 +18,35 @@ import {
   analyzeFolderUrl, 
   encodeFolderPath, 
   resolveFolderIdToPath, 
-  normalizeFolderPath 
+  normalizeFolderPath,
+  extractFolderPathFromParams,
+  buildMediaUrl
 } from '@/lib/media-path-utils'
 
-function CMSMediaPageContent() {
+interface CMSMediaPageProps {
+  params: Promise<{
+    path?: string[]
+  }>
+}
+
+function CMSMediaPageContent({ params }: { params: Promise<{ path?: string[] }> }) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const resolvedParams = use(params)
   
-  // Analyze current URL to determine folder location
+  // Extract folder path from URL segments first (new path-based routing)
+  const urlFolderPath = extractFolderPathFromParams(resolvedParams)
+  
+  // Check for legacy query parameters for backward compatibility
   const urlInfo = analyzeFolderUrl(searchParams)
-  const [currentFolderPath, setCurrentFolderPath] = useState<string>(urlInfo.currentPath || '/')
+  
+  // Determine initial folder path: prioritize URL path, then query params, then default to root
+  const initialFolderPath = urlFolderPath !== '/' ? urlFolderPath : (urlInfo.currentPath || '/')
+  const hasLegacyParams = urlInfo.isLegacyUrl || (urlInfo.currentPath && urlFolderPath === '/')
+  
+  const [currentFolderPath, setCurrentFolderPath] = useState<string>(initialFolderPath)
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(urlInfo.currentFolderId)
-  const [needsLegacyMigration, setNeedsLegacyMigration] = useState(urlInfo.needsUrlUpdate)
+  const [needsLegacyMigration, setNeedsLegacyMigration] = useState(hasLegacyParams)
   
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [search, setSearch] = useState('')
@@ -183,42 +200,48 @@ function CMSMediaPageContent() {
 
   // Handle legacy URL migration and sync with URL changes
   useEffect(() => {
-    const urlInfo = analyzeFolderUrl(searchParams)
-    
-    // If we have a legacy folder ID URL and folders are loaded, migrate to path-based URL
-    if (urlInfo.isLegacyUrl && urlInfo.currentFolderId && folders.length > 0) {
-      const folderPath = resolveFolderIdToPath(urlInfo.currentFolderId, folders)
-      if (folderPath) {
-        const params = new URLSearchParams(searchParams.toString())
-        params.delete('folderId')
-        if (folderPath !== '/') {
-          params.set('path', encodeFolderPath(folderPath))
-        } else {
-          params.delete('path')
+    // Handle legacy query parameter URLs by redirecting to new path-based URLs
+    if (needsLegacyMigration) {
+      let targetPath = '/'
+      
+      // Handle legacy folderId parameter
+      if (urlInfo.isLegacyUrl && urlInfo.currentFolderId && folders.length > 0) {
+        const resolvedPath = resolveFolderIdToPath(urlInfo.currentFolderId, folders)
+        if (resolvedPath) {
+          targetPath = resolvedPath
         }
-        
-        const newUrl = params.toString() 
-          ? `/cms/media?${params.toString()}`
-          : '/cms/media'
-        
-        router.replace(newUrl)
-        setCurrentFolderPath(folderPath)
-        setCurrentFolderId(null)
-        setNeedsLegacyMigration(false)
-        return
       }
+      // Handle legacy path parameter
+      else if (urlInfo.currentPath && urlFolderPath === '/') {
+        targetPath = urlInfo.currentPath
+      }
+      
+      // Build new path-based URL
+      const mediaUrl = buildMediaUrl(targetPath)
+      
+      // Preserve other query parameters
+      const params = new URLSearchParams(searchParams.toString())
+      params.delete('path')
+      params.delete('folderId')
+      
+      const queryString = params.toString()
+      const newUrl = queryString ? `${mediaUrl}?${queryString}` : mediaUrl
+      
+      router.replace(newUrl)
+      setCurrentFolderPath(targetPath)
+      setCurrentFolderId(null)
+      setNeedsLegacyMigration(false)
+      return
     }
     
-    // Sync state with URL changes (browser back/forward navigation)
-    if (!urlInfo.isLegacyUrl) {
-      const newPath = urlInfo.currentPath || '/'
-      if (newPath !== currentFolderPath) {
-        setCurrentFolderPath(newPath)
-        setCurrentFolderId(null)
-        setCurrentPage(1) // Reset page when folder changes via browser navigation
-      }
+    // Sync state with URL path changes (browser back/forward navigation)
+    const currentUrlPath = extractFolderPathFromParams(resolvedParams)
+    if (currentUrlPath !== currentFolderPath) {
+      setCurrentFolderPath(currentUrlPath)
+      setCurrentFolderId(null)
+      setCurrentPage(1) // Reset page when folder changes via browser navigation
     }
-  }, [searchParams, currentFolderPath, folders, router])
+  }, [needsLegacyMigration, urlInfo, urlFolderPath, folders, router, searchParams, resolvedParams, currentFolderPath])
 
   // Handle folder creation
   const handleCreateFolder = useCallback(async (name: string) => {
@@ -310,22 +333,19 @@ function CMSMediaPageContent() {
   }, [])
 
   const handleFolderChange = useCallback((folderPath: string) => {
-    // Update URL with folder path for browser history support
-    const params = new URLSearchParams(searchParams.toString())
     const normalizedPath = normalizeFolderPath(folderPath)
     
-    if (normalizedPath !== '/') {
-      params.set('path', encodeFolderPath(normalizedPath))
-    } else {
-      params.delete('path')
-    }
+    // Build new path-based URL
+    const mediaUrl = buildMediaUrl(normalizedPath)
     
-    // Remove any legacy folderId parameter
+    // Preserve other query parameters (search, filters, etc.) if any
+    const params = new URLSearchParams(searchParams.toString())
+    // Remove legacy path and folderId parameters
+    params.delete('path')
     params.delete('folderId')
     
-    const newUrl = params.toString() 
-      ? `/cms/media?${params.toString()}`
-      : '/cms/media'
+    const queryString = params.toString()
+    const newUrl = queryString ? `${mediaUrl}?${queryString}` : mediaUrl
     
     router.push(newUrl)
     setCurrentFolderPath(normalizedPath)
@@ -546,10 +566,10 @@ function MediaLibraryFallback() {
   )
 }
 
-export default function CMSMediaPage() {
+export default function CMSMediaPage({ params }: CMSMediaPageProps) {
   return (
     <Suspense fallback={<MediaLibraryFallback />}>
-      <CMSMediaPageContent />
+      <CMSMediaPageContent params={params} />
     </Suspense>
   )
 }
