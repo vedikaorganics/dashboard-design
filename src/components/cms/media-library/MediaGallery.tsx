@@ -36,7 +36,7 @@ import {
 } from '@/components/ui/tooltip'
 import { MediaAsset } from '@/types/cms'
 import { cn } from '@/lib/utils'
-import { getVideoMp4Url, getImageVariant } from '@/lib/cloudflare'
+import { getVideoMp4Url, getImageVariant, getVideoEmbedUrl } from '@/lib/cloudflare'
 
 interface MediaGalleryProps {
   assets: MediaAsset[]
@@ -177,7 +177,7 @@ export function MediaGallery({
             ) : currentAsset.type === 'video' ? (
               <iframe
                 key={currentAsset._id}
-                src={currentAsset.metadata?.cloudflareId ? `https://iframe.videodelivery.net/${currentAsset.metadata.cloudflareId}` : currentAsset.url}
+                src={getVideoEmbedUrl(currentAsset.metadata?.cloudflareId || currentAsset.url)}
                 className="max-w-[90vw] max-h-[90vh] w-full h-[70vh] border-0"
                 allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
                 allowFullScreen

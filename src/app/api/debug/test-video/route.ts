@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const thumbnailVariations = [
       {
         name: 'Default thumbnail',
-        url: `https://videodelivery.net/${videoId}/thumbnails/thumbnail.jpg`
+        url: getVideoThumbnail(videoId, 0)
       },
       {
         name: 'Thumbnail at 1s',

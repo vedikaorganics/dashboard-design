@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
         name: file.name,
         requireSignedURLs: false // Set to true if you want signed URLs
       })
-      url = `https://videodelivery.net/${cloudflareResult.uid}`
+      url = getVideoEmbedUrl(cloudflareResult.uid)
       
       // Use proper thumbnail URL with time parameter for better generation
       thumbnailUrl = getVideoThumbnail(cloudflareResult.uid, 1)
@@ -218,8 +218,8 @@ export async function POST(request: NextRequest) {
         originalName: file.name,
         cloudflareId, // Store Cloudflare ID for deletion
         ...(type === 'video' && {
-          streamUrl: `https://videodelivery.net/${cloudflareId}/manifest/video.m3u8`,
-          dashUrl: `https://videodelivery.net/${cloudflareId}/manifest/video.mpd`,
+          streamUrl: getVideoStreamUrl(cloudflareId),
+          dashUrl: getVideoDashUrl(cloudflareId),
           status: (cloudflareResult as any).status
         }),
         ...(type === 'image' && {
