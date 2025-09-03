@@ -41,13 +41,13 @@ export function ImageBlock({ content, isEditing = false, className }: ImageBlock
     if (typeof src === 'string') return src
     if (!src) return ''
     
-    // Use mobile version on mobile if available, otherwise fallback to desktop
-    if (isMobile && src.mobile) return getMediaUrl(src.mobile)
-    return getMediaUrl(src.desktop)
+    // Mobile-first: Use desktop version on desktop if available, otherwise use mobile
+    if (!isMobile && src.desktop) return getMediaUrl(src.desktop)
+    return getMediaUrl(src.mobile)
   }
 
-  // If editing and no desktop image, show placeholder
-  if (isEditing && (!src?.desktop && !src)) {
+  // If editing and no mobile image, show placeholder
+  if (isEditing && (!src?.mobile && !src)) {
     return (
       <div className={cn('text-center', className)}>
         <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-12 bg-muted/20">
@@ -131,37 +131,37 @@ export function ImageBlockEditor({
 }) {
   return (
     <div className={cn('space-y-4', className)}>
-      {/* Desktop Image URL */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Desktop Image URL *</label>
-        <input
-          type="url"
-          value={typeof content.src === 'string' ? content.src : (content.src?.desktop ? getMediaUrl(content.src.desktop) : '')}
-          onChange={(e) => onChange({ 
-            src: typeof content.src === 'string' 
-              ? { desktop: { url: e.target.value }, mobile: { url: '' } }
-              : { ...content.src, desktop: { url: e.target.value } }
-          })}
-          className="w-full p-2 border rounded-md"
-        />
-        <p className="text-xs text-muted-foreground">https://example.com/desktop-image.jpg</p>
-      </div>
-
       {/* Mobile Image URL */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">Mobile Image URL (Optional)</label>
+        <label className="text-sm font-medium">Mobile Image URL *</label>
         <input
           type="url"
-          value={typeof content.src === 'string' ? '' : (content.src?.mobile ? getMediaUrl(content.src.mobile) : '')}
+          value={typeof content.src === 'string' ? content.src : (content.src?.mobile ? getMediaUrl(content.src.mobile) : '')}
           onChange={(e) => onChange({ 
             src: typeof content.src === 'string' 
-              ? { desktop: { url: content.src }, mobile: { url: e.target.value } }
+              ? { mobile: { url: e.target.value }, desktop: { url: '' } }
               : { ...content.src, mobile: { url: e.target.value } }
           })}
           className="w-full p-2 border rounded-md"
         />
+        <p className="text-xs text-muted-foreground">https://example.com/mobile-image.jpg</p>
+      </div>
+
+      {/* Desktop Image URL */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Desktop Image URL (Optional)</label>
+        <input
+          type="url"
+          value={typeof content.src === 'string' ? '' : (content.src?.desktop ? getMediaUrl(content.src.desktop) : '')}
+          onChange={(e) => onChange({ 
+            src: typeof content.src === 'string' 
+              ? { mobile: { url: content.src }, desktop: { url: e.target.value } }
+              : { ...content.src, desktop: { url: e.target.value } }
+          })}
+          className="w-full p-2 border rounded-md"
+        />
         <p className="text-xs text-muted-foreground">
-          Example: https://example.com/mobile-image.jpg - If not provided, desktop image will be used on mobile devices
+          Example: https://example.com/desktop-image.jpg - If not provided, mobile image will be used on desktop devices
         </p>
       </div>
 
@@ -265,7 +265,7 @@ export function ImageBlockEditor({
       )}
 
       {/* Live preview */}
-      {(content.src && (typeof content.src === 'string' ? content.src : content.src?.desktop)) && (
+      {(content.src && (typeof content.src === 'string' ? content.src : content.src?.mobile)) && (
         <div className="space-y-2">
           <label className="text-sm font-medium">Preview</label>
           <div className="border rounded-md p-4 bg-background">

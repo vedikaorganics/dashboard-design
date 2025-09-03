@@ -9,8 +9,8 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
     case 'video-cta':
       return {
         video: {
-          desktop: '',
-          mobile: ''
+          mobile: '',
+          desktop: ''
         },
         heading: 'Your Heading Here',
         text: 'Add your description text here.',
@@ -24,8 +24,8 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
       return {
         slides: [{
           image: {
-            desktop: '',
-            mobile: ''
+            mobile: '',
+            desktop: ''
           },
           heading: 'Slide Heading',
           text: 'Slide description text.',
@@ -47,8 +47,8 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
     case 'image':
       return {
         src: {
-          desktop: '',
-          mobile: ''
+          mobile: '',
+          desktop: ''
         },
         alt: '',
         caption: '',
@@ -71,12 +71,12 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
       return {
         type: 'upload',
         src: {
-          desktop: '',
-          mobile: ''
+          mobile: '',
+          desktop: ''
         },
         poster: {
-          desktop: '',
-          mobile: ''
+          mobile: '',
+          desktop: ''
         },
         controls: true,
         autoplay: false,
@@ -119,8 +119,8 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
           style: 'primary'
         }],
         backgroundImage: {
-          desktop: '',
-          mobile: ''
+          mobile: '',
+          desktop: ''
         },
         backgroundColor: ''
       } as any
@@ -150,9 +150,9 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
     case 'spacer':
       return {
         height: {
-          desktop: 50,
+          mobile: 30,
           tablet: 40,
-          mobile: 30
+          desktop: 50
         }
       } as any
     
@@ -209,7 +209,7 @@ export function validateBlockContent(type: string, content: BlockContent): boole
       case 'video-cta':
         const videoCTAContent = content as any
         return Boolean(
-          (videoCTAContent.video?.desktop || videoCTAContent.video) && 
+          (videoCTAContent.video?.mobile || videoCTAContent.video) && 
           videoCTAContent.heading
         )
       case 'sliding-images-cta':
@@ -219,7 +219,7 @@ export function validateBlockContent(type: string, content: BlockContent): boole
       case 'image':
         const imageContent = content as any
         return Boolean(
-          (imageContent.src?.desktop || imageContent.src) && 
+          (imageContent.src?.mobile || imageContent.src) && 
           imageContent.alt
         )
       case 'gallery':
@@ -227,12 +227,12 @@ export function validateBlockContent(type: string, content: BlockContent): boole
         return Array.isArray(galleryContent.images) && 
                galleryContent.images.length > 0 &&
                galleryContent.images.every((img: any) => 
-                 (img.src?.desktop || img.src) && img.alt
+                 (img.src?.mobile || img.src) && img.alt
                )
       case 'video':
         const videoContent = content as any
         return Boolean(
-          videoContent.src?.desktop || videoContent.src
+          videoContent.src?.mobile || videoContent.src
         )
       case 'product-grid':
         return true // No required fields for product grid
@@ -249,7 +249,7 @@ export function validateBlockContent(type: string, content: BlockContent): boole
       case 'tabs':
         return Array.isArray((content as any).tabs) && (content as any).tabs.length > 0
       case 'spacer':
-        return Boolean((content as any).height?.desktop)
+        return Boolean((content as any).height?.mobile)
       case 'custom-html':
         return Boolean((content as any).html)
       case 'columns':

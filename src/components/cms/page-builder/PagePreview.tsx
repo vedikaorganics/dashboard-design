@@ -97,7 +97,7 @@ export function PagePreview({
         )
       
       case 'spacer':
-        const spacerHeight = block.content?.height?.[device] || block.content?.height?.desktop || 50
+        const spacerHeight = block.content?.height?.[device] || block.content?.height?.mobile || 50
         return (
           <div 
             {...commonProps}

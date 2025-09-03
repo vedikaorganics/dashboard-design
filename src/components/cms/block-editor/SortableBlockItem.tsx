@@ -156,7 +156,7 @@ export function SortableBlockItem({
         const gridCols = (block.content as any)?.columns || 3
         return `${gridLayout} • ${gridCols} columns`
       case 'spacer':
-        const height = (block.content as any)?.height?.desktop || 50
+        const height = (block.content as any)?.height?.mobile || 50
         return `${height}px height`
       default:
         return `${block.type.replace('-', ' ')} component`
@@ -168,15 +168,15 @@ export function SortableBlockItem({
     
     switch (block.type) {
       case 'video-cta':
-        return content?.video?.desktop ? getMediaUrl(content.video.desktop) : null
+        return content?.video?.mobile ? getMediaUrl(content.video.mobile) : null
       case 'sliding-images-cta':
-        return content?.slides?.[0]?.image?.desktop ? getMediaUrl(content.slides[0].image.desktop) : null
+        return content?.slides?.[0]?.image?.mobile ? getMediaUrl(content.slides[0].image.mobile) : null
       case 'image':
-        return content?.src?.desktop ? getMediaUrl(content.src.desktop) : null
+        return content?.src?.mobile ? getMediaUrl(content.src.mobile) : null
       case 'gallery':
-        return content?.images?.[0]?.src?.desktop ? getMediaUrl(content.images[0].src.desktop) : null
+        return content?.images?.[0]?.src?.mobile ? getMediaUrl(content.images[0].src.mobile) : null
       case 'video':
-        return content?.src?.desktop ? getMediaUrl(content.src.desktop) : null
+        return content?.src?.mobile ? getMediaUrl(content.src.mobile) : null
       case 'testimonials':
         return content?.testimonials?.[0]?.avatar ? getMediaUrl(content.testimonials[0].avatar) : null
       default:

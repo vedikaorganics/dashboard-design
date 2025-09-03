@@ -102,8 +102,8 @@ export type BlockContent =
 
 export interface VideoCTABlockContent {
   video: {
-    desktop: { url: string; assetId?: string; filename?: string }
-    mobile?: { url: string; assetId?: string; filename?: string }
+    mobile: { url: string; assetId?: string; filename?: string }
+    desktop?: { url: string; assetId?: string; filename?: string }
   }
   heading: string
   text: string
@@ -119,8 +119,8 @@ export interface VideoCTABlockContent {
 export interface SlidingImagesCTABlockContent {
   slides: Array<{
     image: {
-      desktop: { url: string; assetId?: string }
-      mobile?: { url: string; assetId?: string }
+      mobile: { url: string; assetId?: string }
+      desktop?: { url: string; assetId?: string }
     }
     heading: string
     text: string
@@ -143,8 +143,8 @@ export interface TextBlockContent {
 
 export interface ImageBlockContent {
   src: {
-    desktop: { url: string; assetId?: string; filename?: string }
-    mobile?: { url: string; assetId?: string; filename?: string }
+    mobile: { url: string; assetId?: string; filename?: string }
+    desktop?: { url: string; assetId?: string; filename?: string }
   }
   alt: string
   caption?: string
@@ -157,8 +157,8 @@ export interface ImageBlockContent {
 export interface GalleryBlockContent {
   images: Array<{
     src: {
-      desktop: { url: string; assetId?: string }
-      mobile?: { url: string; assetId?: string }
+      mobile: { url: string; assetId?: string }
+      desktop?: { url: string; assetId?: string }
     }
     alt: string
     caption?: string
@@ -172,12 +172,12 @@ export interface GalleryBlockContent {
 export interface VideoBlockContent {
   type: "upload" | "youtube" | "vimeo"
   src: {
-    desktop: { url: string; assetId?: string; filename?: string }
-    mobile?: { url: string; assetId?: string; filename?: string }
+    mobile: { url: string; assetId?: string; filename?: string }
+    desktop?: { url: string; assetId?: string; filename?: string }
   }
   poster?: {
-    desktop: { url: string; assetId?: string; filename?: string }
-    mobile?: { url: string; assetId?: string; filename?: string }
+    mobile: { url: string; assetId?: string; filename?: string }
+    desktop?: { url: string; assetId?: string; filename?: string }
   }
   controls: boolean
   autoplay: boolean
@@ -230,17 +230,17 @@ export interface CTABlockContent {
     style: "primary" | "secondary" | "outline"
   }>
   backgroundImage?: {
-    desktop: string
-    mobile?: string
+    mobile: string
+    desktop?: string
   }
   backgroundColor?: string
 }
 
 export interface SpacerBlockContent {
   height: {
-    desktop: number
+    mobile: number
     tablet?: number
-    mobile?: number
+    desktop?: number
   }
 }
 
