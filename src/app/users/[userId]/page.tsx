@@ -233,6 +233,65 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
           </CardHeader>
         </Card>
 
+        {/* Customer Notes */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Customer Notes</CardTitle>
+                <div className="text-sm text-muted-foreground">
+                  Internal notes about this customer
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleEditNote}
+                disabled={editingNote}
+              >
+                {editingNote ? 'Editing...' : 'Edit Notes'}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {editingNote ? (
+              <div className="space-y-4">
+                <Textarea
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                  placeholder="Add notes about this customer..."
+                  className="min-h-[100px] resize-none"
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleCancelEdit}
+                    disabled={isSavingNote}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    onClick={handleSaveNote}
+                    disabled={isSavingNote}
+                  >
+                    {isSavingNote ? 'Saving...' : 'Save Notes'}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm">
+                {user.notes ? (
+                  <p className="whitespace-pre-wrap">{user.notes}</p>
+                ) : (
+                  <p className="text-muted-foreground italic">No notes added yet</p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Key Metrics */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
