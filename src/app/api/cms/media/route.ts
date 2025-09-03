@@ -40,8 +40,12 @@ export async function GET(request: NextRequest) {
     
     // Build assets query
     const assetsQuery: any = {}
-    if (folderPath !== undefined || folderId !== undefined) {
+    // Only filter by folderId if we're in a specific folder, otherwise show all assets
+    if (folderPath !== null || folderId !== null) {
       assetsQuery.folderId = targetFolderId
+      console.log(`API Debug: Filtering by folderId="${targetFolderId}" (folderPath="${folderPath}", folderId="${folderId}")`)
+    } else {
+      console.log(`API Debug: No folder filtering - showing ALL assets (folderPath="${folderPath}", folderId="${folderId}")`)
     }
     if (type) assetsQuery.type = type
     if (search) {
@@ -58,8 +62,14 @@ export async function GET(request: NextRequest) {
     
     // Build folders query
     const foldersQuery: any = {}
-    if (folderPath !== undefined || folderId !== undefined) {
+    // Only filter by parentId if we're in a specific folder, otherwise show root-level folders
+    if (folderPath !== null || folderId !== null) {
       foldersQuery.parentId = targetFolderId
+      console.log(`API Debug: Filtering folders by parentId="${targetFolderId}"`)
+    } else {
+      // In "All media" view, still only show root-level folders for navigation
+      foldersQuery.parentId = null
+      console.log(`API Debug: Showing root-level folders for navigation`)
     }
     
     // Build sort object
@@ -68,13 +78,13 @@ export async function GET(request: NextRequest) {
                      sortBy === 'size' ? 'size' :
                      sortBy === 'type' ? 'type' : 'createdAt'
     const sortDirection = sortOrder === 'asc' ? 1 : -1
-    const sortObject = { [sortField]: sortDirection }
+    const sortObject: Record<string, number> = { [sortField]: sortDirection }
     
     // Execute queries in parallel
     const [assets, totalAssets, folders] = await Promise.all([
       assetsCollection
         .find(assetsQuery)
-        .sort(sortObject)
+        .sort(sortObject as any)
         .skip((page - 1) * limit)
         .limit(limit)
         .toArray(),
