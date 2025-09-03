@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ContentBlock, getMediaUrl, createMediaRef } from '@/types/cms'
 import { MediaInput } from '@/components/cms/media-library/MediaInput'
+import { TiptapRichTextEditor } from '@/components/ui/tiptap-rich-text-editor'
 
 interface BlockSettingsProps {
   block: ContentBlock
@@ -71,11 +72,11 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="text">Text</Label>
-                <Textarea
+                <TiptapRichTextEditor
                   id="text"
+                  label="Text"
                   value={videoCTAContent.text || ''}
-                  onChange={(e) => updateBlockContent({ text: e.target.value })}
+                  onChange={(value) => updateBlockContent({ text: value })}
                   placeholder="Enter description text..."
                   rows={3}
                 />
@@ -166,11 +167,11 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                     }}
                     placeholder="Heading"
                   />
-                  <Textarea
+                  <TiptapRichTextEditor
                     value={slide.text || ''}
-                    onChange={(e) => {
+                    onChange={(value) => {
                       const newSlides = [...slidingContent.slides]
-                      newSlides[index] = { ...slide, text: e.target.value }
+                      newSlides[index] = { ...slide, text: value }
                       updateBlockContent({ slides: newSlides })
                     }}
                     placeholder="Text"
@@ -499,11 +500,11 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                       <X className="w-3 h-3" />
                     </Button>
                   </div>
-                  <Textarea
+                  <TiptapRichTextEditor
                     value={testimonial.text || ''}
-                    onChange={(e) => {
+                    onChange={(value) => {
                       const newTestimonials = [...testimonialsContent.testimonials]
-                      newTestimonials[index] = { ...testimonial, text: e.target.value }
+                      newTestimonials[index] = { ...testimonial, text: value }
                       updateBlockContent({ testimonials: newTestimonials })
                     }}
                     placeholder="Testimonial text"
@@ -605,11 +606,11 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                     }}
                     placeholder="Question"
                   />
-                  <Textarea
+                  <TiptapRichTextEditor
                     value={faq.answer || ''}
-                    onChange={(e) => {
+                    onChange={(value) => {
                       const newFaqs = [...faqContent.faqs]
-                      newFaqs[index] = { ...faq, answer: e.target.value }
+                      newFaqs[index] = { ...faq, answer: value }
                       updateBlockContent({ faqs: newFaqs })
                     }}
                     placeholder="Answer"
@@ -648,11 +649,11 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
+              <TiptapRichTextEditor
                 id="description"
+                label="Description"
                 value={ctaContent.description || ''}
-                onChange={(e) => updateBlockContent({ description: e.target.value })}
+                onChange={(value) => updateBlockContent({ description: value })}
                 placeholder="Enter description..."
                 rows={3}
               />
@@ -773,11 +774,11 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
         return (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="text">Banner Text</Label>
-              <Textarea
+              <TiptapRichTextEditor
                 id="text"
+                label="Banner Text"
                 value={bannerContent.text || ''}
-                onChange={(e) => updateBlockContent({ text: e.target.value })}
+                onChange={(value) => updateBlockContent({ text: value })}
                 placeholder="Enter banner message..."
                 rows={2}
               />
@@ -832,11 +833,11 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                     }}
                     placeholder="Title"
                   />
-                  <Textarea
+                  <TiptapRichTextEditor
                     value={item.content || ''}
-                    onChange={(e) => {
+                    onChange={(value) => {
                       const newItems = [...accordionContent.items]
-                      newItems[index] = { ...item, content: e.target.value }
+                      newItems[index] = { ...item, content: value }
                       updateBlockContent({ items: newItems })
                     }}
                     placeholder="Content"
@@ -891,11 +892,11 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                     }}
                     placeholder="Tab title"
                   />
-                  <Textarea
+                  <TiptapRichTextEditor
                     value={tab.content || ''}
-                    onChange={(e) => {
+                    onChange={(value) => {
                       const newTabs = [...tabsContent.tabs]
-                      newTabs[index] = { ...tab, content: e.target.value }
+                      newTabs[index] = { ...tab, content: value }
                       updateBlockContent({ tabs: newTabs })
                     }}
                     placeholder="Tab content"
@@ -1000,50 +1001,13 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
         return (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="text">Content</Label>
-              <Textarea
+              <TiptapRichTextEditor
                 id="text"
                 value={textContent.text || ''}
-                onChange={(e) => updateBlockContent({ text: e.target.value })}
+                onChange={(value) => updateBlockContent({ text: value })}
                 placeholder="Enter your text content..."
                 rows={8}
               />
-              <p className="text-xs text-muted-foreground">
-                HTML tags are supported for formatting
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="columns">Columns</Label>
-              <Select
-                value={String(textContent.columns || 1)}
-                onValueChange={(value) => updateBlockContent({ columns: parseInt(value) })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 Column</SelectItem>
-                  <SelectItem value="2">2 Columns</SelectItem>
-                  <SelectItem value="3">3 Columns</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="alignment">Text Alignment</Label>
-              <Select
-                value={textContent.alignment || 'left'}
-                onValueChange={(value) => updateBlockContent({ alignment: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="left">Left</SelectItem>
-                  <SelectItem value="center">Center</SelectItem>
-                  <SelectItem value="right">Right</SelectItem>
-                  <SelectItem value="justify">Justify</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
         )

@@ -10,6 +10,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogPortal,
+  DialogOverlay,
 } from '@/components/ui/dialog'
 import {
   Tabs,
@@ -87,7 +89,9 @@ export function MediaManagementDialog({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+        <DialogPortal>
+          <DialogOverlay className="z-[60]" />
+          <DialogContent className="max-w-[90vw] w-[1200px] max-h-[95vh] overflow-hidden z-[60] sm:max-w-[90vw]">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-3">
               <div className="w-12 h-12 rounded overflow-hidden bg-muted flex-shrink-0">
@@ -289,7 +293,8 @@ export function MediaManagementDialog({
               Close
             </Button>
           </div>
-        </DialogContent>
+          </DialogContent>
+        </DialogPortal>
       </Dialog>
 
       {/* Replace Media Picker */}

@@ -25,6 +25,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogPortal,
+  DialogOverlay,
 } from '@/components/ui/dialog'
 import { ContentBlock } from '@/types/cms'
 import { createBlock, reorderBlocks } from '@/lib/cms/blocks'
@@ -247,7 +249,9 @@ export function BlockEditor({
         setShowSettings(open)
         if (!open) setSelectedBlock(null)
       }}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+        <DialogPortal>
+          <DialogOverlay className="z-[60]" />
+          <DialogContent className="max-w-none w-fit min-w-[700px] max-h-[95vh] overflow-hidden z-[60]">
           <DialogHeader>
             <DialogTitle>
               Edit {selectedBlock?.type.split('-').map(word => 
@@ -267,7 +271,8 @@ export function BlockEditor({
               />
             )}
           </div>
-        </DialogContent>
+          </DialogContent>
+        </DialogPortal>
       </Dialog>
     </>
   )
