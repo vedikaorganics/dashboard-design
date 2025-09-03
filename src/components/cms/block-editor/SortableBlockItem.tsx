@@ -250,23 +250,6 @@ export function SortableBlockItem({
                 {getBlockDescription(block)}
               </p>
               
-              {/* Visibility indicators */}
-              <div className="flex items-center space-x-2 mt-2">
-                {!block.responsive?.desktop?.visible && (
-                  <Badge variant="outline" className="text-xs">Hidden on Desktop</Badge>
-                )}
-                {!block.responsive?.tablet?.visible && (
-                  <Badge variant="outline" className="text-xs">Hidden on Tablet</Badge>
-                )}
-                {!block.responsive?.mobile?.visible && (
-                  <Badge variant="outline" className="text-xs">Hidden on Mobile</Badge>
-                )}
-                {block.visibility?.showOn !== 'all' && (
-                  <Badge variant="outline" className="text-xs capitalize">
-                    {block.visibility.showOn?.replace('-', ' ')} only
-                  </Badge>
-                )}
-              </div>
             </div>
 
             {/* Actions */}

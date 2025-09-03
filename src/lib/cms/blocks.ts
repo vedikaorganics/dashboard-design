@@ -186,15 +186,7 @@ export function createBlock(
     id: generateBlockId(),
     type,
     order: 0,
-    content: { ...getDefaultBlockContent(type), ...content } as BlockContent,
-    responsive: {
-      desktop: { visible: true },
-      tablet: { visible: true },
-      mobile: { visible: true }
-    },
-    visibility: {
-      showOn: 'all'
-    }
+    content: { ...getDefaultBlockContent(type), ...content } as BlockContent
   }
 }
 

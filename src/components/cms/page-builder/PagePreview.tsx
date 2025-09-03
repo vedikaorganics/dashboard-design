@@ -60,23 +60,11 @@ export function PagePreview({
 
   // Render block based on type
   const renderBlock = (block: any, index: number) => {
-    // Check if block should be visible on current device
-    const responsive = block.responsive || {}
-    const isVisible = responsive[device]?.visible !== false
-
-    if (!isVisible) {
-      return null
-    }
-
     // Block styling will be handled by individual block components
     const blockStyle = {}
 
     const blockClassName = cn(
-      'block-preview',
-      // Hide on specific devices if configured
-      !responsive.desktop?.visible && device === 'desktop' && 'hidden',
-      !responsive.tablet?.visible && device === 'tablet' && 'hidden',
-      !responsive.mobile?.visible && device === 'mobile' && 'hidden'
+      'block-preview'
     )
 
     const commonProps = {

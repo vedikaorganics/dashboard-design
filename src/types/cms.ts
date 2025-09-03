@@ -26,29 +26,10 @@ export interface ContentBlock {
         "banner" | "accordion" | "tabs" | "columns"
   order: number
   content: BlockContent
-  responsive: ResponsiveSettings
-  visibility: VisibilitySettings
 }
 
 
-export interface ResponsiveSettings {
-  desktop: { visible: boolean; width?: string }
-  tablet: { visible: boolean; width?: string }
-  mobile: { visible: boolean; width?: string }
-}
 
-export interface VisibilitySettings {
-  showOn?: "all" | "logged-in" | "logged-out"
-  startDate?: Date
-  endDate?: Date
-  conditions?: VisibilityCondition[]
-}
-
-export interface VisibilityCondition {
-  field: string
-  operator: "equals" | "contains" | "greater-than" | "less-than"
-  value: any
-}
 
 export interface SEOMetadata {
   title?: string
