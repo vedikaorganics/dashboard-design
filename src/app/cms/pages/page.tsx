@@ -139,208 +139,198 @@ export default function CMSPagesPage() {
         </div>
 
         {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Filters</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    placeholder="Search pages..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full md:w-40">
-                  <SelectValue placeholder="All statuses" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={pageTypeFilter} onValueChange={setPageTypeFilter}>
-                <SelectTrigger className="w-full md:w-40">
-                  <SelectValue placeholder="All page types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All page types</SelectItem>
-                  <SelectItem value="predefined">Predefined Pages</SelectItem>
-                  <SelectItem value="custom">Custom Pages</SelectItem>
-                </SelectContent>
-              </Select>
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search pages..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10"
+              />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full md:w-40">
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="published">Published</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="archived">Archived</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={pageTypeFilter} onValueChange={setPageTypeFilter}>
+            <SelectTrigger className="w-full md:w-40">
+              <SelectValue placeholder="All page types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All page types</SelectItem>
+              <SelectItem value="predefined">Predefined Pages</SelectItem>
+              <SelectItem value="custom">Custom Pages</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {/* Missing predefined pages */}
         {missingPredefinedPages.length > 0 && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Setup Required Pages</CardTitle>
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-lg font-semibold">Setup Required Pages</h2>
               <p className="text-sm text-muted-foreground">
                 These essential pages haven't been created yet. Click to create them with pre-configured settings.
               </p>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-3">
-                {missingPredefinedPages.map((predefinedPage) => (
-                  <div key={predefinedPage.slug} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h4 className="font-medium">{predefinedPage.title}</h4>
-                      <p className="text-sm text-muted-foreground">{predefinedPage.description}</p>
-                    </div>
-                    <Link href={`/cms/pages/new?predefined=${predefinedPage.slug}`}>
-                      <Button size="sm">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create
-                      </Button>
-                    </Link>
+            </div>
+            <div className="grid gap-3">
+              {missingPredefinedPages.map((predefinedPage) => (
+                <div key={predefinedPage.slug} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">{predefinedPage.title}</h4>
+                    <p className="text-sm text-muted-foreground">{predefinedPage.description}</p>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <Link href={`/cms/pages/new?predefined=${predefinedPage.slug}`}>
+                    <Button size="sm">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create
+                    </Button>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Content */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">
               {pagination?.total || 0} pages
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="space-y-2">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="h-12 bg-muted rounded animate-pulse" />
-                ))}
+            </h2>
+          </div>
+          
+          {isLoading ? (
+            <div className="space-y-2">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-12 bg-muted rounded animate-pulse" />
+              ))}
+            </div>
+          ) : pages.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                <Plus className="w-8 h-8 text-muted-foreground" />
               </div>
-            ) : pages.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                  <Plus className="w-8 h-8 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-medium mb-2">No pages found</h3>
-                <p className="text-muted-foreground mb-4">
-                  {search || (statusFilter !== 'all') || (pageTypeFilter !== 'all') 
-                    ? 'Try adjusting your filters to find what you\'re looking for.'
-                    : 'Get started by creating your first page.'}
-                </p>
-                <Link href="/cms/pages/new">
-                  <Button>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Page
-                  </Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Page Type</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Blocks</TableHead>
-                      <TableHead>Updated</TableHead>
-                      <TableHead className="w-[70px]">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {pages.map((page) => (
-                      <TableRow key={page._id}>
-                        <TableCell>
-                          <div>
-                            <Link 
-                              href={`/cms/pages/${page.slug}`}
-                              className="font-medium hover:underline"
-                            >
-                              {page.title}
-                            </Link>
-                            <div className="text-xs text-muted-foreground">
-                              /{page.slug}
-                            </div>
+              <h3 className="text-lg font-medium mb-2">No pages found</h3>
+              <p className="text-muted-foreground mb-4">
+                {search || (statusFilter !== 'all') || (pageTypeFilter !== 'all') 
+                  ? 'Try adjusting your filters to find what you\'re looking for.'
+                  : 'Get started by creating your first page.'}
+              </p>
+              <Link href="/cms/pages/new">
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Page
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Page Type</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Blocks</TableHead>
+                    <TableHead>Updated</TableHead>
+                    <TableHead className="w-[70px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pages.map((page) => (
+                    <TableRow key={page._id}>
+                      <TableCell>
+                        <div>
+                          <Link 
+                            href={`/cms/pages/${page.slug}`}
+                            className="font-medium hover:underline"
+                          >
+                            {page.title}
+                          </Link>
+                          <div className="text-xs text-muted-foreground">
+                            /{page.slug}
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="capitalize">
-                            {page.pageType || 'custom'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {getStatusBadge(page)}
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-muted-foreground">
-                            {page.blocks.length}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-muted-foreground">
-                            {formatDate(page.updatedAt)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem asChild>
-                                <Link href={`/cms/pages/${page.slug}`}>
-                                  <Edit className="w-4 h-4 mr-2" />
-                                  Edit
-                                </Link>
-                              </DropdownMenuItem>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="capitalize">
+                          {page.pageType || 'custom'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {getStatusBadge(page)}
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground">
+                          {page.blocks.length}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground">
+                          {formatDate(page.updatedAt)}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link href={`/cms/pages/${page.slug}`}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => window.open(`/preview/${page.slug}`, '_blank')}
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              Preview
+                            </DropdownMenuItem>
+                            {page.status !== 'published' ? (
                               <DropdownMenuItem
-                                onClick={() => window.open(`/preview/${page.slug}`, '_blank')}
+                                onClick={() => handlePublish(page.slug, page.title)}
                               >
-                                <Eye className="w-4 h-4 mr-2" />
-                                Preview
+                                Publish
                               </DropdownMenuItem>
-                              {page.status !== 'published' ? (
-                                <DropdownMenuItem
-                                  onClick={() => handlePublish(page.slug, page.title)}
-                                >
-                                  Publish
-                                </DropdownMenuItem>
-                              ) : (
-                                <DropdownMenuItem
-                                  onClick={() => handleUnpublish(page.slug, page.title)}
-                                >
-                                  Unpublish
-                                </DropdownMenuItem>
-                              )}
+                            ) : (
                               <DropdownMenuItem
-                                onClick={() => handleDelete(page.slug, page.title)}
-                                className="text-destructive"
+                                onClick={() => handleUnpublish(page.slug, page.title)}
                               >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete
+                                Unpublish
                               </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                            )}
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(page.slug, page.title)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
       </div>
     </DashboardLayout>
   )
