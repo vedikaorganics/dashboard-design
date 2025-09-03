@@ -1,0 +1,21 @@
+# AGENTS: Quick Guide
+- Dev: `npm run dev` (port 3003)
+- Build/Start: `npm run build` → `npm start` (port 3001)
+- Lint: `npm run lint`; Fix: `npx eslint . --fix`
+- Tests: no unit test runner configured; recommend Vitest
+- Single test (Vitest): `npx vitest path/to/file.test.ts -t "test name"`
+- Single test (Jest): `npx jest path/to/file.test.ts -t "test name"`
+- Imports: order node/external → `@/*` internal → relative; avoid deep `../../..`
+- Paths: use `@/*` alias (see `tsconfig.json`), not long relatives
+- Types: TS strict; avoid `any` (warned), prefer `unknown` + narrowing; use `zod` for validation
+- Naming: camelCase vars/functions; PascalCase React components/types; UPPER_SNAKE env vars
+- Files: use kebab-case filenames (e.g., `app-sidebar.tsx`); pages remain `page.tsx`
+- Exports: default export for `page.tsx`; API routes export named HTTP methods (`GET`, `POST`, ...)
+- Client/Server: add "use client" atop components using hooks/state; keep data fetching in API routes
+- Error handling: wrap API logic in try/catch; return `{ error, details? }` JSON with proper status; never leak secrets
+- Caching: prefer `src/lib/cache.ts` with sensible TTLs; clear/refresh on writes
+- DB: use pooled client in `src/lib/mongodb.ts`; batch with `Promise.all`; favor aggregations
+- Data hooks: use `src/hooks` (e.g., `use-data.ts`) in client components; coerce API data safely with optional chaining
+- Styling: change only CSS variables in `src/app/globals.css`; follow shadcn/ui patterns; merge classnames via `cn()`
+- Lint rules: extends Next core-web-vitals/typescript; warns on unused vars, explicit any, unescaped entities, prefer-const
+- Cursor/Copilot: no repository rules found; if added in `.cursor/` or `.github/`, mirror key points here
