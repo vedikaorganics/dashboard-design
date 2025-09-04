@@ -37,7 +37,8 @@ import {
 import { MediaAsset } from '@/types/cms'
 import { cn } from '@/lib/utils'
 import { getImageVariant } from '@/lib/cloudflare'
-import { getMuxMp4Url, getMuxEmbedUrl, extractPlaybackIdFromUrl } from '@/lib/mux'
+import { getMuxMp4Url, getMuxEmbedUrl, extractPlaybackIdFromUrl, getMuxThumbnailUrl } from '@/lib/mux'
+import { VideoPlayer } from '@/components/ui/video-player'
 
 interface MediaGalleryProps {
   assets: MediaAsset[]
@@ -176,15 +177,13 @@ export function MediaGallery({
                 />
               </div>
             ) : currentAsset.type === 'video' ? (
-              <iframe
+              <VideoPlayer
                 key={currentAsset._id}
-                src={currentAsset.metadata?.muxPlaybackId 
-                  ? getMuxEmbedUrl(currentAsset.metadata.muxPlaybackId)
-                  : currentAsset.url
-                }
-                className="max-w-[90vw] max-h-[90vh] w-full h-[70vh] border-0"
-                allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-                allowFullScreen
+                src={currentAsset.url}
+                poster={currentAsset.thumbnailUrl}
+                className="max-w-[90vw] max-h-[90vh] w-full h-[70vh]"
+                controls={true}
+                onError={(error) => console.error('Video playback error:', error)}
               />
             ) : null}
           </div>
