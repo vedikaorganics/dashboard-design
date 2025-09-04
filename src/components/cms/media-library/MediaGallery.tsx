@@ -8,20 +8,12 @@ import {
   ChevronRight,
   Download,
   ExternalLink,
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Maximize2,
   ZoomIn,
   ZoomOut,
-  RotateCw,
-  Info,
-  Share2
+  Info
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Slider } from '@/components/ui/slider'
 import {
   Dialog,
   DialogContent,
@@ -56,9 +48,6 @@ export function MediaGallery({
   onAssetChange
 }: MediaGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [isMuted, setIsMuted] = useState(false)
-  const [volume, setVolume] = useState([50])
   const [zoom, setZoom] = useState(1)
   const [showInfo, setShowInfo] = useState(false)
 
@@ -93,9 +82,7 @@ export function MediaGallery({
           break
         case ' ':
           e.preventDefault()
-          if (currentAsset?.type === 'video') {
-            togglePlayPause()
-          }
+          // Let the native video controls handle play/pause
           break
         case 'i':
         case 'I':
@@ -106,7 +93,7 @@ export function MediaGallery({
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, currentIndex, assets.length, isPlaying, showInfo])
+  }, [isOpen, currentIndex, assets.length, showInfo])
 
 
   const goToPrevious = useCallback(() => {
@@ -119,9 +106,6 @@ export function MediaGallery({
     setZoom(1)
   }, [assets.length])
 
-  const togglePlayPause = useCallback(() => {
-    setIsPlaying(!isPlaying)
-  }, [isPlaying])
 
   const handleZoomIn = useCallback(() => {
     setZoom(prev => Math.min(prev + 0.5, 3))
