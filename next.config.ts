@@ -15,7 +15,8 @@ function validateEnvVars() {
     'LIMECHAT_ACCOUNT_ID',
     'UPSTASH_REDIS_REST_URL',
     'UPSTASH_REDIS_REST_TOKEN',
-    'CLOUDFLARE_STREAM_CUSTOMER_CODE',
+    'MUX_TOKEN_ID',
+    'MUX_TOKEN_SECRET',
   ] as const
 
   const missingVars: string[] = []
@@ -69,13 +70,13 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'videodelivery.net',
+        hostname: 'stream.mux.com',
         port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
-        hostname: '*.cloudflarestream.com',
+        hostname: 'image.mux.com',
         port: '',
         pathname: '/**',
       },

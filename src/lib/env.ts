@@ -15,4 +15,5 @@ export const getMailjetSecretKey = () => process.env.MAILJET_SECRET_KEY!
 export const getFromEmail = () => process.env.FROM_EMAIL!
 export const getLimeChatAccessToken = () => process.env.LIMECHAT_ACCESS_TOKEN!
 export const getLimeChatAccountId = () => process.env.LIMECHAT_ACCOUNT_ID!
-export const getCloudflareStreamCustomerCode = () => process.env.CLOUDFLARE_STREAM_CUSTOMER_CODE!
+export const getMuxTokenId = () => process.env.MUX_TOKEN_ID!
+export const getMuxTokenSecret = () => process.env.MUX_TOKEN_SECRET!

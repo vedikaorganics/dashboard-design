@@ -3,7 +3,7 @@ import { getDatabase } from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
 import { MediaAsset, MediaFolder, MediaAssetListResponse, UploadMediaRequest } from '@/types/cms'
 import { getCurrentUserId } from '@/lib/auth-utils'
-import { uploadImageToCloudflare, uploadVideoToCloudflare, getImageVariant, getVideoThumbnail, getVideoEmbedUrl, getVideoStreamUrl, getVideoDashUrl } from '@/lib/cloudflare'
+import { uploadImageToCloudflare, getImageVariant } from '@/lib/cloudflare'
 import { resolvePathToFolderId, normalizeFolderPath } from '@/lib/media-path-utils'
 
 // GET /api/cms/media - List media assets and folders
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
     let cloudflareId: string
     let type: 'image' | 'video'
     
-    // Determine file type and upload to appropriate Cloudflare service
+    // This endpoint now only handles images - videos go through direct upload
     if (file.type.startsWith('image/')) {
       type = 'image'
       cloudflareResult = await uploadImageToCloudflare(file, {
@@ -162,20 +162,9 @@ export async function POST(request: NextRequest) {
       url = cloudflareResult.url
       thumbnailUrl = getImageVariant(cloudflareResult.id, 'thumbnail')
       cloudflareId = cloudflareResult.id
-    } else if (file.type.startsWith('video/')) {
-      type = 'video'
-      cloudflareResult = await uploadVideoToCloudflare(file, {
-        name: file.name,
-        requireSignedURLs: false // Set to true if you want signed URLs
-      })
-      url = getVideoEmbedUrl(cloudflareResult.uid)
-      
-      // Use proper thumbnail URL with time parameter for better generation
-      thumbnailUrl = getVideoThumbnail(cloudflareResult.uid, 1)
-      cloudflareId = cloudflareResult.uid
     } else {
       return NextResponse.json(
-        { success: false, error: 'Unsupported file type. Only images and videos are allowed.' },
+        { success: false, error: 'This endpoint only supports images. Videos should use the direct upload flow.' },
         { status: 400 }
       )
     }
@@ -217,14 +206,7 @@ export async function POST(request: NextRequest) {
         uploadedBy: userId,
         originalName: file.name,
         cloudflareId, // Store Cloudflare ID for deletion
-        ...(type === 'video' && {
-          streamUrl: getVideoStreamUrl(cloudflareId),
-          dashUrl: getVideoDashUrl(cloudflareId),
-          status: (cloudflareResult as any).status
-        }),
-        ...(type === 'image' && {
-          variants: (cloudflareResult as any).variants
-        })
+        variants: (cloudflareResult as any).variants
       },
       createdAt: now,
       updatedAt: now

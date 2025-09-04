@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getVideoThumbnail, getVideoThumbnailWithSize } from '@/lib/cloudflare'
+import { getMuxThumbnailUrl } from '@/lib/mux'
 
 // GET /api/debug/test-video?videoId=xxx
 export async function GET(request: NextRequest) {
@@ -13,27 +13,27 @@ export async function GET(request: NextRequest) {
       }, { status: 400 })
     }
     
-    // Test different thumbnail variations
+    // Test different thumbnail variations for Mux
     const thumbnailVariations = [
       {
         name: 'Default thumbnail',
-        url: getVideoThumbnail(videoId, 0)
+        url: getMuxThumbnailUrl(videoId)
       },
       {
         name: 'Thumbnail at 1s',
-        url: getVideoThumbnail(videoId, 1)
+        url: getMuxThumbnailUrl(videoId, { time: 1 })
       },
       {
         name: 'Thumbnail at 5s',
-        url: getVideoThumbnail(videoId, 5)
+        url: getMuxThumbnailUrl(videoId, { time: 5 })
       },
       {
         name: 'Small thumbnail (160x120)',
-        url: getVideoThumbnailWithSize(videoId, 160, 120, 1)
+        url: getMuxThumbnailUrl(videoId, { time: 1, width: 160, height: 120 })
       },
       {
         name: 'Medium thumbnail (320x240)',
-        url: getVideoThumbnailWithSize(videoId, 320, 240, 1)
+        url: getMuxThumbnailUrl(videoId, { time: 1, width: 320, height: 240 })
       }
     ]
     

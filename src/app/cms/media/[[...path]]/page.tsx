@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, Suspense, use } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import * as UpChunk from '@mux/upchunk'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { MediaAsset } from '@/types/cms'
 import { useMedia } from '@/hooks/cms/use-media'
@@ -14,6 +15,8 @@ import { MediaBreadcrumb } from '@/components/cms/media-library/MediaBreadcrumb'
 import { MediaGallery } from '@/components/cms/media-library/MediaGallery'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { toast } from 'sonner'
+import { useUploadToasts } from '@/hooks/use-upload-toasts'
+import { UploadProgressToast } from '@/components/ui/upload-progress-toast'
 import { 
   analyzeFolderUrl, 
   encodeFolderPath, 
@@ -61,6 +64,9 @@ function CMSMediaPageContent({ params }: { params: Promise<{ path?: string[] }> 
   const [assetDimensions, setAssetDimensions] = useState<Record<string, { width: number; height: number }>>({})
   
   const { showDetails, selectedAsset, openDetails, closeDetails, setShowDetails } = useMediaDetails()
+  
+  // Upload toast system
+  const { uploads, createUploadToast, updateUploadProgress, completeUpload, errorUpload, dismissUpload } = useUploadToasts()
 
   const {
     assets,
@@ -127,66 +133,214 @@ function CMSMediaPageContent({ params }: { params: Promise<{ path?: string[] }> 
     }
   }
 
-  // Handle file upload
+  // Upload image to server (existing flow)
+  const uploadImageToServer = async (file: File, toastId: string) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('alt', file.name.split('.')[0])
+    formData.append('caption', '')
+    formData.append('tags', '')
+    
+    // Handle folder assignment for upload
+    if (currentFolderPath !== '/') {
+      // First try to resolve path to ID if folders are loaded
+      let folderId: string | null = null
+      
+      if (folders && folders.length > 0) {
+        folderId = resolvePathToFolderId(currentFolderPath, folders)
+        console.log(`Upload Debug: Path "${currentFolderPath}" resolved to folderId "${folderId}" (${folders.length} folders available)`)
+      } else {
+        console.log('Upload Debug: Folders not loaded yet, will use folderPath fallback')
+      }
+      
+      if (folderId) {
+        formData.append('folderId', folderId)
+        console.log('Upload Debug: Added folderId to FormData')
+      } else {
+        // Fallback: send the current folder path directly for server-side resolution
+        console.log(`Upload Debug: Could not resolve folderId, sending folderPath "${currentFolderPath}"`)
+        formData.append('folderPath', currentFolderPath)
+      }
+    }
+
+    // Track upload progress using XMLHttpRequest for progress events
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const progress = (e.loaded / e.total) * 100
+          updateUploadProgress(toastId, progress)
+        }
+      }
+      
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText)
+            resolve(response)
+          } catch (error) {
+            reject(new Error('Invalid response format'))
+          }
+        } else {
+          try {
+            const error = JSON.parse(xhr.responseText)
+            reject(new Error(error.error || 'Image upload failed'))
+          } catch {
+            reject(new Error('Image upload failed'))
+          }
+        }
+      }
+      
+      xhr.onerror = () => {
+        reject(new Error('Network error during upload'))
+      }
+      
+      xhr.open('POST', '/api/cms/media')
+      xhr.send(formData)
+    })
+  }
+
+  // Upload video to Mux (direct upload flow)
+  const uploadVideoToMux = async (file: File, toastId: string) => {
+    // Step 1: Get upload URL from our API
+    const uploadUrlResponse = await fetch('/api/cms/media/upload-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename: file.name,
+        folderId: currentFolderPath !== '/' ? currentFolderPath : null,
+        alt: file.name.split('.')[0],
+        caption: '',
+        tags: []
+      })
+    })
+
+    if (!uploadUrlResponse.ok) {
+      throw new Error('Failed to get upload URL')
+    }
+
+    const { data } = await uploadUrlResponse.json()
+    const { uploadUrl, uploadId } = data
+
+    // Step 2: Upload directly to Mux using UpChunk
+    return new Promise((resolve, reject) => {
+      const upload = UpChunk.createUpload({
+        endpoint: uploadUrl,
+        file,
+        chunkSize: 5120 // 5MB chunks
+      })
+
+      upload.on('progress', (progress) => {
+        const progressPercent = Math.round(progress.detail)
+        updateUploadProgress(toastId, progressPercent)
+      })
+
+      upload.on('success', async () => {
+        try {
+          // Step 3: Notify our server that upload is complete
+          const completeResponse = await fetch('/api/cms/media/complete-upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ uploadId })
+          })
+
+          if (!completeResponse.ok) {
+            throw new Error('Failed to complete upload')
+          }
+
+          const result = await completeResponse.json()
+          resolve(result)
+        } catch (error) {
+          reject(error)
+        }
+      })
+
+      upload.on('error', (error) => {
+        reject(new Error(`Upload failed: ${error.detail}`))  
+      })
+    })
+  }
+
+  // Handle file upload - split by type
   const handleUpload = useCallback(async (files: File[]) => {
-    const uploadPromises = files.map(async (file) => {
-      // Validate file type
+    // Validate all files first
+    for (const file of files) {
       if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
         throw new Error(`Unsupported file type: ${file.name}. Only images and videos are allowed.`)
       }
-      
-      // Create FormData for file upload
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('alt', file.name.split('.')[0]) // Remove extension for alt text
-      formData.append('caption', '')
-      formData.append('tags', '')
-      
-      // Handle folder assignment for upload
-      if (currentFolderPath !== '/') {
-        // First try to resolve path to ID if folders are loaded
-        let folderId: string | null = null
-        
-        if (folders && folders.length > 0) {
-          folderId = resolvePathToFolderId(currentFolderPath, folders)
-          console.log(`Upload Debug: Path "${currentFolderPath}" resolved to folderId "${folderId}" (${folders.length} folders available)`)
-        } else {
-          console.log('Upload Debug: Folders not loaded yet, will use folderPath fallback')
-        }
-        
-        if (folderId) {
-          formData.append('folderId', folderId)
-          console.log('Upload Debug: Added folderId to FormData')
-        } else {
-          // Fallback: send the current folder path directly for server-side resolution
-          console.log(`Upload Debug: Could not resolve folderId, sending folderPath "${currentFolderPath}"`)
-          formData.append('folderPath', currentFolderPath)
-        }
-      }
-      
-      // Upload directly to API
-      const response = await fetch('/api/cms/media', {
-        method: 'POST',
-        body: formData
-      })
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Upload failed')
-      }
-      
-      return response.json()
+    }
+
+    // Create toast for each file
+    const fileToastMap = new Map<string, string>()
+    files.forEach(file => {
+      const fileKey = `${file.name}-${file.size}`
+      const toastId = createUploadToast(file)
+      fileToastMap.set(fileKey, toastId)
     })
 
+    // Separate images and videos
+    const images = files.filter(f => f.type.startsWith('image/'))
+    const videos = files.filter(f => f.type.startsWith('video/'))
+
+    const uploadPromises: Promise<any>[] = []
+
+    // Upload images via FormData (existing flow)
+    if (images.length > 0) {
+      uploadPromises.push(
+        ...images.map(async (file) => {
+          const fileKey = `${file.name}-${file.size}`
+          const toastId = fileToastMap.get(fileKey)!
+          try {
+            const result = await uploadImageToServer(file, toastId)
+            completeUpload(toastId)
+            return result
+          } catch (error) {
+            errorUpload(toastId, error instanceof Error ? error.message : 'Upload failed')
+            throw error
+          }
+        })
+      )
+    }
+
+    // Upload videos directly to Mux
+    if (videos.length > 0) {
+      uploadPromises.push(
+        ...videos.map(async (file) => {
+          const fileKey = `${file.name}-${file.size}`
+          const toastId = fileToastMap.get(fileKey)!
+          try {
+            const result = await uploadVideoToMux(file, toastId)
+            completeUpload(toastId)
+            return result
+          } catch (error) {
+            errorUpload(toastId, error instanceof Error ? error.message : 'Upload failed')
+            throw error
+          }
+        })
+      )
+    }
+
     try {
-      await Promise.all(uploadPromises)
-      toast.success(`${files.length} file(s) uploaded successfully to Cloudflare`)
+      const results = await Promise.allSettled(uploadPromises)
+      
+      const successes = results.filter(result => result.status === 'fulfilled').length
+      const failures = results.filter(result => result.status === 'rejected').length
+      
+      if (successes > 0 && failures === 0) {
+        // All succeeded - don't show additional toast as individual toasts will show success
+      } else if (successes > 0 && failures > 0) {
+        toast.warning(`${successes} file(s) uploaded, ${failures} failed`)
+      } else if (failures > 0) {
+        toast.error(`${failures} upload(s) failed`)
+      }
+      
       refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to upload files')
       console.error('Upload error:', error)
+      toast.error('Upload process failed')
     }
-  }, [currentFolderPath, folders, refresh])
+  }, [currentFolderPath, folders, refresh, createUploadToast, completeUpload, errorUpload])
 
   // Fetch dimensions for assets that don't have them
   useEffect(() => {
@@ -501,9 +655,11 @@ function CMSMediaPageContent({ params }: { params: Promise<{ path?: string[] }> 
   }
 
   return (
-    <DashboardLayout title="Media Library">
-      <div className="-m-4 -mt-6 md:-m-8 h-[calc(100vh-4rem)]">
-        <TooltipProvider>
+    <>
+      <UploadProgressToast uploads={uploads} onDismiss={dismissUpload} />
+      <DashboardLayout title="Media Library">
+        <div className="-m-4 -mt-6 md:-m-8 h-[calc(100vh-4rem)]">
+          <TooltipProvider>
         <MediaLibraryLayout
           header={
             <MediaHeader
@@ -565,9 +721,10 @@ function CMSMediaPageContent({ params }: { params: Promise<{ path?: string[] }> 
           onClose={() => setShowGallery(false)}
           initialIndex={galleryIndex}
         />
-        </TooltipProvider>
-      </div>
-    </DashboardLayout>
+          </TooltipProvider>
+        </div>
+      </DashboardLayout>
+    </>
   )
 }
 

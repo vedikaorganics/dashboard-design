@@ -36,7 +36,8 @@ import {
 } from '@/components/ui/tooltip'
 import { MediaAsset } from '@/types/cms'
 import { cn } from '@/lib/utils'
-import { getVideoMp4Url, getImageVariant, getVideoEmbedUrl } from '@/lib/cloudflare'
+import { getImageVariant } from '@/lib/cloudflare'
+import { getMuxMp4Url, getMuxEmbedUrl, extractPlaybackIdFromUrl } from '@/lib/mux'
 
 interface MediaGalleryProps {
   assets: MediaAsset[]
@@ -177,7 +178,10 @@ export function MediaGallery({
             ) : currentAsset.type === 'video' ? (
               <iframe
                 key={currentAsset._id}
-                src={getVideoEmbedUrl(currentAsset.metadata?.cloudflareId || currentAsset.url)}
+                src={currentAsset.metadata?.muxPlaybackId 
+                  ? getMuxEmbedUrl(currentAsset.metadata.muxPlaybackId)
+                  : currentAsset.url
+                }
                 className="max-w-[90vw] max-h-[90vh] w-full h-[70vh] border-0"
                 allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
                 allowFullScreen

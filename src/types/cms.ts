@@ -67,6 +67,8 @@ export interface MediaAsset {
     status?: any
     variants?: string[]
     duration?: string
+    muxAssetId?: string
+    muxPlaybackId?: string
   }
   createdAt: Date
   updatedAt: Date

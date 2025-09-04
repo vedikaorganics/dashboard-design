@@ -264,7 +264,11 @@ export function MediaLibrary({
                   <DialogHeader>
                     <DialogTitle>Upload Media</DialogTitle>
                   </DialogHeader>
-                  <MediaUploader onUpload={handleUpload} accept={accept === 'document' ? 'all' : accept} />
+                  <MediaUploader 
+                    onUpload={handleUpload} 
+                    accept={accept === 'document' ? 'all' : accept}
+                    currentFolderPath={currentFolderPath}
+                  />
                 </DialogContent>
               </Dialog>
             </div>

@@ -4,6 +4,7 @@ import { ObjectId } from 'mongodb'
 import { MediaAsset, MediaAssetResponse } from '@/types/cms'
 import { getCurrentUserId } from '@/lib/auth-utils'
 import { deleteImageFromCloudflare, deleteVideoFromCloudflare } from '@/lib/cloudflare'
+import { deleteVideoFromMux, isMuxUrl } from '@/lib/mux'
 
 interface Params {
   id: string
@@ -116,27 +117,36 @@ export async function DELETE(
       )
     }
     
-    // Delete from Cloudflare first
+    // Delete from appropriate service (Cloudflare or Mux)
     try {
       const cloudflareId = asset.metadata?.cloudflareId
-      console.log(`Attempting to delete ${asset.type} with cloudflareId: ${cloudflareId}`)
+      const muxAssetId = asset.metadata?.muxAssetId
       
-      if (cloudflareId) {
-        if (asset.type === 'image') {
-          console.log('Deleting image from Cloudflare...')
-          await deleteImageFromCloudflare(cloudflareId)
-          console.log('Image deleted from Cloudflare successfully')
-        } else if (asset.type === 'video') {
+      console.log(`Attempting to delete ${asset.type} with cloudflareId: ${cloudflareId}, muxAssetId: ${muxAssetId}`)
+      
+      if (asset.type === 'image' && cloudflareId) {
+        console.log('Deleting image from Cloudflare...')
+        await deleteImageFromCloudflare(cloudflareId)
+        console.log('Image deleted from Cloudflare successfully')
+      } else if (asset.type === 'video') {
+        // Check if it's a Mux video or Cloudflare video
+        if (muxAssetId || isMuxUrl(asset.url)) {
+          const assetId = muxAssetId || cloudflareId
+          if (assetId) {
+            console.log('Deleting video from Mux...')
+            await deleteVideoFromMux(assetId)
+            console.log('Video deleted from Mux successfully')
+          }
+        } else if (cloudflareId) {
+          // Legacy Cloudflare Stream video
           console.log('Deleting video from Cloudflare...')
           await deleteVideoFromCloudflare(cloudflareId)
           console.log('Video deleted from Cloudflare successfully')
         }
-      } else {
-        console.log('No cloudflareId found, skipping Cloudflare deletion')
       }
-    } catch (cloudflareError) {
-      console.error('Error deleting from Cloudflare:', cloudflareError)
-      // Continue with database deletion even if Cloudflare deletion fails
+    } catch (deleteError) {
+      console.error('Error deleting from external service:', deleteError)
+      // Continue with database deletion even if external service deletion fails
       // This prevents orphaned database records
     }
     

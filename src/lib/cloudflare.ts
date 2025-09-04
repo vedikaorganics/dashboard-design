@@ -68,68 +68,6 @@ export async function uploadImageToCloudflare(file: File, metadata?: {
   }
 }
 
-// Upload video to Cloudflare Stream
-export async function uploadVideoToCloudflare(file: File, metadata?: {
-  name?: string
-  allowedOrigins?: string[]
-  requireSignedURLs?: boolean
-}): Promise<{
-  uid: string
-  status: {
-    state: string
-    pctComplete: string
-  }
-  meta: {
-    name: string
-  }
-  playback?: {
-    hls: string
-    dash: string
-  }
-  thumbnail?: string
-  watermark?: any
-}> {
-  try {
-    const formData = new FormData()
-    formData.append('file', file)
-    
-    // Set metadata for the video
-    const videoMetadata = {
-      name: metadata?.name || file.name,
-      ...(metadata?.allowedOrigins && { allowedOrigins: metadata.allowedOrigins }),
-      ...(metadata?.requireSignedURLs !== undefined && { requireSignedURLs: metadata.requireSignedURLs }),
-    }
-    formData.append('meta', JSON.stringify(videoMetadata))
-    
-    const response = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/stream`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${CLOUDFLARE_API_TOKEN}`,
-        },
-        body: formData
-      }
-    )
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Cloudflare Stream upload failed: ${response.status} ${response.statusText} - ${errorText}`)
-    }
-
-    const result = await response.json()
-    
-    if (!result.success) {
-      throw new Error(`Cloudflare Stream error: ${result.errors?.map((e: any) => e.message).join(', ')}`)
-    }
-
-    return result.result
-  } catch (error) {
-    console.error('Error uploading video to Cloudflare:', error)
-    throw error
-  }
-}
-
 // Delete image from Cloudflare Images
 export async function deleteImageFromCloudflare(imageId: string): Promise<void> {
   try {
@@ -158,119 +96,9 @@ export async function deleteImageFromCloudflare(imageId: string): Promise<void> 
   }
 }
 
-// Delete video from Cloudflare Stream
-export async function deleteVideoFromCloudflare(videoUid: string): Promise<void> {
-  try {
-    const response = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/stream/${videoUid}`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${CLOUDFLARE_API_TOKEN}`,
-        },
-      }
-    )
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Failed to delete video: ${response.status} ${response.statusText} - ${errorText}`)
-    }
-
-    const result = await response.json()
-    if (!result.success) {
-      throw new Error(`Cloudflare Stream delete error: ${result.errors?.map((e: any) => e.message).join(', ')}`)
-    }
-  } catch (error) {
-    console.error('Error deleting video from Cloudflare:', error)
-    throw error
-  }
-}
-
 // Get image variants for different sizes
-import { getCloudflareStreamCustomerCode } from './env'
-
 export function getImageVariant(imageId: string, variant: 'public' | 'thumbnail' | 'hero' = 'public'): string {
   return `https://imagedelivery.net/${CLOUDFLARE_IMAGES_ACCOUNT_HASH}/${imageId}/${variant}`
-}
-
-// Get Cloudflare Stream customer subdomain base URL
-function getStreamBaseUrl(): string {
-  const customerCode = getCloudflareStreamCustomerCode()
-  return `https://customer-${customerCode}.cloudflarestream.com`
-}
-
-// Helper function to determine if a URL is already a complete video URL
-export function isCompleteVideoUrl(url: string): boolean {
-  return url.includes('cloudflarestream.com')
-}
-
-// Get video embed URL for iframe embeds
-export function getVideoEmbedUrl(videoUid: string): string {
-  // If it's already a complete URL, return as-is
-  if (isCompleteVideoUrl(videoUid)) {
-    return videoUid
-  }
-  
-  return `${getStreamBaseUrl()}/${videoUid}/iframe`
-}
-
-// Get video HLS stream URL
-export function getVideoStreamUrl(videoUid: string): string {
-  // If it's already a complete URL, extract the video ID
-  if (isCompleteVideoUrl(videoUid)) {
-    const videoId = extractVideoIdFromUrl(videoUid)
-    return `${getStreamBaseUrl()}/${videoId}/manifest/video.m3u8`
-  }
-  return `${getStreamBaseUrl()}/${videoUid}/manifest/video.m3u8`
-}
-
-// Get video DASH stream URL  
-export function getVideoDashUrl(videoUid: string): string {
-  // If it's already a complete URL, extract the video ID
-  if (isCompleteVideoUrl(videoUid)) {
-    const videoId = extractVideoIdFromUrl(videoUid)
-    return `${getStreamBaseUrl()}/${videoId}/manifest/video.mpd`
-  }
-  return `${getStreamBaseUrl()}/${videoUid}/manifest/video.mpd`
-}
-
-// Get video thumbnail - with time parameter for better thumbnail generation
-export function getVideoThumbnail(videoUid: string, timeSeconds: number = 1): string {
-  // If it's already a complete URL, extract the video ID
-  if (isCompleteVideoUrl(videoUid)) {
-    const videoId = extractVideoIdFromUrl(videoUid)
-    return `${getStreamBaseUrl()}/${videoId}/thumbnails/thumbnail.jpg?time=${timeSeconds}s`
-  }
-  return `${getStreamBaseUrl()}/${videoUid}/thumbnails/thumbnail.jpg?time=${timeSeconds}s`
-}
-
-// Get video thumbnail at specific dimensions
-export function getVideoThumbnailWithSize(videoUid: string, width: number = 320, height: number = 240, timeSeconds: number = 1): string {
-  // If it's already a complete URL, extract the video ID
-  if (isCompleteVideoUrl(videoUid)) {
-    const videoId = extractVideoIdFromUrl(videoUid)
-    return `${getStreamBaseUrl()}/${videoId}/thumbnails/thumbnail.jpg?time=${timeSeconds}s&width=${width}&height=${height}`
-  }
-  return `${getStreamBaseUrl()}/${videoUid}/thumbnails/thumbnail.jpg?time=${timeSeconds}s&width=${width}&height=${height}`
-}
-
-// Helper function to extract video ID from complete URLs
-function extractVideoIdFromUrl(url: string): string {
-  // Handle customer-specific URL format:
-  // https://customer-xxx.cloudflarestream.com/abc123/iframe
-  // https://customer-xxx.cloudflarestream.com/abc123/downloads/default.mp4
-  const match = url.match(/\/([a-f0-9]+)(?:\/|$)/)
-  return match ? match[1] : url
-}
-
-// Get video MP4 URL for direct HTML5 video playback
-export function getVideoMp4Url(videoUid: string): string {
-  // If it's already a complete URL, extract the video ID
-  if (isCompleteVideoUrl(videoUid)) {
-    const videoId = extractVideoIdFromUrl(videoUid)
-    return `${getStreamBaseUrl()}/${videoId}/downloads/default.mp4`
-  }
-  return `${getStreamBaseUrl()}/${videoUid}/downloads/default.mp4`
 }
 
 // Get image metadata from Cloudflare Images API
@@ -315,48 +143,6 @@ export async function getImageMetadata(imageId: string): Promise<{
   }
 }
 
-// Get video metadata from Cloudflare Stream API
-export async function getVideoMetadata(videoUid: string): Promise<{
-  width: number
-  height: number
-  duration: number
-  ready: boolean
-} | null> {
-  try {
-    const response = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/stream/${videoUid}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${CLOUDFLARE_API_TOKEN}`,
-        },
-      }
-    )
-
-    if (!response.ok) {
-      console.error(`Failed to fetch video metadata: ${response.status} ${response.statusText}`)
-      return null
-    }
-
-    const result = await response.json()
-    
-    if (!result.success || !result.result) {
-      console.error('Cloudflare Stream API error:', result.errors)
-      return null
-    }
-
-    const metadata = result.result
-    return {
-      width: metadata.input?.width || metadata.playback?.width || 0,
-      height: metadata.input?.height || metadata.playback?.height || 0,
-      duration: metadata.duration || 0,
-      ready: metadata.status?.state === 'ready'
-    }
-  } catch (error) {
-    console.error('Error fetching video metadata:', error)
-    return null
-  }
-}
-
 // Debug function to test image URL accessibility
 export async function testImageUrl(imageId: string, variant: string = 'public'): Promise<{
   url: string
@@ -379,4 +165,9 @@ export async function testImageUrl(imageId: string, variant: string = 'public'):
       status: 0
     }
   }
+}
+
+// Legacy export for backward compatibility with existing Cloudflare Stream videos
+export async function deleteVideoFromCloudflare(videoUid: string): Promise<void> {
+  throw new Error('Cloudflare Stream is deprecated. Use deleteVideoFromMux instead.')
 }

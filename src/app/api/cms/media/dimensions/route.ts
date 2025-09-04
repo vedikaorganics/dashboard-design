@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getVideoMetadata, getImageVariant } from '@/lib/cloudflare'
+import { getImageVariant } from '@/lib/cloudflare'
+import { getVideoMetadata } from '@/lib/mux'
 
 // Helper function to extract image dimensions from image data
 async function getImageDimensions(imageUrl: string): Promise<{ width: number; height: number } | null> {
