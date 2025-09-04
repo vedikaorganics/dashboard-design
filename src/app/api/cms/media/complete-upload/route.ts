@@ -64,13 +64,16 @@ export async function POST(request: NextRequest) {
     const baseUrl = `https://stream.mux.com/${playbackId}`
     const thumbnailUrl = `https://image.mux.com/${playbackId}/thumbnail.jpg?time=1`
 
+    // Get file size from original file size passed through during upload
+    const fileSize = (metadata as any).originalFileSize || 0
+
     // Create MediaAsset document
     const mediaAsset: Omit<MediaAsset, '_id'> = {
       url: `${baseUrl}.m3u8`, // HLS stream URL
       thumbnailUrl,
       type: 'video',
       filename: (metadata as any).filename || 'video.mp4',
-      size: 0, // Mux doesn't provide file size in bytes
+      size: fileSize, // File size from Mux static renditions
       dimensions: asset.tracks?.[0] ? {
         width: (asset.tracks[0] as any).width || 0,
         height: (asset.tracks[0] as any).height || 0

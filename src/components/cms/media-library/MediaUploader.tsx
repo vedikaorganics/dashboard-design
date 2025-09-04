@@ -139,6 +139,7 @@ export function MediaUploader({
   }
 
   const uploadVideoToMux = async (file: File, toastId: string) => {
+    
     // Step 1: Get upload URL from our API
     const uploadUrlResponse = await fetch('/api/cms/media/upload-url', {
       method: 'POST',
@@ -148,7 +149,8 @@ export function MediaUploader({
         folderId: currentFolderPath !== '/' ? currentFolderPath : null,
         alt: file.name.split('.')[0],
         caption: '',
-        tags: []
+        tags: [],
+        fileSize: file.size // Pass original file size
       })
     })
 

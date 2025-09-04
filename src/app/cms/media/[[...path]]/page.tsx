@@ -212,7 +212,8 @@ function CMSMediaPageContent({ params }: { params: Promise<{ path?: string[] }> 
         folderId: currentFolderPath !== '/' ? currentFolderPath : null,
         alt: file.name.split('.')[0],
         caption: '',
-        tags: []
+        tags: [],
+        fileSize: file.size // Pass original file size
       })
     })
 

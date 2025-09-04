@@ -12,7 +12,8 @@ const mux = new Mux({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { filename, folderId, alt, caption, tags } = body
+    const { filename, folderId, alt, caption, tags, fileSize } = body
+    
 
     if (!filename) {
       return NextResponse.json(
@@ -32,7 +33,8 @@ export async function POST(request: NextRequest) {
           folderId: folderId || null,
           alt: alt || '',
           caption: caption || '',
-          tags: tags || []
+          tags: tags || [],
+          originalFileSize: fileSize || 0
         })
       }
     })

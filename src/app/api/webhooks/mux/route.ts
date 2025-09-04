@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/mongodb'
 import crypto from 'crypto'
+import Mux from '@mux/mux-node'
+import { getMuxTokenId, getMuxTokenSecret } from '@/lib/env'
+
+// Initialize Mux client
+const mux = new Mux({
+  tokenId: getMuxTokenId(),
+  tokenSecret: getMuxTokenSecret(),
+})
 
 // POST /api/webhooks/mux - Handle Mux webhook events
 export async function POST(request: NextRequest) {
@@ -8,19 +16,9 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.text()
     const signature = request.headers.get('mux-signature')
     
-    // Debug logging for webhook signature verification
-    console.log('=== Mux Webhook Signature Debug ===')
-    console.log('Raw body length:', rawBody.length)
-    console.log('Raw body first 100 chars:', rawBody.substring(0, 100))
-    console.log('Received signature:', signature)
-    console.log('Webhook secret exists:', !!process.env.MUX_WEBHOOK_SECRET)
-    console.log('Webhook secret length:', process.env.MUX_WEBHOOK_SECRET?.length)
-    
     // Verify webhook signature (for security)
     if (!signature || !process.env.MUX_WEBHOOK_SECRET) {
       console.warn('Missing Mux webhook signature or secret')
-      console.log('Signature present:', !!signature)
-      console.log('Secret present:', !!process.env.MUX_WEBHOOK_SECRET)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -38,9 +36,6 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    console.log('Parsed timestamp:', timestamp)
-    console.log('Parsed signature hash:', signatureHash)
-    
     if (!timestamp || !signatureHash) {
       console.warn('Invalid Mux signature format - missing timestamp or hash')
       return NextResponse.json({ error: 'Invalid signature format' }, { status: 401 })
@@ -54,21 +49,10 @@ export async function POST(request: NextRequest) {
       .update(signedPayload)
       .digest('hex')
     
-    console.log('Signed payload length:', signedPayload.length)
-    console.log('Signed payload first 100 chars:', signedPayload.substring(0, 100))
-    console.log('Expected signature:', expectedSignature)
-    console.log('Received signature hash:', signatureHash)
-    console.log('Signatures match:', expectedSignature === signatureHash)
-    
     if (expectedSignature !== signatureHash) {
       console.warn('Invalid Mux webhook signature')
-      console.log('Expected:', expectedSignature)
-      console.log('Received:', signatureHash)
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
-    
-    console.log('Signature verification successful!')
-    console.log('=====================================')
 
     const event = JSON.parse(rawBody)
     console.log('Mux webhook event received:', event.type, event.data?.id)
@@ -91,18 +75,38 @@ export async function POST(request: NextRequest) {
             height: videoTrack.height || 0
           } : undefined
 
+          // Fetch complete asset details from Mux API to get file size
+          let fileSize = 0
+          
+          try {
+            const asset = await mux.video.assets.retrieve(assetId)
+            
+            if (asset.static_renditions?.files && asset.static_renditions.files.length > 0) {
+              const fileSizes = asset.static_renditions.files.map((file: any) => file.filesize || 0)
+              fileSize = Math.max(...fileSizes)
+            }
+          } catch (error) {
+            console.error('Error fetching asset from Mux API:', error)
+          }
+
+          // Prepare update object
+          const updateData: any = {
+            'metadata.status': 'ready',
+            'metadata.duration': duration,
+            'metadata.muxPlaybackId': playbackIds[0]?.id,
+            dimensions: dimensions,
+            updatedAt: new Date()
+          }
+
+          // Only update size if we have actual data from Mux
+          if (fileSize > 0) {
+            updateData.size = fileSize
+          }
+
           // Update the database record with ready status and metadata
           const updateResult = await assetsCollection.updateOne(
             { 'metadata.muxAssetId': assetId },
-            {
-              $set: {
-                'metadata.status': 'ready',
-                'metadata.duration': duration,
-                'metadata.muxPlaybackId': playbackIds[0]?.id,
-                dimensions: dimensions,
-                updatedAt: new Date()
-              }
-            }
+            { $set: updateData }
           )
 
           if (updateResult.modifiedCount > 0) {
