@@ -81,7 +81,9 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
         controls: true,
         autoplay: false,
         loop: false,
-        muted: false
+        muted: false,
+        width: '',
+        height: ''
       } as any
     
     case 'product-grid':

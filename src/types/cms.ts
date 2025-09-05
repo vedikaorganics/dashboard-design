@@ -116,6 +116,11 @@ export interface VideoCTABlockContent {
   overlay?: boolean
   overlayOpacity?: number
   height: "small" | "medium" | "large" | "fullscreen"
+  // Optional responsive display dimensions for video
+  displayDimensions?: {
+    mobile?: { width?: string; height?: string }
+    desktop?: { width?: string; height?: string }
+  }
 }
 
 export interface SlidingImagesCTABlockContent {
@@ -152,6 +157,12 @@ export interface ImageBlockContent {
   caption?: string
   link?: string
   objectFit?: "contain" | "cover" | "fill"
+  // Responsive display dimensions
+  displayDimensions?: {
+    mobile?: { width?: string; height?: string }
+    desktop?: { width?: string; height?: string }
+  }
+  // Backward compatibility - will be deprecated
   width?: string
   height?: string
 }
@@ -185,6 +196,14 @@ export interface VideoBlockContent {
   autoplay: boolean
   loop: boolean
   muted: boolean
+  // Responsive display dimensions
+  displayDimensions?: {
+    mobile?: { width?: string; height?: string }
+    desktop?: { width?: string; height?: string }
+  }
+  // Backward compatibility - will be deprecated
+  width?: string
+  height?: string
 }
 
 export interface ProductGridBlockContent {

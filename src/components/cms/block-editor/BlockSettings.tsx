@@ -367,12 +367,37 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
             <MediaInput
               label="Mobile Video"
               value={videoContent.src?.mobile}
-              onChange={(value) => updateBlockContent({ 
-                src: { 
-                  ...videoContent.src, 
-                  mobile: value 
+              onChange={(value) => {
+                const updates: any = {
+                  src: { 
+                    ...videoContent.src, 
+                    mobile: value 
+                  }
                 }
-              })}
+                
+                // Auto-populate mobile display dimensions from asset dimensions if available and not already set
+                if (value?.dimensions) {
+                  const currentMobileWidth = videoContent.displayDimensions?.mobile?.width || videoContent.width
+                  const currentMobileHeight = videoContent.displayDimensions?.mobile?.height || videoContent.height
+                  
+                  if (!currentMobileWidth || !currentMobileHeight) {
+                    updates.displayDimensions = {
+                      ...videoContent.displayDimensions,
+                      mobile: {
+                        ...videoContent.displayDimensions?.mobile,
+                        width: !currentMobileWidth ? `${value.dimensions.width}px` : currentMobileWidth,
+                        height: !currentMobileHeight ? `${value.dimensions.height}px` : currentMobileHeight
+                      }
+                    }
+                    
+                    // Backward compatibility
+                    if (!currentMobileWidth) updates.width = `${value.dimensions.width}px`
+                    if (!currentMobileHeight) updates.height = `${value.dimensions.height}px`
+                  }
+                }
+                
+                updateBlockContent(updates)
+              }}
               accept="video"
               placeholder="Select video from library..."
               required={true}
@@ -380,12 +405,33 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
             <MediaInput
               label="Desktop Video (Optional)"
               value={videoContent.src?.desktop}
-              onChange={(value) => updateBlockContent({ 
-                src: { 
-                  ...videoContent.src, 
-                  desktop: value 
+              onChange={(value) => {
+                const updates: any = {
+                  src: { 
+                    ...videoContent.src, 
+                    desktop: value 
+                  }
                 }
-              })}
+                
+                // Auto-populate desktop display dimensions from asset dimensions if available and not already set
+                if (value?.dimensions) {
+                  const currentDesktopWidth = videoContent.displayDimensions?.desktop?.width
+                  const currentDesktopHeight = videoContent.displayDimensions?.desktop?.height
+                  
+                  if (!currentDesktopWidth || !currentDesktopHeight) {
+                    updates.displayDimensions = {
+                      ...videoContent.displayDimensions,
+                      desktop: {
+                        ...videoContent.displayDimensions?.desktop,
+                        width: !currentDesktopWidth ? `${value.dimensions.width}px` : currentDesktopWidth,
+                        height: !currentDesktopHeight ? `${value.dimensions.height}px` : currentDesktopHeight
+                      }
+                    }
+                  }
+                }
+                
+                updateBlockContent(updates)
+              }}
               accept="video"
               placeholder="Select video from library..."
               required={false}
@@ -1025,13 +1071,24 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                     }
                   }
                   
-                  // Auto-populate width/height from dimensions if available and not already set
-                  if (value?.dimensions && (!imageContent.width || !imageContent.height)) {
-                    if (!imageContent.width) {
-                      updates.width = `${value.dimensions.width}px`
-                    }
-                    if (!imageContent.height) {
-                      updates.height = `${value.dimensions.height}px`
+                  // Auto-populate mobile display dimensions from asset dimensions if available and not already set
+                  if (value?.dimensions) {
+                    const currentMobileWidth = imageContent.displayDimensions?.mobile?.width || imageContent.width
+                    const currentMobileHeight = imageContent.displayDimensions?.mobile?.height || imageContent.height
+                    
+                    if (!currentMobileWidth || !currentMobileHeight) {
+                      updates.displayDimensions = {
+                        ...imageContent.displayDimensions,
+                        mobile: {
+                          ...imageContent.displayDimensions?.mobile,
+                          width: !currentMobileWidth ? `${value.dimensions.width}px` : currentMobileWidth,
+                          height: !currentMobileHeight ? `${value.dimensions.height}px` : currentMobileHeight
+                        }
+                      }
+                      
+                      // Backward compatibility
+                      if (!currentMobileWidth) updates.width = `${value.dimensions.width}px`
+                      if (!currentMobileHeight) updates.height = `${value.dimensions.height}px`
                     }
                   }
                   
@@ -1052,14 +1109,20 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                     }
                   }
                   
-                  // Auto-populate width/height from dimensions if available and not already set
-                  // Only do this if mobile image doesn't have dimensions or if this has different dimensions
-                  if (value?.dimensions && (!imageContent.width || !imageContent.height)) {
-                    if (!imageContent.width) {
-                      updates.width = `${value.dimensions.width}px`
-                    }
-                    if (!imageContent.height) {
-                      updates.height = `${value.dimensions.height}px`
+                  // Auto-populate desktop display dimensions from asset dimensions if available and not already set
+                  if (value?.dimensions) {
+                    const currentDesktopWidth = imageContent.displayDimensions?.desktop?.width
+                    const currentDesktopHeight = imageContent.displayDimensions?.desktop?.height
+                    
+                    if (!currentDesktopWidth || !currentDesktopHeight) {
+                      updates.displayDimensions = {
+                        ...imageContent.displayDimensions,
+                        desktop: {
+                          ...imageContent.displayDimensions?.desktop,
+                          width: !currentDesktopWidth ? `${value.dimensions.width}px` : currentDesktopWidth,
+                          height: !currentDesktopHeight ? `${value.dimensions.height}px` : currentDesktopHeight
+                        }
+                      }
                     }
                   }
                   
@@ -1112,26 +1175,6 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                     <SelectItem value="fill">Fill</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-2">
-                  <Label htmlFor="width">Width</Label>
-                  <Input
-                    id="width"
-                    value={imageContent.width || ''}
-                    onChange={(e) => updateBlockContent({ width: e.target.value })}
-                    placeholder="Auto (e.g., 300px, 100%)"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="height">Height</Label>
-                  <Input
-                    id="height"
-                    value={imageContent.height || ''}
-                    onChange={(e) => updateBlockContent({ height: e.target.value })}
-                    placeholder="Auto (e.g., 200px, 50vh)"
-                  />
-                </div>
               </div>
             </div>
           </TooltipProvider>
