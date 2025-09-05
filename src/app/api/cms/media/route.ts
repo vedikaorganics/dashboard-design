@@ -6,6 +6,64 @@ import { getCurrentUserId } from '@/lib/auth-utils'
 import { uploadImageToCloudflare, getImageVariant } from '@/lib/cloudflare'
 import { resolvePathToFolderId, normalizeFolderPath } from '@/lib/media-path-utils'
 
+// Helper function to extract image dimensions from buffer
+async function getImageDimensionsFromFile(file: File): Promise<{ width: number; height: number } | null> {
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer())
+    
+    // PNG dimensions
+    if (buffer.subarray(0, 8).toString('hex') === '89504e470d0a1a0a') {
+      const width = buffer.readUInt32BE(16)
+      const height = buffer.readUInt32BE(20)
+      return { width, height }
+    }
+    
+    // JPEG dimensions
+    if (buffer[0] === 0xFF && buffer[1] === 0xD8) {
+      let offset = 2
+      while (offset < buffer.length - 4) {
+        const marker = buffer.readUInt16BE(offset)
+        if ((marker & 0xFF00) !== 0xFF00) break
+        
+        const length = buffer.readUInt16BE(offset + 2)
+        if (marker === 0xFFC0 || marker === 0xFFC2) {
+          const height = buffer.readUInt16BE(offset + 5)
+          const width = buffer.readUInt16BE(offset + 7)
+          return { width, height }
+        }
+        offset += 2 + length
+      }
+    }
+    
+    // GIF dimensions
+    if (buffer.subarray(0, 6).toString() === 'GIF87a' || buffer.subarray(0, 6).toString() === 'GIF89a') {
+      const width = buffer.readUInt16LE(6)
+      const height = buffer.readUInt16LE(8)
+      return { width, height }
+    }
+    
+    // WebP dimensions
+    if (buffer.subarray(0, 4).toString() === 'RIFF' && buffer.subarray(8, 12).toString() === 'WEBP') {
+      const format = buffer.subarray(12, 16).toString()
+      if (format === 'VP8 ') {
+        const width = buffer.readUInt16LE(26) & 0x3FFF
+        const height = buffer.readUInt16LE(28) & 0x3FFF
+        return { width, height }
+      } else if (format === 'VP8L') {
+        const data = buffer.readUInt32LE(21)
+        const width = (data & 0x3FFF) + 1
+        const height = ((data >> 14) & 0x3FFF) + 1
+        return { width, height }
+      }
+    }
+    
+    return null
+  } catch (error) {
+    console.error('Error extracting image dimensions from file:', error)
+    return null
+  }
+}
+
 // GET /api/cms/media - List media assets and folders
 export async function GET(request: NextRequest) {
   try {
@@ -151,10 +209,15 @@ export async function POST(request: NextRequest) {
     let thumbnailUrl: string
     let cloudflareId: string
     let type: 'image' | 'video'
+    let dimensions: { width: number; height: number } | null = null
     
     // This endpoint now only handles images - videos go through direct upload
     if (file.type.startsWith('image/')) {
       type = 'image'
+      
+      // Extract dimensions before uploading to Cloudflare
+      dimensions = await getImageDimensionsFromFile(file)
+      
       cloudflareResult = await uploadImageToCloudflare(file, {
         alt: alt || '',
         caption: caption || ''
@@ -196,7 +259,7 @@ export async function POST(request: NextRequest) {
       type,
       filename: file.name,
       size: file.size,
-      dimensions: undefined, // Dimensions will be fetched dynamically from Cloudflare
+      dimensions: dimensions, // Dimensions extracted from file buffer during upload
       alt: alt || '',
       caption: caption || '',
       tags: tags ? tags.split(',').map(tag => tag.trim()) : [],

@@ -135,8 +135,8 @@ export async function getVideoMetadata(assetId: string): Promise<{
     const videoTrack = asset.tracks?.find((track: any) => track.type === 'video')
     
     return {
-      width: (videoTrack as any)?.width || 0,
-      height: (videoTrack as any)?.height || 0,
+      width: (videoTrack as any)?.max_width || 0,
+      height: (videoTrack as any)?.max_height || 0,
       duration: asset.duration || 0,
       ready: asset.status === 'ready'
     }

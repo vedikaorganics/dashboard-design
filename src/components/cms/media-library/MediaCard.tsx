@@ -62,10 +62,19 @@ export function MediaCard({
   // Fetch dimensions from API route
   useEffect(() => {
     const fetchDimensions = async () => {
-      if (!asset.metadata?.cloudflareId) return
+      let queryParams = `type=${asset.type}`
+      
+      if (asset.type === 'image' && asset.metadata?.cloudflareId) {
+        queryParams += `&cloudflareId=${asset.metadata.cloudflareId}`
+      } else if (asset.type === 'video' && asset.metadata?.muxAssetId) {
+        queryParams += `&muxAssetId=${asset.metadata.muxAssetId}`
+      } else {
+        // No valid ID found, skip fetching dimensions
+        return
+      }
       
       try {
-        const response = await fetch(`/api/cms/media/dimensions?cloudflareId=${asset.metadata.cloudflareId}&type=${asset.type}`)
+        const response = await fetch(`/api/cms/media/dimensions?${queryParams}`)
         const result = await response.json()
         
         if (result.success && result.data.dimensions) {
@@ -77,7 +86,7 @@ export function MediaCard({
     }
 
     fetchDimensions()
-  }, [asset._id, asset.type, asset.metadata?.cloudflareId])
+  }, [asset._id, asset.type, asset.metadata?.cloudflareId, asset.metadata?.muxAssetId])
 
   const formatFileSize = useCallback((bytes: number) => {
     if (bytes === 0) return '0 Bytes'

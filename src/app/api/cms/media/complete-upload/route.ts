@@ -38,8 +38,41 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get asset details from Mux
+    // Get asset details from Mux with retry logic for dimensions
     const asset = await mux.video.assets.retrieve(upload.asset_id)
+    
+    // Helper function to get dimensions with retry logic
+    const getDimensionsWithRetry = async (maxRetries = 3, delay = 1000): Promise<{ width: number; height: number }> => {
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        const videoTrack = asset.tracks?.find((track: any) => track.type === 'video')
+        if (videoTrack) {
+          const width = (videoTrack as any).max_width || 0
+          const height = (videoTrack as any).max_height || 0
+          
+          if (width > 0 && height > 0) {
+            console.log(`✅ Got dimensions on attempt ${attempt + 1}: ${width}x${height}`)
+            return { width, height }
+          }
+        }
+        
+        if (attempt < maxRetries - 1) {
+          console.log(`⏳ Dimensions not ready, retrying in ${delay}ms... (attempt ${attempt + 1}/${maxRetries})`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+          delay *= 2 // Exponential backoff
+          
+          // Refetch asset data for retry
+          try {
+            const updatedAsset = await mux.video.assets.retrieve(upload.asset_id)
+            Object.assign(asset, updatedAsset)
+          } catch (error) {
+            console.warn('Failed to refetch asset on retry:', error)
+          }
+        }
+      }
+      
+      console.warn(`⚠️ Could not get valid dimensions after ${maxRetries} attempts, using 0x0`)
+      return { width: 0, height: 0 }
+    }
     
     // Parse passthrough data that we stored during upload URL creation
     let metadata = {}
@@ -74,10 +107,7 @@ export async function POST(request: NextRequest) {
       type: 'video',
       filename: (metadata as any).filename || 'video.mp4',
       size: fileSize, // File size from Mux static renditions
-      dimensions: asset.tracks?.[0] ? {
-        width: (asset.tracks[0] as any).width || 0,
-        height: (asset.tracks[0] as any).height || 0
-      } : undefined,
+      dimensions: await getDimensionsWithRetry(),
       alt: (metadata as any).alt || '',
       caption: (metadata as any).caption || '',
       tags: (metadata as any).tags || [],

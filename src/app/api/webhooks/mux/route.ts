@@ -71,8 +71,8 @@ export async function POST(request: NextRequest) {
           // Find video track for dimensions
           const videoTrack = tracks.find((track: any) => track.type === 'video')
           const dimensions = videoTrack ? {
-            width: videoTrack.width || 0,
-            height: videoTrack.height || 0
+            width: videoTrack.max_width || 0,
+            height: videoTrack.max_height || 0
           } : undefined
 
           // Fetch complete asset details from Mux API to get file size

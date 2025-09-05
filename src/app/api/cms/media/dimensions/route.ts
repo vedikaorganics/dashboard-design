@@ -63,16 +63,17 @@ async function getImageDimensions(imageUrl: string): Promise<{ width: number; he
   }
 }
 
-// GET /api/cms/media/dimensions - Get media dimensions from Cloudflare
+// GET /api/cms/media/dimensions - Get media dimensions from Cloudflare or Mux
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const cloudflareId = searchParams.get('cloudflareId')
+    const muxAssetId = searchParams.get('muxAssetId')
     const type = searchParams.get('type') // 'image' or 'video'
     
-    if (!cloudflareId || !type) {
+    if ((!cloudflareId && !muxAssetId) || !type) {
       return NextResponse.json(
-        { success: false, error: 'cloudflareId and type parameters are required' },
+        { success: false, error: 'Either cloudflareId (for images) or muxAssetId (for videos) and type parameters are required' },
         { status: 400 }
       )
     }
@@ -80,25 +81,26 @@ export async function GET(request: NextRequest) {
     let dimensions: { width: number; height: number } | null = null
 
     try {
-      if (type === 'image') {
+      if (type === 'image' && cloudflareId) {
         // Get the public variant URL and extract dimensions from the image
         const imageUrl = getImageVariant(cloudflareId, 'public')
         dimensions = await getImageDimensions(imageUrl)
-      } else if (type === 'video') {
-        const metadata = await getVideoMetadata(cloudflareId)
+      } else if (type === 'video' && muxAssetId) {
+        // Use the Mux API to get video metadata
+        const metadata = await getVideoMetadata(muxAssetId)
         if (metadata && metadata.width && metadata.height) {
           dimensions = { width: metadata.width, height: metadata.height }
         }
       } else {
         return NextResponse.json(
-          { success: false, error: 'type must be either "image" or "video"' },
+          { success: false, error: 'Invalid combination: type must match the provided ID (cloudflareId for images, muxAssetId for videos)' },
           { status: 400 }
         )
       }
     } catch (error) {
-      console.error('Error fetching metadata from Cloudflare:', error)
+      console.error('Error fetching metadata:', error)
       return NextResponse.json(
-        { success: false, error: 'Failed to fetch metadata from Cloudflare' },
+        { success: false, error: 'Failed to fetch metadata' },
         { status: 500 }
       )
     }
