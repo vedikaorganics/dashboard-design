@@ -10,7 +10,8 @@ import {
   Eye, 
   Copy,
   FileVideo,
-  FileText
+  FileText,
+  RotateCcw
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -39,11 +40,13 @@ interface MediaGridProps {
   selectedAssets: MediaAsset[]
   onAssetSelect: (asset: MediaAsset) => void
   onAssetDelete: (assetId: string) => void
+  onAssetRestore?: (assetId: string) => void
   onAssetUpdate: (assetId: string, data: {
     alt?: string
     caption?: string
     tags?: string[]
   }) => Promise<MediaAsset | null>
+  isTrashView?: boolean
 }
 
 export function MediaGrid({
@@ -52,7 +55,9 @@ export function MediaGrid({
   selectedAssets,
   onAssetSelect,
   onAssetDelete,
-  onAssetUpdate
+  onAssetRestore,
+  onAssetUpdate,
+  isTrashView = false
 }: MediaGridProps) {
   const [editingAsset, setEditingAsset] = useState<MediaAsset | null>(null)
   const [previewAsset, setPreviewAsset] = useState<MediaAsset | null>(null)
@@ -294,13 +299,32 @@ export function MediaGrid({
                       Download
                     </a>
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => onAssetDelete(asset._id)}
-                    className="text-destructive"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
+                  {isTrashView ? (
+                    <>
+                      <DropdownMenuItem 
+                        onClick={() => onAssetRestore?.(asset._id)}
+                        className="text-green-600"
+                      >
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                        Restore
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => onAssetDelete(asset._id)}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Permanently
+                      </DropdownMenuItem>
+                    </>
+                  ) : (
+                    <DropdownMenuItem 
+                      onClick={() => onAssetDelete(asset._id)}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Move to Trash
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -473,13 +497,32 @@ export function MediaGrid({
                         Download
                       </a>
                     </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => onAssetDelete(asset._id)}
-                      className="text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
+                    {isTrashView ? (
+                      <>
+                        <DropdownMenuItem 
+                          onClick={() => onAssetRestore?.(asset._id)}
+                          className="text-green-600"
+                        >
+                          <RotateCcw className="w-4 h-4 mr-2" />
+                          Restore
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => onAssetDelete(asset._id)}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete Permanently
+                        </DropdownMenuItem>
+                      </>
+                    ) : (
+                      <DropdownMenuItem 
+                        onClick={() => onAssetDelete(asset._id)}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Move to Trash
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

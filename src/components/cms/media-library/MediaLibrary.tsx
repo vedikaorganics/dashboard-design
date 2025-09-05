@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Search, Upload, FolderPlus, Grid, List, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, Upload, FolderPlus, Grid, List, Filter, X, ChevronLeft, ChevronRight, Trash2, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/select'
 import { MediaAsset, MediaFolder } from '@/types/cms'
 import { useMedia } from '@/hooks/cms/use-media'
+import { useMediaTrash } from '@/hooks/cms/use-media-trash'
 import { MediaGrid } from './MediaGrid'
 import { MediaUploader } from './MediaUploader'
 import { MediaFolders } from './MediaFolders'
@@ -54,14 +55,15 @@ export function MediaLibrary({
   const [showNewFolder, setShowNewFolder] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [viewMode, setViewMode] = useState<'library' | 'trash'>('library')
 
   const {
-    assets,
+    assets: libraryAssets,
     folders,
-    pagination,
-    isLoading,
-    error,
-    refresh,
+    pagination: libraryPagination,
+    isLoading: libraryLoading,
+    error: libraryError,
+    refresh: libraryRefresh,
     uploadMedia,
     createFolder,
     deleteAsset,
@@ -73,6 +75,28 @@ export function MediaLibrary({
     page: currentPage,
     limit: 24
   })
+
+  const {
+    assets: trashAssets,
+    pagination: trashPagination,
+    isLoading: trashLoading,
+    error: trashError,
+    refresh: trashRefresh,
+    restoreAsset,
+    permanentlyDeleteAssets
+  } = useMediaTrash({
+    search: search || undefined,
+    type: typeFilter === 'all' ? undefined : typeFilter,
+    page: currentPage,
+    limit: 24
+  })
+
+  // Use appropriate data based on view mode
+  const assets = viewMode === 'library' ? libraryAssets : trashAssets
+  const pagination = viewMode === 'library' ? libraryPagination : trashPagination
+  const isLoading = viewMode === 'library' ? libraryLoading : trashLoading
+  const error = viewMode === 'library' ? libraryError : trashError
+  const refresh = viewMode === 'library' ? libraryRefresh : trashRefresh
 
   // Handle file upload
   const handleUpload = useCallback(async (files: File[]) => {
@@ -145,13 +169,39 @@ export function MediaLibrary({
 
   // Handle asset delete
   const handleAssetDelete = useCallback(async (assetId: string) => {
-    if (window.confirm('Are you sure you want to delete this asset?')) {
-      const success = await deleteAsset(assetId)
-      if (success) {
-        toast.success('Asset deleted successfully')
+    if (viewMode === 'library') {
+      if (window.confirm('Are you sure you want to move this asset to trash?')) {
+        const success = await deleteAsset(assetId)
+        if (success) {
+          toast.success('Asset moved to trash')
+        }
+      }
+    } else {
+      if (window.confirm('Are you sure you want to permanently delete this asset? This cannot be undone.')) {
+        const success = await permanentlyDeleteAssets([assetId])
+        if (success) {
+          toast.success('Asset permanently deleted')
+        }
       }
     }
-  }, [deleteAsset])
+  }, [deleteAsset, permanentlyDeleteAssets, viewMode])
+
+  // Handle asset restore
+  const handleAssetRestore = useCallback(async (assetId: string) => {
+    const restoredAsset = await restoreAsset(assetId)
+    if (restoredAsset) {
+      toast.success('Asset restored successfully')
+      // Also refresh library to show restored item
+      libraryRefresh()
+    }
+  }, [restoreAsset, libraryRefresh])
+
+  // Handle view mode change
+  const handleViewModeChange = useCallback((mode: 'library' | 'trash') => {
+    setViewMode(mode)
+    setCurrentPage(1) // Reset pagination
+    setCurrentFolderPath('/') // Reset folder navigation for trash
+  }, [])
 
   // Filter assets by accepted types
   const filteredAssets = assets.filter(asset => {
@@ -178,6 +228,28 @@ export function MediaLibrary({
         </DialogHeader>
 
         <div className="flex flex-col h-[70vh]">
+          {/* View Mode Tabs */}
+          <div className="flex items-center space-x-1 px-4 pt-4 pb-2 border-b">
+            <Button
+              variant={viewMode === 'library' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleViewModeChange('library')}
+              className="flex items-center space-x-2"
+            >
+              <FolderPlus className="w-4 h-4" />
+              <span>Library</span>
+            </Button>
+            <Button
+              variant={viewMode === 'trash' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleViewModeChange('trash')}
+              className="flex items-center space-x-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Trash</span>
+            </Button>
+          </div>
+
           {/* Toolbar */}
           <div className="flex items-center justify-between p-4 border-b">
             <div className="flex items-center space-x-2">
@@ -213,13 +285,15 @@ export function MediaLibrary({
                 {view === 'grid' ? <List className="w-4 h-4" /> : <Grid className="w-4 h-4" />}
               </Button>
 
-              <Dialog open={showNewFolder} onOpenChange={setShowNewFolder}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <FolderPlus className="w-4 h-4 mr-2" />
-                    New Folder
-                  </Button>
-                </DialogTrigger>
+              {viewMode === 'library' && (
+                <>
+                  <Dialog open={showNewFolder} onOpenChange={setShowNewFolder}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <FolderPlus className="w-4 h-4 mr-2" />
+                        New Folder
+                      </Button>
+                    </DialogTrigger>
                 <DialogContent className="sm:max-w-md">
                   <DialogHeader>
                     <DialogTitle>Create New Folder</DialogTitle>
@@ -251,15 +325,15 @@ export function MediaLibrary({
                     </div>
                   </div>
                 </DialogContent>
-              </Dialog>
+                  </Dialog>
 
-              <Dialog open={showUploader} onOpenChange={setShowUploader}>
-                <DialogTrigger asChild>
-                  <Button size="sm">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload
-                  </Button>
-                </DialogTrigger>
+                  <Dialog open={showUploader} onOpenChange={setShowUploader}>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload
+                      </Button>
+                    </DialogTrigger>
                 <DialogContent className="sm:max-w-md">
                   <DialogHeader>
                     <DialogTitle>Upload Media</DialogTitle>
@@ -270,12 +344,14 @@ export function MediaLibrary({
                     currentFolderPath={currentFolderPath}
                   />
                 </DialogContent>
-              </Dialog>
+                  </Dialog>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Breadcrumb Navigation */}
-          {currentFolderPath !== '/' && (
+          {/* Breadcrumb Navigation - only show in library view */}
+          {viewMode === 'library' && currentFolderPath !== '/' && (
             <MediaBreadcrumb
               currentPath={currentFolderPath}
               folders={folders}
@@ -287,14 +363,16 @@ export function MediaLibrary({
 
           {/* Content */}
           <div className="flex flex-1 overflow-hidden">
-            {/* Folders sidebar */}
-            <div className="w-64 border-r bg-muted/20">
-              <MediaFolders
-                folders={folders}
-                currentFolderPath={currentFolderPath}
-                onFolderSelect={handleFolderChange}
-              />
-            </div>
+            {/* Folders sidebar - only show in library view */}
+            {viewMode === 'library' && (
+              <div className="w-64 border-r bg-muted/20">
+                <MediaFolders
+                  folders={folders}
+                  currentFolderPath={currentFolderPath}
+                  onFolderSelect={handleFolderChange}
+                />
+              </div>
+            )}
 
             {/* Main content */}
             <div className="flex-1 overflow-auto">
@@ -313,7 +391,9 @@ export function MediaLibrary({
                   selectedAssets={selectedAssets}
                   onAssetSelect={handleAssetSelect}
                   onAssetDelete={handleAssetDelete}
+                  onAssetRestore={viewMode === 'trash' ? handleAssetRestore : undefined}
                   onAssetUpdate={updateAsset}
+                  isTrashView={viewMode === 'trash'}
                 />
               )}
             </div>

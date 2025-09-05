@@ -14,7 +14,8 @@ import {
   HardDrive,
   Calendar,
   Tag,
-  ExternalLink
+  ExternalLink,
+  RotateCcw
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -36,11 +37,13 @@ interface MediaCardProps {
   onSelect: (asset: MediaAsset) => void
   onPreview?: (asset: MediaAsset) => void
   onDelete?: (assetId: string) => void
+  onRestore?: (assetId: string) => void
   onCopyUrl?: (url: string) => void
   className?: string
   size?: 'sm' | 'md' | 'lg'
   showActions?: boolean
   showCheckbox?: boolean
+  isTrashView?: boolean
 }
 
 export function MediaCard({
@@ -49,11 +52,13 @@ export function MediaCard({
   onSelect,
   onPreview,
   onDelete,
+  onRestore,
   onCopyUrl,
   className,
   size = 'md',
   showActions = true,
-  showCheckbox = true
+  showCheckbox = true,
+  isTrashView = false
 }: MediaCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [imageError, setImageError] = useState(false)
@@ -271,16 +276,41 @@ export function MediaCard({
                     Download
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                    onClick={(e) => {
-                        e.stopPropagation()
-                        onDelete?.(asset._id)
-                    }}
-                    className="text-destructive"
-                >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
-                </DropdownMenuItem>
+                {isTrashView ? (
+                    <>
+                        <DropdownMenuItem
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onRestore?.(asset._id)
+                            }}
+                            className="text-green-600"
+                        >
+                            <RotateCcw className="w-4 h-4 mr-2" />
+                            Restore
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onDelete?.(asset._id)
+                            }}
+                            className="text-destructive"
+                        >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete Permanently
+                        </DropdownMenuItem>
+                    </>
+                ) : (
+                    <DropdownMenuItem
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            onDelete?.(asset._id)
+                        }}
+                        className="text-destructive"
+                    >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Move to Trash
+                    </DropdownMenuItem>
+                )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

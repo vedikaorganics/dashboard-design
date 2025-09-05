@@ -72,6 +72,8 @@ export interface MediaAsset {
   }
   createdAt: Date
   updatedAt: Date
+  deletedAt?: Date
+  deletedBy?: string
 }
 
 export interface MediaFolder {

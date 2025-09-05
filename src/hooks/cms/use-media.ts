@@ -45,6 +45,7 @@ interface UseMediaReturn {
   }) => Promise<MediaAsset | null>
   createFolder: (name: string, parentId?: string) => Promise<MediaFolder | null>
   deleteAsset: (id: string) => Promise<boolean>
+  restoreAsset: (id: string) => Promise<MediaAsset | null>
   updateAsset: (id: string, data: {
     alt?: string
     caption?: string
@@ -168,7 +169,7 @@ export function useMedia(params: UseMediaParams = {}): UseMediaReturn {
       const result = await response.json()
 
       if (result.success) {
-        // Remove from local state
+        // Remove from local state (soft deleted items shouldn't show in normal view)
         setAssets(prevAssets => prevAssets.filter(asset => asset._id !== id))
         return true
       } else {
@@ -181,6 +182,31 @@ export function useMedia(params: UseMediaParams = {}): UseMediaReturn {
       return false
     }
   }, [])
+
+  const restoreAsset = useCallback(async (id: string): Promise<MediaAsset | null> => {
+    try {
+      const response = await fetch(`/api/cms/media/${id}/restore`, {
+        method: 'POST'
+      })
+
+      const result: MediaAssetResponse = await response.json()
+
+      if (result.success && result.data) {
+        // Add restored asset to local state if we're not in trash view
+        if (!params.search?.includes('trash')) {
+          setAssets(prevAssets => [result.data!, ...prevAssets])
+        }
+        return result.data
+      } else {
+        setError(result.error || 'Failed to restore asset')
+        return null
+      }
+    } catch (err) {
+      setError('Failed to restore asset')
+      console.error('Error restoring asset:', err)
+      return null
+    }
+  }, [params.search])
 
   const updateAsset = useCallback(async (id: string, data: {
     alt?: string
@@ -233,6 +259,7 @@ export function useMedia(params: UseMediaParams = {}): UseMediaReturn {
     uploadMedia,
     createFolder,
     deleteAsset,
+    restoreAsset,
     updateAsset
   }
 }

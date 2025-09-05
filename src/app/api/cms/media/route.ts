@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
     const tags = searchParams.get('tags')
     const sortBy = searchParams.get('sortBy') || 'date'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
+    const includeDeleted = searchParams.get('includeDeleted') === 'true'
     
     const db = await getDatabase()
     const assetsCollection = db.collection('cms_media_assets')
@@ -98,6 +99,12 @@ export async function GET(request: NextRequest) {
     
     // Build assets query
     const assetsQuery: any = {}
+    
+    // Filter soft-deleted items unless explicitly requested
+    if (!includeDeleted) {
+      assetsQuery.deletedAt = { $exists: false }
+    }
+    
     // Only filter by folderId if we're in a specific folder, otherwise show all assets
     if (folderPath !== null || folderId !== null) {
       assetsQuery.folderId = targetFolderId

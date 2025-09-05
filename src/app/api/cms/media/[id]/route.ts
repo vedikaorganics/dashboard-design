@@ -96,7 +96,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/cms/media/[id] - Delete media asset
+// DELETE /api/cms/media/[id] - Soft delete media asset
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<Params> }
@@ -107,62 +107,44 @@ export async function DELETE(
     const db = await getDatabase()
     const collection = db.collection('cms_media_assets')
     
-    // Get asset to find Cloudflare ID
-    const asset = await collection.findOne({ _id: new ObjectId(id) })
+    // Check if asset exists and is not already deleted
+    const asset = await collection.findOne({ 
+      _id: new ObjectId(id),
+      deletedAt: { $exists: false }
+    })
     
     if (!asset) {
       return NextResponse.json(
-        { success: false, error: 'Asset not found' },
+        { success: false, error: 'Asset not found or already deleted' },
         { status: 404 }
       )
     }
     
-    // Delete from appropriate service (Cloudflare or Mux)
-    try {
-      const cloudflareId = asset.metadata?.cloudflareId
-      const muxAssetId = asset.metadata?.muxAssetId
-      
-      console.log(`Attempting to delete ${asset.type} with cloudflareId: ${cloudflareId}, muxAssetId: ${muxAssetId}`)
-      
-      if (asset.type === 'image' && cloudflareId) {
-        console.log('Deleting image from Cloudflare...')
-        await deleteImageFromCloudflare(cloudflareId)
-        console.log('Image deleted from Cloudflare successfully')
-      } else if (asset.type === 'video') {
-        // Check if it's a Mux video or Cloudflare video
-        if (muxAssetId || isMuxUrl(asset.url)) {
-          const assetId = muxAssetId || cloudflareId
-          if (assetId) {
-            console.log('Deleting video from Mux...')
-            await deleteVideoFromMux(assetId)
-            console.log('Video deleted from Mux successfully')
-          }
-        } else if (cloudflareId) {
-          // Legacy Cloudflare Stream video
-          console.log('Deleting video from Cloudflare...')
-          await deleteVideoFromCloudflare(cloudflareId)
-          console.log('Video deleted from Cloudflare successfully')
+    // Soft delete: Update asset with deletion timestamp and user
+    const currentUserId = await getCurrentUserId(request)
+    const result = await collection.updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          deletedAt: new Date(),
+          deletedBy: currentUserId,
+          updatedAt: new Date()
         }
       }
-    } catch (deleteError) {
-      console.error('Error deleting from external service:', deleteError)
-      // Continue with database deletion even if external service deletion fails
-      // This prevents orphaned database records
-    }
+    )
     
-    // Delete from database
-    const result = await collection.deleteOne({ _id: new ObjectId(id) })
-    
-    if (result.deletedCount === 0) {
+    if (result.matchedCount === 0) {
       return NextResponse.json(
         { success: false, error: 'Asset not found' },
         { status: 404 }
       )
     }
     
+    console.log(`Soft deleted media asset: ${asset.filename} (ID: ${id}) - Media files preserved in external services`)
+    
     return NextResponse.json({
       success: true,
-      message: 'Asset deleted successfully'
+      message: 'Asset moved to trash successfully'
     })
   } catch (error) {
     console.error('Failed to delete media asset:', error)
