@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
           
           // Refetch asset data for retry
           try {
-            const updatedAsset = await mux.video.assets.retrieve(upload.asset_id)
+            const updatedAsset = await mux.video.assets.retrieve(upload.asset_id!)
             Object.assign(asset, updatedAsset)
           } catch (error) {
             console.warn('Failed to refetch asset on retry:', error)

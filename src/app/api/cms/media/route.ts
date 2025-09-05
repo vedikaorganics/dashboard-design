@@ -259,7 +259,7 @@ export async function POST(request: NextRequest) {
       type,
       filename: file.name,
       size: file.size,
-      dimensions: dimensions, // Dimensions extracted from file buffer during upload
+      dimensions: dimensions || undefined, // Dimensions extracted from file buffer during upload
       alt: alt || '',
       caption: caption || '',
       tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
