@@ -86,8 +86,7 @@ export async function POST(
     
     const response: MediaAssetResponse = {
       success: true,
-      data: restoredAsset as any,
-      message: 'Asset restored successfully'
+      data: restoredAsset as any
     }
     
     return NextResponse.json(response)

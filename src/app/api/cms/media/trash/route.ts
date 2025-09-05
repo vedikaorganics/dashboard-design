@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/mongodb'
+import { ObjectId } from 'mongodb'
 import { MediaAsset, MediaAssetListResponse } from '@/types/cms'
 
 // GET /api/cms/media/trash - List soft-deleted media assets
@@ -100,7 +101,7 @@ export async function DELETE(request: NextRequest) {
     
     // Only allow permanent deletion of soft-deleted items
     const result = await assetsCollection.deleteMany({
-      _id: { $in: assetIds.map(id => ({ _id: id })) },
+      _id: { $in: assetIds.map(id => new ObjectId(id)) },
       deletedAt: { $exists: true }
     })
     
