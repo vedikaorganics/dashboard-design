@@ -156,8 +156,8 @@ interface TextBlockContent {
 // Video CTA Block Content Structure  
 interface VideoCTABlockContent {
   video: {
-    mobile: { url: string }      // HLS streaming URL from Cloudflare Stream
-    desktop?: { url: string }    // HLS streaming URL from Cloudflare Stream (optional)
+    mobile: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
+    desktop?: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
   }
   overlay: boolean
   overlayOpacity?: number
@@ -167,23 +167,57 @@ interface VideoCTABlockContent {
     text: string
     link: string
   }
-  height: "small" | "medium" | "large" | "full"
+  height: "small" | "medium" | "large" | "fullscreen"
+  // Optional responsive display dimensions for video
+  displayDimensions?: {
+    mobile?: { width?: string; height?: string }
+    desktop?: { width?: string; height?: string }
+  }
 }
 
 // Video Block Content Structure
 interface VideoBlockContent {
+  type: "upload" | "youtube" | "vimeo"
   src: {
-    mobile: { url: string }      // HLS streaming URL from Cloudflare Stream
-    desktop?: { url: string }    // HLS streaming URL from Cloudflare Stream (optional)
+    mobile: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
+    desktop?: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
   }
   poster?: {
-    mobile: { url: string }      // Poster image URL
-    desktop?: { url: string }    // Desktop poster image (optional)
+    mobile: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
+    desktop?: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
   }
-  controls?: boolean            // Show video controls
-  autoplay?: boolean           // Auto-play video
-  loop?: boolean               // Loop video playback
-  muted?: boolean              // Mute video by default
+  controls: boolean
+  autoplay: boolean
+  loop: boolean
+  muted: boolean
+  // Responsive display dimensions
+  displayDimensions?: {
+    mobile?: { width?: string; height?: string }
+    desktop?: { width?: string; height?: string }
+  }
+  // Backward compatibility - will be deprecated
+  width?: string
+  height?: string
+}
+
+// Image Block Content Structure
+interface ImageBlockContent {
+  src: {
+    mobile: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
+    desktop?: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
+  }
+  alt: string
+  caption?: string
+  link?: string
+  objectFit?: "contain" | "cover" | "fill"
+  // Responsive display dimensions
+  displayDimensions?: {
+    mobile?: { width?: string; height?: string }
+    desktop?: { width?: string; height?: string }
+  }
+  // Backward compatibility - will be deprecated
+  width?: string
+  height?: string
 }
 ```
 
@@ -201,19 +235,23 @@ interface MediaAsset {
   caption?: string              // Caption text
   tags: string[]               // Media tags
   folderId?: string            // Organization folder
-  metadata: {
+  metadata?: {
     mimeType: string
     uploadedBy: string
     originalName: string
-    cloudflareId: string       // Cloudflare asset ID
+    cloudflareId?: string      // Cloudflare asset ID
     streamUrl?: string         // Video stream URL
     dashUrl?: string          // Video DASH URL
     status?: any              // Upload status
     variants?: string[]       // Image variants
     duration?: string         // Video duration
+    muxAssetId?: string       // Mux asset ID (alternative to Cloudflare)
+    muxPlaybackId?: string    // Mux playback ID
   }
   createdAt: Date
   updatedAt: Date
+  deletedAt?: Date             // Soft delete timestamp
+  deletedBy?: string           // User who deleted the asset
 }
 ```
 
@@ -542,7 +580,15 @@ function TextBlock({ content }: { content: TextBlockContent }) {
 
 // Video CTA Block
 function VideoCTABlock({ content }: { content: VideoCTABlockContent }) {
+  // Get video source - dimensions are automatically available from media references
   const videoSrc = content.video.desktop?.url || content.video.mobile.url
+  const videoDimensions = content.video.desktop?.dimensions || content.video.mobile.dimensions
+  
+  // Apply display dimensions if specified, otherwise use natural dimensions
+  const displayStyle = content.displayDimensions ? {
+    width: content.displayDimensions.desktop?.width || content.displayDimensions.mobile?.width,
+    height: content.displayDimensions.desktop?.height || content.displayDimensions.mobile?.height
+  } : undefined
   
   return (
     <section className={`video-cta height-${content.height}`}>
@@ -552,6 +598,9 @@ function VideoCTABlock({ content }: { content: VideoCTABlockContent }) {
         loop
         muted
         className="background-video"
+        style={displayStyle}
+        width={videoDimensions?.width}
+        height={videoDimensions?.height}
       />
       {content.overlay && (
         <div 
@@ -573,24 +622,74 @@ function VideoCTABlock({ content }: { content: VideoCTABlockContent }) {
   )
 }
 
-// Video Block
+// Video Block  
 function VideoBlock({ content }: { content: VideoBlockContent }) {
+  // Get video and poster sources with dimensions
   const videoSrc = content.src.desktop?.url || content.src.mobile.url
   const posterSrc = content.poster?.desktop?.url || content.poster?.mobile?.url
+  const videoDimensions = content.src.desktop?.dimensions || content.src.mobile.dimensions
+  
+  // Apply display dimensions if specified
+  const displayStyle = content.displayDimensions ? {
+    width: content.displayDimensions.desktop?.width || content.displayDimensions.mobile?.width,
+    height: content.displayDimensions.desktop?.height || content.displayDimensions.mobile?.height
+  } : undefined
   
   return (
     <section className="video-block">
       <video
         src={videoSrc}
         poster={posterSrc}
-        controls={content.controls ?? true}
-        autoPlay={content.autoplay ?? false}
-        loop={content.loop ?? false}
-        muted={content.muted ?? false}
+        controls={content.controls}
+        autoPlay={content.autoplay}
+        loop={content.loop}
+        muted={content.muted}
         className="w-full h-auto"
+        style={displayStyle}
+        width={videoDimensions?.width}
+        height={videoDimensions?.height}
       >
         Your browser does not support the video tag.
       </video>
+    </section>
+  )
+}
+
+// Image Block
+function ImageBlock({ content }: { content: ImageBlockContent }) {
+  const imageSrc = content.src.desktop?.url || content.src.mobile.url
+  const imageDimensions = content.src.desktop?.dimensions || content.src.mobile.dimensions
+  
+  // Apply display dimensions if specified
+  const displayStyle = content.displayDimensions ? {
+    width: content.displayDimensions.desktop?.width || content.displayDimensions.mobile?.width,
+    height: content.displayDimensions.desktop?.height || content.displayDimensions.mobile?.height,
+    objectFit: content.objectFit || 'cover'
+  } : { objectFit: content.objectFit || 'cover' }
+  
+  const imageElement = (
+    <img
+      src={imageSrc}
+      alt={content.alt}
+      className="w-full h-auto"
+      style={displayStyle}
+      width={imageDimensions?.width}
+      height={imageDimensions?.height}
+    />
+  )
+  
+  return (
+    <section className="image-block">
+      {content.link ? (
+        <a href={content.link}>
+          {imageElement}
+        </a>
+      ) : (
+        imageElement
+      )}
+      {content.caption && (
+        <p className="caption text-sm text-gray-600 mt-2">{content.caption}</p>
+      )}
     </section>
   )
 }
@@ -624,6 +723,41 @@ function ProductGridBlock({ content }: { content: ProductGridBlockContent }) {
 
 ## Media Asset Integration
 
+### Automatic Dimension Capture
+
+The CMS system automatically captures media dimensions when assets are selected from the media library:
+
+- **Image Assets**: Width and height are captured during upload and stored in the `dimensions` field
+- **Video Assets**: Video resolution is captured during processing and stored in the `dimensions` field  
+- **Media References**: All CMS block media references now include these dimensions automatically
+- **Display Dimensions**: Separate `displayDimensions` field allows customizing responsive display sizes without losing original asset dimensions
+
+**Key Benefits:**
+- Eliminates manual dimension input in block editors
+- Provides better performance with proper width/height attributes
+- Enables responsive layouts with accurate aspect ratios
+- Supports both original asset dimensions and custom display dimensions
+
+**Media Reference Structure:**
+```typescript
+// Modern media reference with auto-captured dimensions
+{
+  url: string                    // Cloudflare public URL
+  assetId?: string              // Reference to MediaAsset document
+  filename?: string             // Original filename
+  dimensions?: {                // Auto-captured from media asset
+    width: number
+    height: number
+  }
+}
+
+// Display dimensions for responsive layouts (optional)
+displayDimensions?: {
+  mobile?: { width?: string; height?: string }
+  desktop?: { width?: string; height?: string }
+}
+```
+
 ### Cloudflare Media URLs
 
 All media assets are stored in Cloudflare and optimized for performance:
@@ -656,13 +790,20 @@ export function ResponsiveImage({
   sizes = "100vw",
   className 
 }: {
-  src: { mobile: { url: string }, desktop?: { url: string } }
+  src: { 
+    mobile: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
+    desktop?: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
+  }
   alt: string
   sizes?: string
   className?: string
 }) {
   const mobileUrl = src.mobile.url
   const desktopUrl = src.desktop?.url || mobileUrl
+  
+  // Use actual dimensions from media assets when available
+  const mobileDimensions = src.mobile.dimensions
+  const desktopDimensions = src.desktop?.dimensions || mobileDimensions
   
   return (
     <picture>
@@ -683,6 +824,8 @@ export function ResponsiveImage({
         sizes={sizes}
         alt={alt}
         className={className}
+        width={desktopDimensions?.width || mobileDimensions?.width}
+        height={desktopDimensions?.height || mobileDimensions?.height}
       />
     </picture>
   )
@@ -757,18 +900,29 @@ export function ResponsiveVideo({
   className = "",
   ...videoProps 
 }: {
-  src: { mobile: { url: string }, desktop?: { url: string } }
-  poster?: { mobile: { url: string }, desktop?: { url: string } }
+  src: { 
+    mobile: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
+    desktop?: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
+  }
+  poster?: { 
+    mobile: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
+    desktop?: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
+  }
   className?: string
   controls?: boolean
   autoPlay?: boolean
   loop?: boolean
   muted?: boolean
 }) {
+  // Use dimensions from video source for optimal rendering
+  const videoDimensions = src.desktop?.dimensions || src.mobile.dimensions
+  
   return (
     <video
       className={`w-full h-auto ${className}`}
       poster={poster?.desktop?.url || poster?.mobile?.url}
+      width={videoDimensions?.width}
+      height={videoDimensions?.height}
       {...videoProps}
     >
       {/* Desktop video source */}
