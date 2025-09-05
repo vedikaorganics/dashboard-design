@@ -10,6 +10,8 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Tooltip,
   TooltipContent,
@@ -22,7 +24,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CheckCircle, Clock, Truck, Package, Ban, ChevronRight, RefreshCw } from "lucide-react"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { CheckCircle, Clock, Truck, Package, Ban, ChevronRight, RefreshCw, Edit3, Check, X } from "lucide-react"
 import { useOrders } from "@/hooks/use-data"
 import { DataTable } from "@/components/ui/data-table"
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
@@ -241,6 +248,103 @@ const PaymentStatusWithSync = ({ order, onSync }: {
   )
 }
 
+const EditableUserNotes = ({ order, onNotesUpdate }: { 
+  order: Order, 
+  onNotesUpdate: (orderId: string, userId: string, notes: string) => void 
+}) => {
+  const user = (order as any).user
+  const originalNotes = user?.notes || ""
+  const [editingNotes, setEditingNotes] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
+
+  // Reset editing notes when opening the popover
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open)
+    if (open) {
+      setEditingNotes(originalNotes)
+    }
+  }
+
+  const handleSave = async () => {
+    if (!user?._id) return
+    
+    setIsSaving(true)
+    try {
+      const response = await fetch(`/api/users/${user._id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notes: editingNotes }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update notes')
+      }
+
+      onNotesUpdate(order.orderId, user._id, editingNotes)
+      toast.success('Customer notes updated successfully')
+      setIsOpen(false)
+    } catch (error) {
+      toast.error('Failed to update customer notes')
+      console.error('Notes update error:', error)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleCancel = () => {
+    setEditingNotes(originalNotes)
+    setIsOpen(false)
+  }
+
+  return (
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>
+        <div className="cursor-pointer w-24 group">
+          <div className="flex items-center gap-1">
+            <span className={`text-sm block truncate flex-1 ${originalNotes ? 'text-primary' : 'text-muted-foreground'}`}>
+              {originalNotes || '-'}
+            </span>
+            <Edit3 className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+        </div>
+      </PopoverTrigger>
+      <PopoverContent className="w-80" align="start">
+        <div className="space-y-3">
+          <div>
+            <h4 className="font-medium text-sm">Customer Notes</h4>
+            <p className="text-xs text-muted-foreground">{originalNotes ? 'Edit notes about this customer' : 'Add notes about this customer'}</p>
+          </div>
+          <Textarea 
+            value={editingNotes}
+            onChange={(e) => setEditingNotes(e.target.value)}
+            placeholder="Enter customer notes..."
+            className="min-h-[80px] resize-none"
+          />
+          <div className="flex justify-end gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleCancel}
+            >
+              Cancel
+            </Button>
+            <Button 
+              size="sm" 
+              onClick={handleSave}
+              disabled={isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 const getCustomerName = (order: Order) => {
   return order.address.firstName + (order.address.lastName ? ` ${order.address.lastName}` : '')
 }
@@ -310,6 +414,28 @@ function OrdersPageContent() {
   const handlePaymentSync = (orderId: string) => {
     // Refresh data from server after sync
     mutate()
+  }
+
+  // Handle notes updates with optimistic updates
+  const handleNotesUpdate = (orderId: string, userId: string, newNotes: string) => {
+    // Optimistic update to local state
+    setLocalOrders(prev => 
+      prev.map(order => 
+        order.orderId === orderId 
+          ? { 
+              ...order, 
+              user: { 
+                ...(order as any).user, 
+                notes: newNotes,
+                updatedAt: new Date().toISOString()
+              }
+            }
+          : order
+      )
+    )
+    
+    // Quick refresh from server for consistency
+    setTimeout(() => mutate(), 100)
   }
   
   const handlePaginationChange = setPagination
@@ -443,33 +569,11 @@ function OrdersPageContent() {
       size: 160, // Bigger fixed column width
       cell: ({ row }) => {
         const order = row.original
-        const user = (order as any).user
-        const notes = user?.notes
-        
-        if (!notes) {
-          return (
-            <div className="text-sm text-muted-foreground w-24">-</div>
-          )
-        }
-        
         return (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="cursor-help w-24">
-                  <span className="text-sm block truncate text-primary">
-                    {notes}
-                  </span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-80">
-                <div>
-                  <strong>Customer Notes:</strong><br />
-                  {notes}
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <EditableUserNotes 
+            order={order} 
+            onNotesUpdate={handleNotesUpdate}
+          />
         )
       },
     },

@@ -15,6 +15,8 @@ function validateEnvVars() {
     'LIMECHAT_ACCOUNT_ID',
     'UPSTASH_REDIS_REST_URL',
     'UPSTASH_REDIS_REST_TOKEN',
+    'MUX_TOKEN_ID',
+    'MUX_TOKEN_SECRET',
   ] as const
 
   const missingVars: string[] = []
@@ -31,7 +33,7 @@ function validateEnvVars() {
     missingVars.forEach(varName => {
       console.error(`   - ${varName}`)
     })
-    console.error('\nPlease check your .env.local file and ensure all variables are set.\n')
+    console.error('\nPlease check your environment files (.env.local, .env, etc.) and ensure all variables are set.\n')
     process.exit(1)
   }
   
@@ -63,6 +65,18 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'imagedelivery.net',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'stream.mux.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'image.mux.com',
         port: '',
         pathname: '/**',
       },

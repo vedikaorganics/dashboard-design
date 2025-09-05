@@ -299,8 +299,10 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                 <>
                   <Separator />
                   <div>
-                    <p className="font-medium mb-1">Customer Notes</p>
-                    <p className="text-sm text-muted-foreground">{order.user.notes}</p>
+                    <p className="font-medium mb-2 text-primary">Customer Notes</p>
+                    <div className="bg-info/10 border-l-4 border-l-info rounded-r-lg p-3">
+                      <p className="text-sm text-foreground whitespace-pre-wrap">{order.user.notes}</p>
+                    </div>
                   </div>
                 </>
               )}
