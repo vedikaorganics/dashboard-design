@@ -9,8 +9,8 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
     case 'video-cta':
       return {
         video: {
-          mobile: '',
-          desktop: ''
+          mobile: { url: '', assetId: undefined, filename: undefined, dimensions: undefined },
+          desktop: { url: '', assetId: undefined, filename: undefined, dimensions: undefined }
         },
         heading: 'Your Heading Here',
         text: 'Add your description text here.',
@@ -24,8 +24,8 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
       return {
         slides: [{
           image: {
-            mobile: '',
-            desktop: ''
+            mobile: { url: '', assetId: undefined, dimensions: undefined },
+            desktop: { url: '', assetId: undefined, dimensions: undefined }
           },
           heading: 'Slide Heading',
           text: 'Slide description text.',
@@ -47,8 +47,8 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
     case 'image':
       return {
         src: {
-          mobile: '',
-          desktop: ''
+          mobile: { url: '', assetId: undefined, filename: undefined, dimensions: undefined },
+          desktop: { url: '', assetId: undefined, filename: undefined, dimensions: undefined }
         },
         alt: '',
         caption: '',
@@ -71,12 +71,12 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
       return {
         type: 'upload',
         src: {
-          mobile: '',
-          desktop: ''
+          mobile: { url: '', assetId: undefined, filename: undefined, dimensions: undefined },
+          desktop: { url: '', assetId: undefined, filename: undefined, dimensions: undefined }
         },
         poster: {
-          mobile: '',
-          desktop: ''
+          mobile: { url: '', assetId: undefined, filename: undefined, dimensions: undefined },
+          desktop: { url: '', assetId: undefined, filename: undefined, dimensions: undefined }
         },
         controls: true,
         autoplay: false,
@@ -119,8 +119,8 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
           style: 'primary'
         }],
         backgroundImage: {
-          mobile: '',
-          desktop: ''
+          mobile: { url: '', assetId: undefined, dimensions: undefined },
+          desktop: { url: '', assetId: undefined, dimensions: undefined }
         },
         backgroundColor: ''
       } as any

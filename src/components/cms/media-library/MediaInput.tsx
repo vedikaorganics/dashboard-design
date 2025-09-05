@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Image as ImageIcon, Video, X, ExternalLink, Edit, MousePointer, Link } from 'lucide-react'
+import { Image as ImageIcon, Video, X, ExternalLink, Edit, MousePointer } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,8 +19,8 @@ import { cn } from '@/lib/utils'
 
 interface MediaInputProps {
   label: string
-  value: string | { url: string; assetId?: string; filename?: string } | undefined
-  onChange: (value: { url: string; assetId?: string; filename?: string } | undefined) => void
+  value: string | { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } } | undefined
+  onChange: (value: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } } | undefined) => void
   accept?: 'image' | 'video' | 'all'
   placeholder?: string
   required?: boolean
@@ -35,16 +35,14 @@ export function MediaInput({
   value,
   onChange,
   accept = 'all',
-  placeholder = 'Select or enter URL...',
+  placeholder = 'Select media from library...',
   required = false,
   className,
-  showUrlInput = true,
+  showUrlInput = false,
   allowClear = true,
   allowDragDrop = true
 }: MediaInputProps) {
   const [showPicker, setShowPicker] = useState(false)
-  const [isUrlInputVisible, setIsUrlInputVisible] = useState(false)
-  const [urlValue, setUrlValue] = useState('')
 
   const currentUrl = value ? getMediaUrl(value) : ''
   const currentAssetId = value ? getMediaAssetId(value) : undefined
@@ -53,25 +51,28 @@ export function MediaInput({
   const handleMediaSelect = (assets: MediaAsset[]) => {
     if (assets.length > 0) {
       const asset = assets[0]
-      onChange(createMediaRef(asset.url, asset._id, asset.filename))
+      onChange({
+        url: asset.url,
+        assetId: asset._id,
+        filename: asset.filename,
+        dimensions: asset.dimensions
+      })
     }
   }
 
   const handleDropZoneUpload = (assets: MediaAsset[]) => {
     if (assets.length > 0) {
       const asset = assets[0]
-      onChange(createMediaRef(asset.url, asset._id, asset.filename))
+      onChange({
+        url: asset.url,
+        assetId: asset._id,
+        filename: asset.filename,
+        dimensions: asset.dimensions
+      })
     }
   }
 
 
-  const handleUrlSubmit = () => {
-    if (urlValue.trim()) {
-      onChange(createMediaRef(urlValue.trim()))
-      setUrlValue('')
-      setIsUrlInputVisible(false)
-    }
-  }
 
   const handleClear = () => {
     onChange(undefined)
@@ -209,17 +210,6 @@ export function MediaInput({
                 <MousePointer className="w-3 h-3 mr-1" />
                 Pick
               </Button>
-              {showUrlInput && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setIsUrlInputVisible(true)}
-                  className="h-8 text-xs"
-                >
-                  <Link className="w-3 h-3 mr-1" />
-                  Enter URL
-                </Button>
-              )}
               {allowClear && (
                 <Button
                   size="sm"
@@ -258,19 +248,6 @@ export function MediaInput({
                     <MousePointer className="w-4 h-4 mr-2" />
                     Pick
                   </Button>
-                  {showUrlInput && (
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setIsUrlInputVisible(!isUrlInputVisible)
-                      }}
-                      variant="outline"
-                      size="sm"
-                    >
-                      <Link className="w-4 h-4 mr-2" />
-                      Enter URL
-                    </Button>
-                  )}
                 </div>
               </div>
             </MediaDropZone>
@@ -288,47 +265,9 @@ export function MediaInput({
                 <MousePointer className="w-4 h-4 mr-2" />
                 Pick
               </Button>
-              {showUrlInput && (
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setIsUrlInputVisible(!isUrlInputVisible)
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                >
-                  <Link className="w-4 h-4 mr-2" />
-                  Enter URL
-                </Button>
-              )}
             </div>
           )}
 
-          {isUrlInputVisible && (
-            <div className="space-y-2">
-              <div className="flex space-x-2">
-                <Input
-                  value={urlValue}
-                  onChange={(e) => setUrlValue(e.target.value)}
-                  className="text-sm"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleUrlSubmit()
-                    }
-                  }}
-                />
-                <Button
-                  size="sm"
-                  onClick={handleUrlSubmit}
-                  disabled={!urlValue.trim()}
-                >
-                  Add
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">{placeholder}</p>
-            </div>
-          )}
         </div>
       )}
 

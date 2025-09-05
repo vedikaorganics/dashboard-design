@@ -104,8 +104,8 @@ export type BlockContent =
 
 export interface VideoCTABlockContent {
   video: {
-    mobile: { url: string; assetId?: string; filename?: string }
-    desktop?: { url: string; assetId?: string; filename?: string }
+    mobile: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
+    desktop?: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
   }
   heading: string
   text: string
@@ -121,8 +121,8 @@ export interface VideoCTABlockContent {
 export interface SlidingImagesCTABlockContent {
   slides: Array<{
     image: {
-      mobile: { url: string; assetId?: string }
-      desktop?: { url: string; assetId?: string }
+      mobile: { url: string; assetId?: string; dimensions?: { width: number; height: number } }
+      desktop?: { url: string; assetId?: string; dimensions?: { width: number; height: number } }
     }
     heading: string
     text: string
@@ -145,8 +145,8 @@ export interface TextBlockContent {
 
 export interface ImageBlockContent {
   src: {
-    mobile: { url: string; assetId?: string; filename?: string }
-    desktop?: { url: string; assetId?: string; filename?: string }
+    mobile: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
+    desktop?: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
   }
   alt: string
   caption?: string
@@ -159,8 +159,8 @@ export interface ImageBlockContent {
 export interface GalleryBlockContent {
   images: Array<{
     src: {
-      mobile: { url: string; assetId?: string }
-      desktop?: { url: string; assetId?: string }
+      mobile: { url: string; assetId?: string; dimensions?: { width: number; height: number } }
+      desktop?: { url: string; assetId?: string; dimensions?: { width: number; height: number } }
     }
     alt: string
     caption?: string
@@ -174,12 +174,12 @@ export interface GalleryBlockContent {
 export interface VideoBlockContent {
   type: "upload" | "youtube" | "vimeo"
   src: {
-    mobile: { url: string; assetId?: string; filename?: string }
-    desktop?: { url: string; assetId?: string; filename?: string }
+    mobile: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
+    desktop?: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
   }
   poster?: {
-    mobile: { url: string; assetId?: string; filename?: string }
-    desktop?: { url: string; assetId?: string; filename?: string }
+    mobile: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
+    desktop?: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
   }
   controls: boolean
   autoplay: boolean
@@ -206,7 +206,7 @@ export interface TestimonialsBlockContent {
     text: string
     author: string
     role?: string
-    avatar?: { url: string; assetId?: string; filename?: string }
+    avatar?: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
     rating?: number
   }>
   layout: "grid" | "carousel" | "single"
@@ -383,28 +383,39 @@ export interface BlockDefinition {
 }
 
 // Media utility functions for backwards compatibility
-export const createMediaRef = (url: string, assetId?: string, filename?: string): { url: string; assetId?: string; filename?: string } => ({
+export const createMediaRef = (
+  url: string, 
+  assetId?: string, 
+  filename?: string, 
+  dimensions?: { width: number; height: number }
+): { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } } => ({
   url,
   assetId,
-  filename
+  filename,
+  dimensions
 })
 
-export const getMediaUrl = (mediaRef: string | { url: string; assetId?: string; filename?: string }): string => {
+export const getMediaUrl = (mediaRef: string | { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }): string => {
   if (typeof mediaRef === 'string') return mediaRef
   return mediaRef.url
 }
 
-export const getMediaAssetId = (mediaRef: string | { url: string; assetId?: string; filename?: string }): string | undefined => {
+export const getMediaAssetId = (mediaRef: string | { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }): string | undefined => {
   if (typeof mediaRef === 'string') return undefined
   return mediaRef.assetId
 }
 
-export const getMediaFilename = (mediaRef: string | { url: string; assetId?: string; filename?: string }): string | undefined => {
+export const getMediaFilename = (mediaRef: string | { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }): string | undefined => {
   if (typeof mediaRef === 'string') return undefined
   return mediaRef.filename
 }
 
-export const isMediaAsset = (mediaRef: string | { url: string; assetId?: string; filename?: string }): mediaRef is { url: string; assetId?: string; filename?: string } => {
+export const getMediaDimensions = (mediaRef: string | { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }): { width: number; height: number } | undefined => {
+  if (typeof mediaRef === 'string') return undefined
+  return mediaRef.dimensions
+}
+
+export const isMediaAsset = (mediaRef: string | { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }): mediaRef is { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } } => {
   return typeof mediaRef === 'object' && mediaRef !== null && 'url' in mediaRef
 }
 

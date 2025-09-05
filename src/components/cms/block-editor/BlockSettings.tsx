@@ -45,7 +45,7 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                   }
                 })}
                 accept="video"
-                placeholder="Select video or enter URL..."
+                placeholder="Select video from library..."
                 required={true}
               />
               <MediaInput
@@ -58,7 +58,7 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                   }
                 })}
                 accept="video"
-                placeholder="Select video or enter URL..."
+                placeholder="Select video from library..."
                 required={false}
                 allowClear={true}
               />
@@ -128,35 +128,42 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                       <X className="w-3 h-3" />
                     </Button>
                   </div>
-                  <Input
-                    value={slide.image?.mobile || ''}
-                    onChange={(e) => {
+                  <MediaInput
+                    label="Mobile Image"
+                    value={slide.image?.mobile}
+                    onChange={(value) => {
                       const newSlides = [...slidingContent.slides]
                       newSlides[index] = { 
                         ...slide, 
                         image: { 
                           ...slide.image, 
-                          mobile: e.target.value 
+                          mobile: value 
                         }
                       }
                       updateBlockContent({ slides: newSlides })
                     }}
-                    placeholder="Mobile Image URL"
+                    accept="image"
+                    placeholder="Select image from library..."
+                    required={true}
                   />
-                  <Input
-                    value={slide.image?.desktop || ''}
-                    onChange={(e) => {
+                  <MediaInput
+                    label="Desktop Image (Optional)"
+                    value={slide.image?.desktop}
+                    onChange={(value) => {
                       const newSlides = [...slidingContent.slides]
                       newSlides[index] = { 
                         ...slide, 
                         image: { 
                           ...slide.image, 
-                          desktop: e.target.value 
+                          desktop: value 
                         }
                       }
                       updateBlockContent({ slides: newSlides })
                     }}
-                    placeholder="Desktop Image URL (Optional)"
+                    accept="image"
+                    placeholder="Select image from library..."
+                    required={false}
+                    allowClear={true}
                   />
                   <Input
                     value={slide.heading || ''}
@@ -245,35 +252,42 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                       <X className="w-3 h-3" />
                     </Button>
                   </div>
-                  <Input
-                    value={image.src?.mobile || ''}
-                    onChange={(e) => {
+                  <MediaInput
+                    label="Mobile Image"
+                    value={image.src?.mobile}
+                    onChange={(value) => {
                       const newImages = [...galleryContent.images]
                       newImages[index] = { 
                         ...image, 
                         src: { 
                           ...image.src, 
-                          mobile: e.target.value 
+                          mobile: value 
                         }
                       }
                       updateBlockContent({ images: newImages })
                     }}
-                    placeholder="Mobile Image URL"
+                    accept="image"
+                    placeholder="Select image from library..."
+                    required={true}
                   />
-                  <Input
-                    value={image.src?.desktop || ''}
-                    onChange={(e) => {
+                  <MediaInput
+                    label="Desktop Image (Optional)"
+                    value={image.src?.desktop}
+                    onChange={(value) => {
                       const newImages = [...galleryContent.images]
                       newImages[index] = { 
                         ...image, 
                         src: { 
                           ...image.src, 
-                          desktop: e.target.value 
+                          desktop: value 
                         }
                       }
                       updateBlockContent({ images: newImages })
                     }}
-                    placeholder="Desktop Image URL (Optional)"
+                    accept="image"
+                    placeholder="Select image from library..."
+                    required={false}
+                    allowClear={true}
                   />
                   <Input
                     value={image.alt || ''}
@@ -360,7 +374,7 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                 }
               })}
               accept="video"
-              placeholder="Select video or enter URL..."
+              placeholder="Select video from library..."
               required={true}
             />
             <MediaInput
@@ -373,7 +387,7 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                 }
               })}
               accept="video"
-              placeholder="Select video or enter URL..."
+              placeholder="Select video from library..."
               required={false}
             />
             <MediaInput
@@ -386,7 +400,7 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                 }
               })}
               accept="image"
-              placeholder="Select image or enter URL..."
+              placeholder="Select image from library..."
               required={false}
             />
             <MediaInput
@@ -399,7 +413,7 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                 }
               })}
               accept="image"
-              placeholder="Select image or enter URL..."
+              placeholder="Select image from library..."
               required={false}
             />
           </div>
@@ -510,14 +524,18 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                       placeholder="Role/Title"
                     />
                   </div>
-                  <Input
-                    value={testimonial.avatar || ''}
-                    onChange={(e) => {
+                  <MediaInput
+                    label="Avatar Image (Optional)"
+                    value={testimonial.avatar}
+                    onChange={(value) => {
                       const newTestimonials = [...testimonialsContent.testimonials]
-                      newTestimonials[index] = { ...testimonial, avatar: e.target.value }
+                      newTestimonials[index] = { ...testimonial, avatar: value }
                       updateBlockContent({ testimonials: newTestimonials })
                     }}
-                    placeholder="Avatar URL (optional)"
+                    accept="image"
+                    placeholder="Select avatar from library..."
+                    required={false}
+                    allowClear={true}
                   />
                 </div>
               ))}
@@ -638,34 +656,33 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                 rows={3}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="bg-mobile">Mobile Background Image URL</Label>
-              <Input
-                id="bg-mobile"
-                value={ctaContent.backgroundImage?.mobile || ''}
-                onChange={(e) => updateBlockContent({ 
-                  backgroundImage: { 
-                    ...ctaContent.backgroundImage, 
-                    mobile: e.target.value 
-                  }
-                })}
-                placeholder="https://..."
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="bg-desktop">Desktop Background Image URL (Optional)</Label>
-              <Input
-                id="bg-desktop"
-                value={ctaContent.backgroundImage?.desktop || ''}
-                onChange={(e) => updateBlockContent({ 
-                  backgroundImage: { 
-                    ...ctaContent.backgroundImage, 
-                    desktop: e.target.value 
-                  }
-                })}
-                placeholder="https://... (optional)"
-              />
-            </div>
+            <MediaInput
+              label="Mobile Background Image"
+              value={ctaContent.backgroundImage?.mobile}
+              onChange={(value) => updateBlockContent({ 
+                backgroundImage: { 
+                  ...ctaContent.backgroundImage, 
+                  mobile: value 
+                }
+              })}
+              accept="image"
+              placeholder="Select background image from library..."
+              required={false}
+            />
+            <MediaInput
+              label="Desktop Background Image (Optional)"
+              value={ctaContent.backgroundImage?.desktop}
+              onChange={(value) => updateBlockContent({ 
+                backgroundImage: { 
+                  ...ctaContent.backgroundImage, 
+                  desktop: value 
+                }
+              })}
+              accept="image"
+              placeholder="Select background image from library..."
+              required={false}
+              allowClear={true}
+            />
             <div className="space-y-2">
               <Label htmlFor="bg-color">Background Color</Label>
               <Input
@@ -1000,27 +1017,56 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
               <MediaInput
                 label="Mobile Image"
                 value={imageContent.src?.mobile}
-                onChange={(value) => updateBlockContent({ 
-                  src: { 
-                    ...imageContent.src, 
-                    mobile: value 
+                onChange={(value) => {
+                  const updates: any = {
+                    src: { 
+                      ...imageContent.src, 
+                      mobile: value 
+                    }
                   }
-                })}
+                  
+                  // Auto-populate width/height from dimensions if available and not already set
+                  if (value?.dimensions && (!imageContent.width || !imageContent.height)) {
+                    if (!imageContent.width) {
+                      updates.width = `${value.dimensions.width}px`
+                    }
+                    if (!imageContent.height) {
+                      updates.height = `${value.dimensions.height}px`
+                    }
+                  }
+                  
+                  updateBlockContent(updates)
+                }}
                 accept="image"
-                placeholder="Select image or enter URL..."
+                placeholder="Select image from library..."
                 required={true}
               />
               <MediaInput
                 label="Desktop Image (Optional)"
                 value={imageContent.src?.desktop}
-                onChange={(value) => updateBlockContent({ 
-                  src: { 
-                    ...imageContent.src, 
-                    desktop: value 
+                onChange={(value) => {
+                  const updates: any = {
+                    src: { 
+                      ...imageContent.src, 
+                      desktop: value 
+                    }
                   }
-                })}
+                  
+                  // Auto-populate width/height from dimensions if available and not already set
+                  // Only do this if mobile image doesn't have dimensions or if this has different dimensions
+                  if (value?.dimensions && (!imageContent.width || !imageContent.height)) {
+                    if (!imageContent.width) {
+                      updates.width = `${value.dimensions.width}px`
+                    }
+                    if (!imageContent.height) {
+                      updates.height = `${value.dimensions.height}px`
+                    }
+                  }
+                  
+                  updateBlockContent(updates)
+                }}
                 accept="image"
-                placeholder="Select image or enter URL..."
+                placeholder="Select image from library..."
                 required={false}
                 allowClear={true}
               />
@@ -1066,6 +1112,26 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                     <SelectItem value="fill">Fill</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
+                  <Label htmlFor="width">Width</Label>
+                  <Input
+                    id="width"
+                    value={imageContent.width || ''}
+                    onChange={(e) => updateBlockContent({ width: e.target.value })}
+                    placeholder="Auto (e.g., 300px, 100%)"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="height">Height</Label>
+                  <Input
+                    id="height"
+                    value={imageContent.height || ''}
+                    onChange={(e) => updateBlockContent({ height: e.target.value })}
+                    placeholder="Auto (e.g., 200px, 50vh)"
+                  />
+                </div>
               </div>
             </div>
           </TooltipProvider>
