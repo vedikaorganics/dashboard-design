@@ -96,17 +96,6 @@ export function PagePreview({
           </div>
         )
       
-      case 'spacer':
-        const spacerHeight = block.content?.height?.[device] || block.content?.height?.mobile || 50
-        return (
-          <div 
-            {...commonProps}
-            style={{
-              ...blockStyle,
-              height: `${spacerHeight}px`
-            }}
-          />
-        )
       
       case 'custom-html':
         return (

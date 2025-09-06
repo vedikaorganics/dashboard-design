@@ -229,7 +229,7 @@ export async function POST(request: NextRequest) {
         alt: alt || '',
         caption: caption || ''
       })
-      url = cloudflareResult.url
+      url = getImageVariant(cloudflareResult.id, 'public')
       thumbnailUrl = getImageVariant(cloudflareResult.id, 'thumbnail')
       cloudflareId = cloudflareResult.id
     } else {

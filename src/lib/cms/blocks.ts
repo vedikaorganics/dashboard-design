@@ -97,65 +97,10 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
         filters: {}
       } as any
     
-    case 'testimonials':
-      return {
-        testimonials: [],
-        layout: 'grid',
-        showRating: true,
-        showAvatar: true
-      } as any
-    
     case 'faq':
       return {
         faqs: [],
         allowMultipleOpen: false
-      } as any
-    
-    case 'cta':
-      return {
-        heading: 'Ready to Get Started?',
-        description: 'Join thousands of satisfied customers.',
-        buttons: [{
-          text: 'Get Started',
-          url: '',
-          style: 'primary'
-        }],
-        backgroundImage: {
-          mobile: { url: '', assetId: undefined, dimensions: undefined },
-          desktop: { url: '', assetId: undefined, dimensions: undefined }
-        },
-        backgroundColor: ''
-      } as any
-    
-    case 'banner':
-      return {
-        text: 'Important announcement or message here.',
-        type: 'info',
-        dismissible: true,
-        icon: '',
-        buttons: []
-      } as any
-    
-    case 'accordion':
-      return {
-        items: [],
-        allowMultipleOpen: false
-      } as any
-    
-    case 'tabs':
-      return {
-        tabs: [],
-        defaultTab: 0,
-        orientation: 'horizontal'
-      } as any
-    
-    case 'spacer':
-      return {
-        height: {
-          mobile: 30,
-          tablet: 40,
-          desktop: 50
-        }
       } as any
     
     case 'custom-html':
@@ -163,15 +108,6 @@ export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent
         html: '<div>Your custom HTML here</div>',
         css: '',
         js: ''
-      } as any
-    
-    case 'columns':
-      return {
-        columns: [
-          { width: 50, blocks: [] },
-          { width: 50, blocks: [] }
-        ],
-        gap: 16
       } as any
     
     default:
@@ -238,24 +174,10 @@ export function validateBlockContent(type: string, content: BlockContent): boole
         )
       case 'product-grid':
         return true // No required fields for product grid
-      case 'testimonials':
-        return Array.isArray((content as any).testimonials) && (content as any).testimonials.length > 0
       case 'faq':
         return Array.isArray((content as any).faqs) && (content as any).faqs.length > 0
-      case 'cta':
-        return Boolean((content as any).heading)
-      case 'banner':
-        return Boolean((content as any).text)
-      case 'accordion':
-        return Array.isArray((content as any).items) && (content as any).items.length > 0
-      case 'tabs':
-        return Array.isArray((content as any).tabs) && (content as any).tabs.length > 0
-      case 'spacer':
-        return Boolean((content as any).height?.mobile)
       case 'custom-html':
         return Boolean((content as any).html)
-      case 'columns':
-        return Boolean((content as any).gap !== undefined)
       default:
         return true
     }
