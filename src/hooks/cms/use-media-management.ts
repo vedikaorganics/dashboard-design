@@ -33,8 +33,6 @@ export function useMediaManagement() {
           return `Gallery (${content?.images?.length || 0} images)`
         case 'video':
           return 'Video Block'
-        case 'testimonials':
-          return `Testimonials (${content?.testimonials?.length || 0})`
         default:
           return `${block.type.replace('-', ' ')} Block`
       }
