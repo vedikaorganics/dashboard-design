@@ -82,21 +82,6 @@ const blockDefinitions: BlockDefinition[] = [
     category: 'media'
   },
 
-  // Layout blocks
-  {
-    type: 'columns',
-    name: 'Columns',
-    description: 'Multi-column layout container for organizing content',
-    icon: <Layout className="w-5 h-5" />,
-    category: 'layout'
-  },
-  {
-    type: 'spacer',
-    name: 'Spacer',
-    description: 'Add vertical spacing between content sections',
-    icon: <Minus className="w-5 h-5" />,
-    category: 'layout'
-  },
 
   // E-commerce blocks
   {
@@ -110,46 +95,10 @@ const blockDefinitions: BlockDefinition[] = [
 
   // Interactive blocks
   {
-    type: 'cta',
-    name: 'Call to Action',
-    description: 'Prominent section with heading, text and action buttons',
-    icon: <MousePointer className="w-5 h-5" />,
-    category: 'interactive',
-    popular: true
-  },
-  {
-    type: 'testimonials',
-    name: 'Testimonials',
-    description: 'Customer reviews and testimonials in grid or carousel',
-    icon: <Star className="w-5 h-5" />,
-    category: 'interactive'
-  },
-  {
     type: 'faq',
     name: 'FAQ',
     description: 'Expandable frequently asked questions section',
     icon: <HelpCircle className="w-5 h-5" />,
-    category: 'interactive'
-  },
-  {
-    type: 'accordion',
-    name: 'Accordion',
-    description: 'Collapsible content sections with titles',
-    icon: <Layout className="w-5 h-5" />,
-    category: 'interactive'
-  },
-  {
-    type: 'tabs',
-    name: 'Tabs',
-    description: 'Tabbed interface for organizing related content',
-    icon: <Layout className="w-5 h-5" />,
-    category: 'interactive'
-  },
-  {
-    type: 'banner',
-    name: 'Banner',
-    description: 'Notification or announcement banner with dismiss option',
-    icon: <Megaphone className="w-5 h-5" />,
     category: 'interactive'
   },
   {

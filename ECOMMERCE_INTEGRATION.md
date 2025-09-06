@@ -141,9 +141,7 @@ interface CMSContent {
 interface ContentBlock {
   id: string
   type: "video-cta" | "sliding-images-cta" | "text" | "image" | 
-        "gallery" | "video" | "product-grid" | "testimonials" | 
-        "faq" | "cta" | "spacer" | "custom-html" | "banner" | 
-        "accordion" | "tabs" | "columns"
+        "gallery" | "video" | "product-grid" | "faq" | "custom-html"
   order: number                 // Display order
   content: BlockContent        // Type-specific content
 }
@@ -546,8 +544,6 @@ export function ContentBlock({ block }: { block: ContentBlock }) {
     case 'product-grid':
       return <ProductGridBlock content={block.content as ProductGridBlockContent} />
     
-    case 'testimonials':
-      return <TestimonialsBlock content={block.content as TestimonialsBlockContent} />
     
     case 'faq':
       return <FAQBlock content={block.content as FAQBlockContent} />

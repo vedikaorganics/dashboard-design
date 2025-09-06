@@ -64,15 +64,8 @@ export function SortableBlockItem({
         return <ImageIcon className="w-4 h-4" />
       case 'video':
         return <Video className="w-4 h-4" />
-      case 'columns':
-      case 'spacer':
-        return <Layout className="w-4 h-4" />
       case 'product-grid':
         return <ShoppingCart className="w-4 h-4" />
-      case 'cta':
-      case 'accordion':
-      case 'tabs':
-        return <MousePointer className="w-4 h-4" />
       default:
         return <Layout className="w-4 h-4" />
     }
@@ -102,27 +95,9 @@ export function SortableBlockItem({
       case 'product-grid':
         const products = (block.content as any)?.products
         return products?.length ? `Products (${products.length} items)` : 'Product Grid'
-      case 'testimonials':
-        const testimonials = (block.content as any)?.testimonials
-        return testimonials?.length ? `Testimonials (${testimonials.length})` : 'Testimonials'
       case 'faq':
         const faqs = (block.content as any)?.faqs
         return faqs?.length ? `FAQ (${faqs.length} items)` : 'FAQ Block'
-      case 'cta':
-        return (block.content as any)?.heading || 'Call to Action'
-      case 'accordion':
-        const items = (block.content as any)?.items
-        return items?.length ? `Accordion (${items.length} items)` : 'Accordion'
-      case 'tabs':
-        const tabs = (block.content as any)?.tabs
-        return tabs?.length ? `Tabs (${tabs.length})` : 'Tabs Block'
-      case 'columns':
-        const columns = (block.content as any)?.columns
-        return columns?.length ? `${columns.length} Columns` : 'Columns'
-      case 'spacer':
-        return 'Spacer'
-      case 'banner':
-        return (block.content as any)?.text || 'Banner'
       case 'custom-html':
         return 'Custom HTML'
       default:
@@ -155,9 +130,6 @@ export function SortableBlockItem({
         const gridLayout = (block.content as any)?.layout || 'grid'
         const gridCols = (block.content as any)?.columns || 3
         return `${gridLayout} • ${gridCols} columns`
-      case 'spacer':
-        const height = (block.content as any)?.height?.mobile || 50
-        return `${height}px height`
       default:
         return `${block.type.replace('-', ' ')} component`
     }
@@ -177,8 +149,6 @@ export function SortableBlockItem({
         return content?.images?.[0]?.src?.mobile ? getMediaUrl(content.images[0].src.mobile) : null
       case 'video':
         return content?.src?.mobile ? getMediaUrl(content.src.mobile) : null
-      case 'testimonials':
-        return content?.testimonials?.[0]?.avatar ? getMediaUrl(content.testimonials[0].avatar) : null
       default:
         return null
     }

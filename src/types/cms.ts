@@ -22,8 +22,7 @@ export interface CMSContent {
 export interface ContentBlock {
   id: string
   type: "video-cta" | "sliding-images-cta" | "text" | "image" | "gallery" | "video" | "product-grid" | 
-        "testimonials" | "faq" | "cta" | "spacer" | "custom-html" | 
-        "banner" | "accordion" | "tabs" | "columns"
+        "faq" | "custom-html"
   order: number
   content: BlockContent
 }
@@ -94,15 +93,8 @@ export type BlockContent =
   | GalleryBlockContent
   | VideoBlockContent
   | ProductGridBlockContent
-  | TestimonialsBlockContent
   | FAQBlockContent
-  | CTABlockContent
-  | SpacerBlockContent
   | CustomHTMLBlockContent
-  | BannerBlockContent
-  | AccordionBlockContent
-  | TabsBlockContent
-  | ColumnsBlockContent
 
 export interface VideoCTABlockContent {
   video: {
@@ -222,18 +214,6 @@ export interface ProductGridBlockContent {
   }
 }
 
-export interface TestimonialsBlockContent {
-  testimonials: Array<{
-    text: string
-    author: string
-    role?: string
-    avatar?: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
-    rating?: number
-  }>
-  layout: "grid" | "carousel" | "single"
-  showRating: boolean
-  showAvatar: boolean
-}
 
 export interface FAQBlockContent {
   faqs: Array<{
@@ -244,28 +224,7 @@ export interface FAQBlockContent {
   defaultOpen?: number
 }
 
-export interface CTABlockContent {
-  heading: string
-  description?: string
-  buttons: Array<{
-    text: string
-    url: string
-    style: "primary" | "secondary" | "outline"
-  }>
-  backgroundImage?: {
-    mobile: string
-    desktop?: string
-  }
-  backgroundColor?: string
-}
 
-export interface SpacerBlockContent {
-  height: {
-    mobile: number
-    tablet?: number
-    desktop?: number
-  }
-}
 
 export interface CustomHTMLBlockContent {
   html: string
@@ -273,43 +232,9 @@ export interface CustomHTMLBlockContent {
   js?: string
 }
 
-export interface BannerBlockContent {
-  text: string
-  type: "info" | "warning" | "success" | "error"
-  dismissible: boolean
-  icon?: string
-  buttons?: Array<{
-    text: string
-    url: string
-    style: "primary" | "secondary" | "outline"
-  }>
-}
 
-export interface AccordionBlockContent {
-  items: Array<{
-    title: string
-    content: string
-  }>
-  allowMultipleOpen: boolean
-  defaultOpen?: number[]
-}
 
-export interface TabsBlockContent {
-  tabs: Array<{
-    title: string
-    content: string
-  }>
-  defaultTab?: number
-  orientation: "horizontal" | "vertical"
-}
 
-export interface ColumnsBlockContent {
-  columns: Array<{
-    width: number // percentage
-    blocks: ContentBlock[]
-  }>
-  gap: number
-}
 
 // API Response types
 export interface CMSContentResponse {
