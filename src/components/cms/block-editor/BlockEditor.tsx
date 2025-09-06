@@ -251,15 +251,15 @@ export function BlockEditor({
       }}>
         <DialogPortal>
           <DialogOverlay className="z-[60]" />
-          <DialogContent className="max-w-none w-fit min-w-[700px] max-h-[95vh] overflow-hidden z-[60]">
-          <DialogHeader>
+          <DialogContent className="max-w-none w-fit min-w-[700px] max-h-[95vh] z-[60] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>
               Edit {selectedBlock?.type.split('-').map(word => 
                 word.charAt(0).toUpperCase() + word.slice(1)
               ).join(' ')} Block
             </DialogTitle>
           </DialogHeader>
-          <div className="overflow-auto">
+          <div className="flex-1 overflow-auto min-h-0">
             {selectedBlock && (
               <BlockSettings
                 block={selectedBlock}
