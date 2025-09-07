@@ -109,6 +109,14 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // Validate blog type requirements
+    if (body.type === 'blog' && !body.blogCategory) {
+      return NextResponse.json(
+        { success: false, error: 'blogCategory is required for blog content' },
+        { status: 400 }
+      )
+    }
     
     const db = await getDatabase()
     const collection = db.collection('cms_content')
@@ -126,19 +134,44 @@ export async function POST(request: NextRequest) {
     const status = body.status || 'draft'
     const userId = await getCurrentUserId(request)
     
+    // Calculate read time for blog posts
+    let blogReadTime: number | undefined
+    if (body.type === 'blog' && body.blocks) {
+      const wordsPerMinute = 200
+      let totalWords = 0
+      
+      body.blocks.forEach(block => {
+        if (block.type === 'text' && (block.content as any)?.text) {
+          const textContent = (block.content as any).text.replace(/<[^>]*>/g, '') // Remove HTML tags
+          totalWords += textContent.split(/\s+/).length
+        }
+      })
+      
+      blogReadTime = Math.max(1, Math.ceil(totalWords / wordsPerMinute))
+    }
+
     const content: Omit<CMSContent, '_id'> = {
       slug: body.slug,
       type: body.type,
       pageType: body.pageType,
       productId: body.productId,
+      // Blog-specific fields
+      ...(body.type === 'blog' && {
+        blogCategory: body.blogCategory,
+        blogTags: body.blogTags || [],
+        blogAuthor: body.blogAuthor,
+        blogFeaturedImage: body.blogFeaturedImage,
+        blogExcerpt: body.blogExcerpt,
+        blogReadTime
+      }),
       title: body.title,
       status,
       publishedAt: status === 'published' ? now : undefined,
       blocks: body.blocks || [],
       seo: body.seo || {
         title: body.title,
-        description: '',
-        keywords: []
+        description: body.blogExcerpt || '',
+        keywords: body.blogTags || []
       },
       // Always start with version 1
       version: 1,
