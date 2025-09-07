@@ -34,7 +34,7 @@ import { useOrders } from "@/hooks/use-data"
 import { DataTable } from "@/components/ui/data-table"
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 import type { Order } from "@/types"
-import { cn } from "@/lib/utils"
+import { cn, formatRelativeDateTime } from "@/lib/utils"
 
 interface AlertMetricProps {
   title: string
@@ -517,6 +517,23 @@ function OrdersPageContent() {
         
         // Fallback to plain text if no userId
         return <div>{customerName}</div>
+      },
+    },
+    {
+      accessorKey: "createdAt",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Order Time" />
+      ),
+      cell: ({ row }) => {
+        const order = row.original
+        const timestamp = order.time || order.createdAt
+        const { time, relativeDate } = formatRelativeDateTime(timestamp)
+        return (
+          <div className="text-xs">
+            <div className="font-mono">{time}</div>
+            <div className="text-muted-foreground">{relativeDate}</div>
+          </div>
+        )
       },
     },
     {

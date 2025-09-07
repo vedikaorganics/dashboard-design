@@ -22,7 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { MoreHorizontal, Star, Eye, Check, X, Flag, Clock, Save, Edit3 } from "lucide-react"
+import { MoreHorizontal, Star, Eye, Check, X, Flag, Clock, Save, Edit3, Trash2 } from "lucide-react"
 import { useReviews } from "@/hooks/use-data"
 import { StarRating } from "@/components/ui/star-rating"
 import { DataTable } from "@/components/ui/data-table"
@@ -60,6 +60,9 @@ function ReviewsPageContent() {
   const [isSavingSortOrder, setIsSavingSortOrder] = useState<boolean>(false)
   const [selectedReview, setSelectedReview] = useState<any | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false)
+  const [isEditingPhotos, setIsEditingPhotos] = useState<boolean>(false)
+  const [editedPhotos, setEditedPhotos] = useState<string[]>([])
+  const [isSavingPhotos, setIsSavingPhotos] = useState<boolean>(false)
   
   // URL state management
   const [searchQuery, setSearchQuery] = useUrlSearchState("search", 300)
@@ -148,6 +151,53 @@ function ReviewsPageContent() {
   const handleViewDetails = (review: any) => {
     setSelectedReview(review)
     setIsDialogOpen(true)
+    // Reset photo editing state
+    setIsEditingPhotos(false)
+    setEditedPhotos(review.photos || [])
+  }
+
+  const handleEditPhotos = () => {
+    setIsEditingPhotos(true)
+    setEditedPhotos(selectedReview?.photos || [])
+  }
+
+  const handleCancelPhotoEdit = () => {
+    setIsEditingPhotos(false)
+    setEditedPhotos(selectedReview?.photos || [])
+  }
+
+  const handleRemovePhoto = (indexToRemove: number) => {
+    setEditedPhotos(prev => prev.filter((_, index) => index !== indexToRemove))
+  }
+
+  const handleSavePhotos = async () => {
+    if (!selectedReview) return
+    
+    setIsSavingPhotos(true)
+    try {
+      const response = await fetch(`/api/reviews/${selectedReview._id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ photos: editedPhotos })
+      })
+      
+      if (response.ok) {
+        setIsEditingPhotos(false)
+        // Update the selected review to reflect changes
+        setSelectedReview((prev: any) => ({ ...prev, photos: editedPhotos }))
+        // Refresh data
+        mutate()
+      } else {
+        alert('Failed to update photos')
+      }
+    } catch (error) {
+      console.error('Failed to update photos:', error)
+      alert('Failed to update photos')
+    } finally {
+      setIsSavingPhotos(false)
+    }
   }
 
   const handleApprovalToggle = async (reviewId: string, newApprovalStatus: boolean) => {
@@ -451,28 +501,90 @@ function ReviewsPageContent() {
                 </div>
 
                 {/* Photos */}
-                {selectedReview.photos && selectedReview.photos.length > 0 && (
+                {((selectedReview.photos && selectedReview.photos.length > 0) || isEditingPhotos) && (
                   <div className="space-y-2">
-                    <h4 className="font-semibold text-sm">Photos ({selectedReview.photos.length})</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {selectedReview.photos.map((photo: string, index: number) => (
-                        <div
-                          key={index}
-                          className="relative aspect-square rounded-lg overflow-hidden bg-muted group cursor-pointer"
-                          onClick={() => window.open(photo, '_blank')}
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold text-sm">
+                        Photos ({isEditingPhotos ? editedPhotos.length : selectedReview.photos?.length || 0})
+                      </h4>
+                      {!isEditingPhotos ? (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleEditPhotos}
+                          className="h-7 px-2"
                         >
-                          <img
-                            src={photo}
-                            alt={`Review photo ${index + 1}`}
-                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                            loading="lazy"
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                            <Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </div>
+                          <Edit3 className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={handleCancelPhotoEdit}
+                            className="h-7 px-2"
+                            disabled={isSavingPhotos}
+                          >
+                            <X className="h-3 w-3 mr-1" />
+                            Cancel
+                          </Button>
+                          <Button 
+                            variant="default" 
+                            size="sm" 
+                            onClick={handleSavePhotos}
+                            className="h-7 px-2"
+                            disabled={isSavingPhotos}
+                          >
+                            <Save className="h-3 w-3 mr-1" />
+                            {isSavingPhotos ? 'Saving...' : 'Save'}
+                          </Button>
                         </div>
-                      ))}
+                      )}
                     </div>
+                    
+                    {(isEditingPhotos ? editedPhotos : selectedReview.photos || []).length > 0 ? (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {(isEditingPhotos ? editedPhotos : selectedReview.photos).map((photo: string, index: number) => (
+                          <div
+                            key={index}
+                            className="relative aspect-square rounded-lg overflow-hidden bg-muted group"
+                          >
+                            <img
+                              src={photo}
+                              alt={`Review photo ${index + 1}`}
+                              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                              loading="lazy"
+                            />
+                            
+                            {!isEditingPhotos ? (
+                              <div 
+                                className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center cursor-pointer"
+                                onClick={() => window.open(photo, '_blank')}
+                              >
+                                <Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
+                            ) : (
+                              <div className="absolute top-2 right-2">
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 rounded-full"
+                                  onClick={() => handleRemovePhoto(index)}
+                                  disabled={isSavingPhotos}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : isEditingPhotos && editedPhotos.length === 0 ? (
+                      <div className="text-sm text-muted-foreground p-4 text-center border border-dashed rounded-lg">
+                        No photos remaining. Click "Save" to remove all photos from this review.
+                      </div>
+                    ) : null}
                   </div>
                 )}
 

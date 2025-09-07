@@ -4,13 +4,14 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { TrendingUp, TrendingDown, AlertCircle, Clock, CheckCircle, Truck, Star } from "lucide-react"
+import { TrendingUp, TrendingDown, AlertCircle, Clock, CheckCircle, Truck, Star, Package } from "lucide-react"
 import { BarChart } from "@/components/charts"
 import { useDashboard, useOrders, useReviews, usePrefetch } from "@/hooks/use-data"
 import Link from "next/link"
 import { Area, AreaChart as RechartsAreaChart, Line, ComposedChart, XAxis, YAxis, CartesianGrid } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"
+import { formatRelativeDateTime } from "@/lib/utils"
 
 
 
@@ -30,15 +31,32 @@ const getStatusBadge = (status: string) => {
 const getPaymentStatusBadge = (paymentStatus: string) => {
   switch (paymentStatus) {
     case 'PAID':
-      return <Badge className="bg-success/20 text-success">Paid</Badge>
+      return <Badge className="bg-success/20 text-success"><CheckCircle className="w-3 h-3 mr-1" />Paid</Badge>
     case 'CASH_ON_DELIVERY':
-      return <Badge className="bg-success/20 text-success">COD</Badge>
+      return <Badge className="bg-info/20 text-info"><CheckCircle className="w-3 h-3 mr-1" />COD</Badge>
     case 'PENDING':
-      return <Badge className="bg-warning/20 text-warning">Pending</Badge>
+      return <Badge className="bg-warning/20 text-warning"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
     case 'FAILED':
       return <Badge className="bg-destructive/20 text-destructive">Failed</Badge>
     default:
       return <Badge variant="outline">{paymentStatus}</Badge>
+  }
+}
+
+const getDeliveryStatusBadge = (deliveryStatus: string) => {
+  switch (deliveryStatus) {
+    case 'PENDING':
+      return <Badge className="border-border text-muted-foreground bg-muted/10"><Package className="w-3 h-3 mr-1" />Pending</Badge>
+    case 'PREPARING':
+      return <Badge className="bg-warning/20 text-warning border-warning/30"><Package className="w-3 h-3 mr-1" />Preparing</Badge>
+    case 'DISPATCHED':
+      return <Badge className="bg-info/20 text-info border-info/30"><Truck className="w-3 h-3 mr-1" />Dispatched</Badge>
+    case 'DELIVERED':
+      return <Badge className="bg-success/20 text-success border-success/30"><CheckCircle className="w-3 h-3 mr-1" />Delivered</Badge>
+    case 'CANCELLED':
+      return <Badge className="bg-destructive/20 text-destructive border-destructive/30"><Package className="w-3 h-3 mr-1" />Cancelled</Badge>
+    default:
+      return <Badge variant="outline">{deliveryStatus}</Badge>
   }
 }
 
@@ -185,46 +203,32 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {(recentOrdersData as any)?.orders?.slice(0, 5).map((order: any) => {
+                {(recentOrdersData as any)?.orders
+                  ?.filter((order: any) => order.paymentStatus === 'CASH_ON_DELIVERY' || order.paymentStatus === 'PAID')
+                  ?.slice(0, 5).map((order: any) => {
                   const customerName = order.address.firstName + (order.address.lastName ? ` ${order.address.lastName}` : '')
+                  const timestamp = order.time || order.createdAt
+                  const { time, relativeDate } = formatRelativeDateTime(timestamp)
                   
                   return (
                     <div key={order._id} className="flex items-center space-x-4">
                       <div className="flex-1">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-3">
                           <span className="text-xs text-muted-foreground font-mono">#{order.orderId}</span>
                           <p className="text-sm font-medium leading-none">
                             {customerName}
                           </p>
-                          <p className="text-xs text-muted-foreground">
-                            {(() => {
-                              const orderDate = new Date(order.createdAt)
-                              const today = new Date()
-                              const isToday = orderDate.toDateString() === today.toDateString()
-                              
-                              if (isToday) {
-                                return orderDate.toLocaleString('en-IN', { 
-                                  timeZone: 'Asia/Kolkata',
-                                  hour12: true,
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })
-                              } else {
-                                return orderDate.toLocaleString('en-IN', { 
-                                  timeZone: 'Asia/Kolkata',
-                                  hour12: true,
-                                  day: '2-digit',
-                                  month: 'short',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })
-                              }
-                            })()}
-                          </p>
+                          <div className="text-xs">
+                            <span className="font-mono">{time}</span>
+                            <span className="text-muted-foreground">, {relativeDate}</span>
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
                         {getPaymentStatusBadge(order.paymentStatus)}
+                        {(order.paymentStatus === 'CASH_ON_DELIVERY' || order.paymentStatus === 'PAID') && 
+                          getDeliveryStatusBadge(order.deliveryStatus)
+                        }
                         <div className="font-medium text-right">
                           <div>₹{order.amount.toLocaleString()}</div>
                         </div>

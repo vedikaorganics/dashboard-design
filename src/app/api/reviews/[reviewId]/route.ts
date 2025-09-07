@@ -9,7 +9,7 @@ export async function PATCH(
   try {
     const { reviewId } = await params
     const body = await request.json()
-    const { sortOrder, isApproved } = body
+    const { sortOrder, isApproved, photos } = body
 
     // Build update object based on provided fields
     const updateFields: any = {
@@ -36,6 +36,28 @@ export async function PATCH(
         )
       }
       updateFields.isApproved = isApproved
+    }
+
+    // Validate and add photos if provided
+    if (photos !== undefined) {
+      if (!Array.isArray(photos)) {
+        return NextResponse.json(
+          { error: 'Invalid photos. Must be an array.' },
+          { status: 400 }
+        )
+      }
+      
+      // Validate each photo is a string URL
+      for (let i = 0; i < photos.length; i++) {
+        if (typeof photos[i] !== 'string') {
+          return NextResponse.json(
+            { error: `Invalid photo at index ${i}. Must be a string URL.` },
+            { status: 400 }
+          )
+        }
+      }
+      
+      updateFields.photos = photos
     }
 
     // Ensure at least one field is being updated

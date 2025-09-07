@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,12 +9,18 @@ import { toast } from "sonner"
 import { signIn } from "@/lib/auth-client"
 import { Loader2, Mail } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
+import Image from "next/image"
+import { useTheme } from "next-themes"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const { session } = useAuth()
+  const { theme } = useTheme()
+  
+  // Determine which logo to use based on theme
+  const logoSrc = theme === "dark" ? "/vedika-logo-dark.png" : "/vedika-logo-light.png"
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -26,15 +31,20 @@ export default function LoginPage() {
 
   if (session) {
     return (
-      <div className="min-h-screen flex items-center justify-center  p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 h-12 w-12 bg-success rounded-full flex items-center justify-center">
-              <Loader2 className="h-6 w-6 text-white animate-spin" />
-            </div>
-            <CardTitle className="text-2xl font-bold">Redirecting...</CardTitle>
-          </CardHeader>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-md text-center">
+          <div className="mx-auto mb-6 relative">
+            <Image
+              src={logoSrc}
+              alt="Vedika Organics"
+              width={48}
+              height={48}
+              className="mx-auto"
+            />
+            <Loader2 className="h-4 w-4 animate-spin absolute -bottom-2 right-1/2 translate-x-1/2" />
+          </div>
+          <h1 className="text-2xl font-bold">Redirecting...</h1>
+        </div>
       </div>
     )
   }
@@ -75,55 +85,52 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center  p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 h-12 w-12 bg-primary rounded-full flex items-center justify-center">
-            <Mail className="h-6 w-6 text-white" />
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="mx-auto mb-6">
+            <Image
+              src={logoSrc}
+              alt="Vedika Organics"
+              width={48}
+              height={48}
+              className="mx-auto"
+            />
           </div>
-          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-          <CardDescription>
-            Staff members can sign in using their registered email address
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-                required
-              />
-            </div>
-            <Button 
-              type="submit" 
-              className="w-full" 
+          <h1 className="text-2xl font-bold">Welcome Back</h1>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Input
+              id="email"
+              type="email"
+              placeholder="Enter your email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending Magic Link...
-                </>
-              ) : (
-                <>
-                  <Mail className="mr-2 h-4 w-4" />
-                  Send Magic Link
-                </>
-              )}
-            </Button>
-          </form>
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>We'll send you a secure link to sign in</p>
-            <p className="mt-1">Only registered staff members can access the dashboard</p>
+              required
+            />
           </div>
-        </CardContent>
-      </Card>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Sending Magic Link...
+              </>
+            ) : (
+              <>
+                <Mail className="mr-2 h-4 w-4" />
+                Send Magic Link
+              </>
+            )}
+          </Button>
+        </form>
+      </div>
     </div>
   )
 }
