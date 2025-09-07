@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { CMSContent, BLOG_CATEGORIES } from '@/types/cms'
+import { MediaInput } from '@/components/cms/media-library/MediaInput'
 import { cn } from '@/lib/utils'
 
 interface BlogSidebarProps {
@@ -53,6 +54,10 @@ export function BlogSidebar({
   }
 
   const isSlugFrozen = Boolean(content.publishedAt)
+
+  const handleCoverImageChange = (value: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } } | undefined) => {
+    onUpdate({ blogFeaturedImage: value?.url || '' })
+  }
 
   const handleTagsChange = (tagsString: string) => {
     const tags = tagsString.split(',').map(tag => tag.trim()).filter(Boolean)
@@ -196,30 +201,15 @@ export function BlogSidebar({
 
         {/* Cover Image */}
         <div className="bg-background rounded-lg p-4 space-y-3">
-          <h3 className="text-sm font-medium flex items-center gap-2">
-            <Image className="w-4 h-4" />
-            Cover Image
-          </h3>
-            <Input
-              placeholder="Image URL or upload"
-              value={content.blogFeaturedImage || ''}
-              onChange={(e) => onUpdate({ blogFeaturedImage: e.target.value })}
-              className="h-8"
-            />
-            
-            {content.blogFeaturedImage && (
-              <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-                <img
-                  src={content.blogFeaturedImage}
-                  alt="Featured image preview"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.style.display = 'none'
-                  }}
-                />
-              </div>
-            )}
+          <MediaInput
+            label="Cover Image"
+            value={content.blogFeaturedImage || ''}
+            onChange={handleCoverImageChange}
+            accept="image"
+            placeholder="Select cover image from library..."
+            required={false}
+            allowClear={true}
+          />
         </div>
 
         {/* Excerpt */}
