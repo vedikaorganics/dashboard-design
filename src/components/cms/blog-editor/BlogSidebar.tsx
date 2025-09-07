@@ -209,6 +209,7 @@ export function BlogSidebar({
             placeholder="Select cover image from library..."
             required={false}
             allowClear={true}
+            previewSize="lg"
           />
         </div>
 
