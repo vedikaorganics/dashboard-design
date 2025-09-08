@@ -146,7 +146,7 @@ export function MediaUploader({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         filename: file.name,
-        folderId: currentFolderPath !== '/' ? currentFolderPath : null,
+        folderPath: currentFolderPath !== '/' ? currentFolderPath : null,
         alt: file.name.split('.')[0],
         caption: '',
         tags: [],

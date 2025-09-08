@@ -3,7 +3,8 @@ import { getDatabase } from '@/lib/mongodb'
 import Mux from '@mux/mux-node'
 import { getMuxTokenId, getMuxTokenSecret } from '@/lib/env'
 import { getCurrentUserId } from '@/lib/auth-utils'
-import { MediaAsset } from '@/types/cms'
+import { MediaAsset, MediaFolder } from '@/types/cms'
+import { resolvePathToFolderId } from '@/lib/media-path-utils'
 
 // Initialize Mux client
 const mux = new Mux({
@@ -25,6 +26,7 @@ export async function POST(request: NextRequest) {
 
     const db = await getDatabase()
     const assetsCollection = db.collection('cms_media_assets')
+    const foldersCollection = db.collection('cms_media_folders')
     const userId = await getCurrentUserId(request)
     const now = new Date()
 
@@ -100,6 +102,34 @@ export async function POST(request: NextRequest) {
     // Get file size from original file size passed through during upload
     const fileSize = (metadata as any).originalFileSize || 0
 
+    // Resolve folder path to folder ID
+    let resolvedFolderId: string | undefined = undefined
+    const folderPath = (metadata as any).folderPath
+    const legacyFolderId = (metadata as any).folderId
+    
+    console.log(`Debug: folderPath="${folderPath}", legacyFolderId="${legacyFolderId}"`)
+    
+    if (folderPath) {
+      // New path-based approach: resolve path to ID
+      const allFolders = await foldersCollection.find({}).toArray() as unknown as MediaFolder[]
+      console.log(`Debug: Found ${allFolders.length} folders:`, allFolders.map(f => ({ id: f._id, path: f.path })))
+      
+      const folderId = resolvePathToFolderId(folderPath, allFolders)
+      if (folderId) {
+        resolvedFolderId = folderId
+        console.log(`✅ Resolved folderPath "${folderPath}" to folderId "${folderId}"`)
+      } else {
+        console.error(`❌ Failed to resolve folderPath "${folderPath}" - folder not found in database`)
+        // Don't set resolvedFolderId - let it remain undefined
+      }
+    } else if (legacyFolderId && legacyFolderId !== folderPath) {
+      // Backward compatibility: use provided folderId directly (but only if it's not the path string)
+      resolvedFolderId = legacyFolderId
+      console.log(`Using legacy folderId "${legacyFolderId}"`)
+    } else {
+      console.log(`No valid folder ID found, saving to root folder`)
+    }
+
     // Create MediaAsset document
     const mediaAsset: Omit<MediaAsset, '_id'> = {
       url: `${baseUrl}.m3u8`, // HLS stream URL
@@ -111,7 +141,7 @@ export async function POST(request: NextRequest) {
       alt: (metadata as any).alt || '',
       caption: (metadata as any).caption || '',
       tags: (metadata as any).tags || [],
-      folderId: (metadata as any).folderId || undefined,
+      folderId: resolvedFolderId,
       metadata: {
         mimeType: 'video/mp4',
         uploadedBy: userId,
