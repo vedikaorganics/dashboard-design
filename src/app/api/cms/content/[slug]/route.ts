@@ -81,10 +81,40 @@ export async function PUT(
       
       // Update with provided data
       if (body.title !== undefined) updateData.title = body.title
+      
+      // Handle slug changes - only allow if content has never been published
+      if (body.slug !== undefined && !currentContent.publishedAt) {
+        updateData.slug = body.slug
+      }
+      
       if (body.blocks !== undefined) updateData.blocks = body.blocks
       if (body.seo !== undefined) updateData.seo = { ...currentContent.seo, ...body.seo }
       if (body.status !== undefined) updateData.status = body.status
       if (body.scheduledPublishAt !== undefined) updateData.scheduledPublishAt = body.scheduledPublishAt
+      
+      // Blog-specific updates
+      if (currentContent.type === 'blog') {
+        if (body.blogCategory !== undefined) updateData.blogCategory = body.blogCategory
+        if (body.blogTags !== undefined) updateData.blogTags = body.blogTags
+        if (body.blogAuthor !== undefined) updateData.blogAuthor = body.blogAuthor
+        if (body.blogFeaturedImage !== undefined) updateData.blogFeaturedImage = body.blogFeaturedImage
+        if (body.blogExcerpt !== undefined) updateData.blogExcerpt = body.blogExcerpt
+        
+        // Recalculate read time if blocks are updated
+        if (body.blocks !== undefined) {
+          const wordsPerMinute = 200
+          let totalWords = 0
+          
+          body.blocks.forEach(block => {
+            if (block.type === 'text' && (block.content as any)?.text) {
+              const textContent = (block.content as any).text.replace(/<[^>]*>/g, '')
+              totalWords += textContent.split(/\s+/).length
+            }
+          })
+          
+          updateData.blogReadTime = Math.max(1, Math.ceil(totalWords / wordsPerMinute))
+        }
+      }
       
       // Set publishedAt if changing from draft to published
       if (body.status === 'published') {
@@ -121,9 +151,19 @@ export async function PUT(
         
         // Apply the updates
         ...(body.title !== undefined && { title: body.title }),
+        // Note: slug changes are not allowed for published content to preserve links
         ...(body.blocks !== undefined && { blocks: body.blocks }),
         ...(body.seo !== undefined && { seo: { ...currentContent.seo, ...body.seo } }),
         ...(body.scheduledPublishAt !== undefined && { scheduledPublishAt: body.scheduledPublishAt }),
+        
+        // Blog-specific updates
+        ...(currentContent.type === 'blog' && {
+          ...(body.blogCategory !== undefined && { blogCategory: body.blogCategory }),
+          ...(body.blogTags !== undefined && { blogTags: body.blogTags }),
+          ...(body.blogAuthor !== undefined && { blogAuthor: body.blogAuthor }),
+          ...(body.blogFeaturedImage !== undefined && { blogFeaturedImage: body.blogFeaturedImage }),
+          ...(body.blogExcerpt !== undefined && { blogExcerpt: body.blogExcerpt })
+        }),
         
         // New draft version
         version: newVersion,
@@ -131,6 +171,21 @@ export async function PUT(
         publishedAt: body.status === 'published' ? now : undefined,
         updatedBy: userId,
         updatedAt: now
+      }
+      
+      // Recalculate read time for blog posts if blocks are updated
+      if (currentContent.type === 'blog' && body.blocks !== undefined) {
+        const wordsPerMinute = 200
+        let totalWords = 0
+        
+        body.blocks.forEach(block => {
+          if (block.type === 'text' && (block.content as any)?.text) {
+            const textContent = (block.content as any).text.replace(/<[^>]*>/g, '')
+            totalWords += textContent.split(/\s+/).length
+          }
+        })
+        
+        newDraftContent.blogReadTime = Math.max(1, Math.ceil(totalWords / wordsPerMinute))
       }
       
       // Insert the new draft version

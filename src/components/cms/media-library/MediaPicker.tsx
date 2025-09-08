@@ -114,62 +114,13 @@ export function MediaPicker({
     onClose()
   }, [internalSelection, onSelect, onClose])
 
-  // Handle file upload
-  const handleUpload = useCallback(async (files: File[]) => {
-    const uploadPromises = files.map(async (file) => {
-      // Validate file type based on accept prop
-      if (accept !== 'all') {
-        if (accept === 'image' && !file.type.startsWith('image/')) {
-          throw new Error(`Only images are allowed. ${file.name} is not an image.`)
-        }
-        if (accept === 'video' && !file.type.startsWith('video/')) {
-          throw new Error(`Only videos are allowed. ${file.name} is not a video.`)
-        }
-      }
-      
-      // Create FormData for file upload
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('alt', file.name.split('.')[0]) // Remove extension for alt text
-      formData.append('caption', '')
-      formData.append('tags', '')
-      const currentFolder = currentFolderPath !== '/' ? folders.find(f => f.path === currentFolderPath) : null
-      if (currentFolder) {
-        formData.append('folderId', currentFolder._id)
-      }
-      
-      // Upload directly to API
-      const response = await fetch('/api/cms/media', {
-        method: 'POST',
-        body: formData
-      })
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Upload failed')
-      }
-      
-      return response.json()
-    })
-
-    try {
-      const uploadedAssets = await Promise.all(uploadPromises)
-      toast.success(`${files.length} file(s) uploaded successfully`)
-      refresh()
-      
-      // Auto-select uploaded assets if in single mode
-      if (!multiple && uploadedAssets.length === 1) {
-        setInternalSelection([uploadedAssets[0].data])
-      } else if (multiple) {
-        setInternalSelection(prev => [...prev, ...uploadedAssets.map(u => u.data)])
-      }
-      
-      setShowUploader(false)
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to upload files')
-      console.error('Upload error:', error)
-    }
-  }, [currentFolderPath, folders, refresh, multiple, accept])
+  // Handle file upload completion
+  const handleUploadComplete = useCallback(async (files: File[]) => {
+    // Just refresh the media list and close the uploader
+    // The actual upload is handled by MediaUploader component
+    await refresh()
+    setShowUploader(false)
+  }, [refresh])
 
   // Handle folder creation
   const handleCreateFolder = useCallback(async (name: string) => {
@@ -391,9 +342,10 @@ export function MediaPicker({
             <DialogTitle>Upload Media</DialogTitle>
           </DialogHeader>
           <MediaUploader
-            onUpload={handleUpload}
+            onUpload={handleUploadComplete}
             accept={accept === 'document' ? 'all' : accept}
             multiple={true}
+            currentFolderPath={currentFolderPath}
           />
           </DialogContent>
         </DialogPortal>

@@ -28,6 +28,7 @@ interface MediaInputProps {
   showUrlInput?: boolean
   allowClear?: boolean
   allowDragDrop?: boolean
+  previewSize?: 'sm' | 'md' | 'lg'
 }
 
 export function MediaInput({
@@ -40,7 +41,8 @@ export function MediaInput({
   className,
   showUrlInput = false,
   allowClear = true,
-  allowDragDrop = true
+  allowDragDrop = true,
+  previewSize = 'sm'
 }: MediaInputProps) {
   const [showPicker, setShowPicker] = useState(false)
 
@@ -82,54 +84,117 @@ export function MediaInput({
     const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv']
     const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']
     
-    const extension = url.toLowerCase().substring(url.lastIndexOf('.'))
+    // Check for Cloudflare Images URLs
+    if (url.includes('imagedelivery.net')) return 'image'
     
+    // Check for other known image/video services
+    if (url.includes('youtube.com') || url.includes('vimeo.com')) return 'video'
+    if (url.includes('images.') || url.includes('cdn.') || url.includes('imgur.com')) return 'image'
+    
+    // Check file extensions
+    const extension = url.toLowerCase().substring(url.lastIndexOf('.'))
     if (videoExtensions.includes(extension)) return 'video'
     if (imageExtensions.includes(extension)) return 'image'
-    if (url.includes('youtube.com') || url.includes('vimeo.com')) return 'video'
+    
+    // For MediaInput with accept="image", assume it's an image
+    if (accept === 'image') return 'image'
+    if (accept === 'video') return 'video'
     
     return 'unknown'
+  }
+
+  const getPreviewDimensions = () => {
+    switch (previewSize) {
+      case 'sm':
+        return 'w-16 h-16'
+      case 'md':
+        return 'w-24 h-24'
+      case 'lg':
+        return 'w-full h-48' // Fixed height for large preview
+      default:
+        return 'w-16 h-16'
+    }
   }
 
   const renderPreview = () => {
     if (!currentUrl) return null
 
     const mediaType = getMediaType(currentUrl)
+    const dimensions = getPreviewDimensions()
     
     return (
-      <div className="relative w-16 h-16 rounded-md overflow-hidden bg-muted border">
+      <div className={cn("relative rounded-md overflow-hidden bg-muted border", dimensions)}>
         {mediaType === 'image' ? (
-          <img
-            src={currentUrl}
-            alt="Preview"
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement
-              target.style.display = 'none'
-              target.nextElementSibling!.classList.remove('hidden')
-            }}
-          />
+          <>
+            <img
+              src={currentUrl}
+              alt="Preview"
+              className="w-full h-full object-cover"
+              onLoad={(e) => {
+                // Hide fallback when image loads successfully
+                const fallback = e.currentTarget.parentElement?.querySelector('.fallback-icon')
+                if (fallback) {
+                  fallback.classList.add('hidden')
+                }
+              }}
+              onError={(e) => {
+                // Show fallback when image fails to load
+                const target = e.target as HTMLImageElement
+                target.style.display = 'none'
+                const fallback = target.parentElement?.querySelector('.fallback-icon')
+                if (fallback) {
+                  fallback.classList.remove('hidden')
+                }
+              }}
+            />
+            {/* Fallback icon for images */}
+            <div className="fallback-icon absolute inset-0 flex items-center justify-center bg-muted">
+              <ImageIcon className={cn(
+                "text-muted-foreground",
+                previewSize === 'lg' ? "w-12 h-12" : "w-6 h-6"
+              )} />
+            </div>
+          </>
         ) : mediaType === 'video' ? (
-          <video
-            src={currentUrl}
-            className="w-full h-full object-cover"
-            muted
-            onError={(e) => {
-              const target = e.target as HTMLVideoElement
-              target.style.display = 'none'
-              target.nextElementSibling!.classList.remove('hidden')
-            }}
-          />
-        ) : null}
-        
-        {/* Fallback icon */}
-        <div className="absolute inset-0 flex items-center justify-center bg-muted hidden">
-          {mediaType === 'video' ? (
-            <Video className="w-6 h-6 text-muted-foreground" />
-          ) : (
-            <ImageIcon className="w-6 h-6 text-muted-foreground" />
-          )}
-        </div>
+          <>
+            <video
+              src={currentUrl}
+              className="w-full h-full object-cover"
+              muted
+              onLoadedData={(e) => {
+                // Hide fallback when video loads successfully
+                const fallback = e.currentTarget.parentElement?.querySelector('.fallback-icon')
+                if (fallback) {
+                  fallback.classList.add('hidden')
+                }
+              }}
+              onError={(e) => {
+                // Show fallback when video fails to load
+                const target = e.target as HTMLVideoElement
+                target.style.display = 'none'
+                const fallback = target.parentElement?.querySelector('.fallback-icon')
+                if (fallback) {
+                  fallback.classList.remove('hidden')
+                }
+              }}
+            />
+            {/* Fallback icon for videos */}
+            <div className="fallback-icon absolute inset-0 flex items-center justify-center bg-muted">
+              <Video className={cn(
+                "text-muted-foreground",
+                previewSize === 'lg' ? "w-12 h-12" : "w-6 h-6"
+              )} />
+            </div>
+          </>
+        ) : (
+          /* Unknown media type fallback */
+          <div className="absolute inset-0 flex items-center justify-center bg-muted">
+            <ImageIcon className={cn(
+              "text-muted-foreground",
+              previewSize === 'lg' ? "w-12 h-12" : "w-6 h-6"
+            )} />
+          </div>
+        )}
 
         {/* Overlay with actions */}
         <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center space-x-1">
@@ -138,10 +203,13 @@ export function MediaInput({
               <Button
                 size="sm"
                 variant="secondary"
-                className="h-6 w-6 p-0"
+                className={cn(
+                  "p-0",
+                  previewSize === 'lg' ? "h-8 w-8" : "h-6 w-6"
+                )}
                 onClick={() => setShowPicker(true)}
               >
-                <Edit className="w-3 h-3" />
+                <Edit className={previewSize === 'lg' ? "w-4 h-4" : "w-3 h-3"} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Change media</TooltipContent>
@@ -152,10 +220,13 @@ export function MediaInput({
               <Button
                 size="sm"
                 variant="secondary"
-                className="h-6 w-6 p-0"
+                className={cn(
+                  "p-0",
+                  previewSize === 'lg' ? "h-8 w-8" : "h-6 w-6"
+                )}
                 onClick={() => window.open(currentUrl, '_blank')}
               >
-                <ExternalLink className="w-3 h-3" />
+                <ExternalLink className={previewSize === 'lg' ? "w-4 h-4" : "w-3 h-3"} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Open in new tab</TooltipContent>
@@ -167,10 +238,13 @@ export function MediaInput({
                 <Button
                   size="sm"
                   variant="destructive"
-                  className="h-6 w-6 p-0"
+                  className={cn(
+                    "p-0",
+                    previewSize === 'lg' ? "h-8 w-8" : "h-6 w-6"
+                  )}
                   onClick={handleClear}
                 >
-                  <X className="w-3 h-3" />
+                  <X className={previewSize === 'lg' ? "w-4 h-4" : "w-3 h-3"} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Remove</TooltipContent>
@@ -196,9 +270,13 @@ export function MediaInput({
       </div>
 
       {currentUrl ? (
-        <div className="flex items-center space-x-3">
+        <div className={cn(
+          previewSize === 'lg' ? "space-y-3" : "flex items-center space-x-3"
+        )}>
           {renderPreview()}
-          <div className="flex-1 min-w-0">
+          <div className={cn(
+            previewSize === 'lg' ? "" : "flex-1 min-w-0"
+          )}>
             <p className="text-sm font-medium truncate">{currentFilename || currentUrl}</p>
             <div className="flex items-center space-x-2 mt-1">
               <Button

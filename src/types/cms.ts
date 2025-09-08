@@ -2,10 +2,17 @@
 
 export interface CMSContent {
   _id: string
-  slug: string // URL identifier (e.g., "home", "privacy-policy", "product-123")
-  type: "page" | "product"
+  slug: string // URL identifier (e.g., "home", "privacy-policy", "product-123", "my-first-blog-post")
+  type: "page" | "product" | "blog"
   pageType?: "predefined" | "custom" // For pages: predefined (home, shop, etc.) or custom
   productId?: string // For products: reference to actual product in database
+  // Blog-specific fields
+  blogCategory?: string // For blogs: category slug
+  blogTags?: string[] // For blogs: array of tags
+  blogAuthor?: string // For blogs: author name or ID
+  blogFeaturedImage?: string // For blogs: featured image URL
+  blogExcerpt?: string // For blogs: short description/summary
+  blogReadTime?: number // For blogs: estimated read time in minutes
   title: string
   status: "draft" | "published" | "archived"
   publishedAt?: Date
@@ -281,9 +288,15 @@ export interface MediaAssetListResponse {
 // Form types for API requests
 export interface CreateContentRequest {
   slug: string
-  type: "page" | "product"
+  type: "page" | "product" | "blog"
   pageType?: "predefined" | "custom"
   productId?: string
+  // Blog-specific fields
+  blogCategory?: string
+  blogTags?: string[]
+  blogAuthor?: string
+  blogFeaturedImage?: string
+  blogExcerpt?: string
   title: string
   blocks?: ContentBlock[]
   seo?: SEOMetadata
@@ -293,11 +306,18 @@ export interface CreateContentRequest {
 
 export interface UpdateContentRequest {
   title?: string
+  slug?: string
   blocks?: ContentBlock[]
   seo?: SEOMetadata
   status?: "draft" | "published" | "archived"
   publishedAt?: Date
   scheduledPublishAt?: Date
+  // Blog-specific fields
+  blogCategory?: string
+  blogTags?: string[]
+  blogAuthor?: string
+  blogFeaturedImage?: string
+  blogExcerpt?: string
 }
 
 export interface PublishContentRequest {
@@ -443,5 +463,52 @@ export const PREDEFINED_PAGES: PredefinedPage[] = [
     requiredSEO: {
       title: 'Shipping & Returns - Vedika Organics'
     }
+  }
+]
+
+// Blog categories configuration
+export interface BlogCategory {
+  slug: string
+  name: string
+  description: string
+  color?: string
+}
+
+export const BLOG_CATEGORIES: BlogCategory[] = [
+  {
+    slug: 'health-wellness',
+    name: 'Health & Wellness',
+    description: 'Articles about organic living and healthy lifestyle',
+    color: '#10b981'
+  },
+  {
+    slug: 'recipes',
+    name: 'Recipes',
+    description: 'Delicious organic recipes and cooking tips',
+    color: '#f59e0b'
+  },
+  {
+    slug: 'sustainability',
+    name: 'Sustainability',
+    description: 'Environmental impact and sustainable practices',
+    color: '#22c55e'
+  },
+  {
+    slug: 'farming',
+    name: 'Organic Farming',
+    description: 'Insights into organic farming methods and practices',
+    color: '#8b5cf6'
+  },
+  {
+    slug: 'product-updates',
+    name: 'Product Updates',
+    description: 'New products and company announcements',
+    color: '#3b82f6'
+  },
+  {
+    slug: 'tips-guides',
+    name: 'Tips & Guides',
+    description: 'Helpful tips and how-to guides',
+    color: '#ef4444'
   }
 ]

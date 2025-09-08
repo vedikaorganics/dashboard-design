@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ContentBlock, getMediaUrl, createMediaRef } from '@/types/cms'
 import { MediaInput } from '@/components/cms/media-library/MediaInput'
-import { TiptapRichTextEditor } from '@/components/ui/tiptap-rich-text-editor'
+import { SimpleRichTextEditor } from '@/components/ui/simple-rich-text-editor'
 
 interface BlockSettingsProps {
   block: ContentBlock
@@ -72,7 +72,7 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                 />
               </div>
               <div className="space-y-2">
-                <TiptapRichTextEditor
+                <SimpleRichTextEditor
                   id="text"
                   label="Text"
                   value={videoCTAContent.text || ''}
@@ -174,7 +174,7 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                     }}
                     placeholder="Heading"
                   />
-                  <TiptapRichTextEditor
+                  <SimpleRichTextEditor
                     value={slide.text || ''}
                     onChange={(value) => {
                       const newSlides = [...slidingContent.slides]
@@ -550,7 +550,7 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
                     }}
                     placeholder="Question"
                   />
-                  <TiptapRichTextEditor
+                  <SimpleRichTextEditor
                     value={faq.answer || ''}
                     onChange={(value) => {
                       const newFaqs = [...faqContent.faqs]
@@ -629,7 +629,7 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
         return (
           <div className="space-y-4">
             <div className="space-y-2">
-              <TiptapRichTextEditor
+              <SimpleRichTextEditor
                 id="text"
                 value={textContent.text || ''}
                 onChange={(value) => updateBlockContent({ text: value })}
