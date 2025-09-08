@@ -195,8 +195,8 @@ export async function GET(request: NextRequest) {
         console.log(`  Stored:  "${stored}" (length: ${stored?.length})`)
         console.log(`  Queried: "${queried}" (length: ${queried?.length})`)
         console.log(`  Equal: ${stored === queried}`)
-        console.log(`  Stored bytes:  ${Array.from(stored || '').map(c => c.charCodeAt(0))}`)
-        console.log(`  Queried bytes: ${Array.from(queried || '').map(c => c.charCodeAt(0))}`)
+        console.log(`  Stored bytes:  ${Array.from(String(stored || '')).map(c => c.charCodeAt(0))}`)
+        console.log(`  Queried bytes: ${Array.from(String(queried || '')).map(c => c.charCodeAt(0))}`)
       }
     }
     
