@@ -178,7 +178,7 @@ export default function ProductContentPage() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Link href={`${process.env.NEXT_PUBLIC_PAYMENTS_SERVER || ''}/shop/products/${product.id}`}>
+            <Link href={`${process.env.NEXT_PUBLIC_PAYMENT_SERVER_URL || ''}/draft/shop/${product.id}`} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" size="sm" className="text-xs px-3 py-2">
                 <Eye className="w-3 h-3 mr-1" />
                 Preview
