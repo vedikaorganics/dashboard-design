@@ -1,13 +1,14 @@
 'use client'
 
-import { use } from 'react'
+import { use, useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Save, Eye, Globe, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
-import { BlogEditor } from '@/components/cms/blog-editor/BlogEditor'
+import { BlogEditor, BlogEditorRef } from '@/components/cms/blog-editor/BlogEditor'
 import { useCMSContentItem } from '@/hooks/cms/use-cms-content'
+import { CMSContent } from '@/types/cms'
 import { toast } from 'sonner'
 
 interface BlogEditorPageProps {
@@ -20,21 +21,62 @@ export default function BlogEditorPage({ params }: BlogEditorPageProps) {
   const router = useRouter()
   const resolvedParams = use(params)
   const { content: blogPost, isLoading, error, updateContent } = useCMSContentItem(resolvedParams.slug)
+  
+  // Local state to track content changes before saving
+  const [localContent, setLocalContent] = useState<CMSContent | null>(null)
+  const blogEditorRef = useRef<BlogEditorRef>(null)
+  
+  // Update local content when blogPost changes (initial load, refresh, etc.)
+  useEffect(() => {
+    if (blogPost) {
+      setLocalContent(blogPost)
+    }
+  }, [blogPost])
+
+  // Local update handler - updates local state without API call
+  const handleLocalUpdate = useCallback((updates: Partial<CMSContent>) => {
+    setLocalContent(prev => {
+      if (!prev) return prev
+      return { ...prev, ...updates }
+    })
+  }, [])
 
   const handleSave = async (status: 'draft' | 'published' = 'draft') => {
-    if (!blogPost) return
+    if (!localContent) return
 
     try {
-      if (status === 'published') {
-        await updateContent({
-          status: 'published',
-          publishedAt: new Date()
-        })
-        toast.success('Blog post published successfully')
-      } else {
-        await updateContent({ status: 'draft' })
-        toast.success('Blog post saved as draft')
+      // Get the absolute latest content from the editor
+      const currentEditorContent = blogEditorRef.current?.getCurrentContent() || ''
+      
+      // Create updated blocks with the latest editor content
+      const updatedBlocks = [{
+        id: localContent.blocks?.[0]?.id || 'text-1',
+        type: 'text' as const,
+        order: 0,
+        content: {
+          text: currentEditorContent,
+          alignment: 'left' as const
+        }
+      }]
+
+      const updateData = {
+        // Include all current content
+        title: localContent.title,
+        blocks: updatedBlocks, // Use the latest editor content
+        blogCategory: localContent.blogCategory,
+        blogTags: localContent.blogTags,
+        blogAuthor: localContent.blogAuthor,
+        blogFeaturedImage: localContent.blogFeaturedImage,
+        blogExcerpt: localContent.blogExcerpt,
+        seo: localContent.seo,
+        slug: localContent.slug,
+        // Add status-specific fields
+        status,
+        ...(status === 'published' && { publishedAt: new Date() })
       }
+
+      await updateContent(updateData)
+      toast.success(`Blog post ${status === 'published' ? 'published' : 'saved as draft'} successfully`)
     } catch (error) {
       toast.error(`Failed to ${status === 'published' ? 'publish' : 'save'} blog post`)
     }
@@ -56,9 +98,9 @@ export default function BlogEditorPage({ params }: BlogEditorPageProps) {
   }
 
   const getStatusBadge = () => {
-    if (!blogPost) return null
+    if (!localContent) return null
     
-    switch (blogPost.status) {
+    switch (localContent.status) {
       case 'published':
         return <Badge variant="default">Published</Badge>
       case 'draft':
@@ -123,21 +165,21 @@ export default function BlogEditorPage({ params }: BlogEditorPageProps) {
           <div className="flex items-center space-x-4">
             <div className="flex-1">
               <div className="flex items-center space-x-3">
-                <h1 className="text-xl font-bold">{blogPost.title || 'Untitled Blog Post'}</h1>
+                <h1 className="text-xl font-bold">{localContent?.title || 'Untitled Blog Post'}</h1>
                 {getStatusBadge()}
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                <span>By {blogPost.blogAuthor || 'Unknown'}</span>
-                {blogPost.blogCategory && (
+                <span>By {localContent?.blogAuthor || 'Unknown'}</span>
+                {localContent?.blogCategory && (
                   <>
                     <span>•</span>
-                    <span>{blogPost.blogCategory}</span>
+                    <span>{localContent.blogCategory}</span>
                   </>
                 )}
-                {blogPost.blogReadTime && (
+                {localContent?.blogReadTime && (
                   <>
                     <span>•</span>
-                    <span>{blogPost.blogReadTime} min read</span>
+                    <span>{localContent.blogReadTime} min read</span>
                   </>
                 )}
               </div>
@@ -184,22 +226,21 @@ export default function BlogEditorPage({ params }: BlogEditorPageProps) {
         </div>
 
         {/* Blog Editor */}
-        <BlogEditor
-          content={blogPost}
-          onUpdate={updateContent}
-          onSave={async () => {
-            await handleSave('draft')
-          }}
-          onPublish={async (publishAt) => {
-            await updateContent({
-              status: 'published',
-              publishedAt: publishAt || new Date(),
-              ...(publishAt && { scheduledPublishAt: publishAt })
-            })
-          }}
-          onUnpublish={handleUnpublish}
-          isLoading={isLoading}
-        />
+        {localContent && (
+          <BlogEditor
+            ref={blogEditorRef}
+            content={localContent}
+            onUpdate={handleLocalUpdate}
+            onSave={async () => {
+              await handleSave('draft')
+            }}
+            onPublish={async (publishAt) => {
+              await handleSave('published')
+            }}
+            onUnpublish={handleUnpublish}
+            isLoading={isLoading}
+          />
+        )}
       </div>
     </DashboardLayout>
   )

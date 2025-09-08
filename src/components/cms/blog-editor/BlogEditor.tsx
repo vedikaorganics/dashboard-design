@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 import { $getRoot, $getSelection } from 'lexical'
 import { $generateHtmlFromNodes, $generateNodesFromDOM } from '@lexical/html'
 import { LexicalComposer } from '@lexical/react/LexicalComposer'
@@ -62,7 +62,7 @@ const theme = {
   code: 'bg-muted p-4 rounded font-mono text-sm my-4',
 }
 
-// Plugin to set initial content
+// Plugin to set initial content (only once on mount)
 function InitialContentPlugin({ content }: { content: string }) {
   const [editor] = useLexicalComposerContext()
   
@@ -76,7 +76,7 @@ function InitialContentPlugin({ content }: { content: string }) {
         $getRoot().append(...nodes)
       })
     }
-  }, [editor, content])
+  }, [editor]) // Removed 'content' to prevent re-initialization on content changes
 
   return null
 }
@@ -90,18 +90,28 @@ interface BlogEditorProps {
   isLoading?: boolean
 }
 
-export function BlogEditor({
+export interface BlogEditorRef {
+  getCurrentContent: () => string
+}
+
+export const BlogEditor = forwardRef<BlogEditorRef, BlogEditorProps>(({
   content,
   onUpdate,
   onSave,
   onPublish,
   onUnpublish,
   isLoading = false
-}: BlogEditorProps) {
+}, ref) => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const editorRef = useRef<any>(null)
+  const currentContentRef = useRef<string>('')
+
+  // Expose methods to parent component
+  useImperativeHandle(ref, () => ({
+    getCurrentContent: () => currentContentRef.current
+  }), [])
 
   // Initialize content - convert from blocks to HTML if needed  
   const initialContent = content.blocks?.[0]?.type === 'text' 
@@ -174,12 +184,20 @@ export function BlogEditor({
   const [wordCount, setWordCount] = useState(0)
   const [readingTime, setReadingTime] = useState(1)
 
-  const handleChange = (editorState: any) => {
+  const handleChange = (editorState: any, editor: any) => {
     editorState.read(() => {
+      // Update word count and reading time
       const text = $getRoot().getTextContent()
       const words = text.trim().split(/\s+/).filter(Boolean).length
       setWordCount(words)
       setReadingTime(Math.max(1, Math.ceil(words / 200)))
+      
+      // Get current HTML and store in ref
+      const html = $generateHtmlFromNodes(editor)
+      currentContentRef.current = html
+      
+      // Immediately update content blocks 
+      handleContentChange(html)
     })
   }
 
@@ -259,4 +277,4 @@ export function BlogEditor({
       />
     </div>
   )
-}
+})
