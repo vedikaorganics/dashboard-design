@@ -90,12 +90,17 @@ export async function GET(request: NextRequest) {
       // Path-based query - need to resolve path to folder ID
       // First, get all folders to resolve the path
       const allFolders = await foldersCollection.find({}).toArray() as unknown as MediaFolder[]
-      targetFolderId = resolvePathToFolderId(folderPath, allFolders)
+      const resolvedId = resolvePathToFolderId(folderPath, allFolders)
+      // Convert ObjectId to string to match how folderId is stored in assets
+      targetFolderId = resolvedId ? resolvedId.toString() : null
+      console.log(`⚙️ After resolution: targetFolderId="${targetFolderId}" (type: ${typeof targetFolderId})`)
     } else if (folderId) {
       // Legacy folder ID query
       targetFolderId = folderId === 'root' ? null : folderId
+      console.log(`⚙️ Using legacy folderId: targetFolderId="${targetFolderId}" (type: ${typeof targetFolderId})`)
     }
     // If neither is provided, targetFolderId remains null (root folder)
+    console.log(`⚙️ Final targetFolderId before query: "${targetFolderId}" (type: ${typeof targetFolderId})`)
     
     // Build assets query
     const assetsQuery: any = {}
@@ -105,10 +110,11 @@ export async function GET(request: NextRequest) {
       assetsQuery.deletedAt = { $exists: false }
     }
     
-    // Only filter by folderId if we're in a specific folder, otherwise show all assets
-    if (folderPath !== null || folderId !== null) {
+    // Only filter by folderId if we have a resolved target folder, otherwise show all assets
+    if (targetFolderId !== null) {
+      // Keep as string since folderId is stored as string in database
       assetsQuery.folderId = targetFolderId
-      console.log(`API Debug: Filtering by folderId="${targetFolderId}" (folderPath="${folderPath}", folderId="${folderId}")`)
+      console.log(`API Debug: Filtering by string folderId="${targetFolderId}" (folderPath="${folderPath}", folderId="${folderId}")`)
     } else {
       console.log(`API Debug: No folder filtering - showing ALL assets (folderPath="${folderPath}", folderId="${folderId}")`)
     }
@@ -125,17 +131,12 @@ export async function GET(request: NextRequest) {
       assetsQuery.tags = { $in: tagArray }
     }
     
-    // Build folders query
+    // Build folders query - always fetch ALL folders to build complete tree
     const foldersQuery: any = {}
-    // Only filter by parentId if we're in a specific folder, otherwise show root-level folders
-    if (folderPath !== null || folderId !== null) {
-      foldersQuery.parentId = targetFolderId
-      console.log(`API Debug: Filtering folders by parentId="${targetFolderId}"`)
-    } else {
-      // In "All media" view, still only show root-level folders for navigation
-      foldersQuery.parentId = null
-      console.log(`API Debug: Showing root-level folders for navigation`)
-    }
+    console.log(`API Debug: Fetching ALL folders to build complete folder tree`)
+    
+    // Add more debugging for the final query
+    console.log(`🔍 Final assets query:`, JSON.stringify(assetsQuery, null, 2))
     
     // Build sort object
     const sortField = sortBy === 'date' ? 'createdAt' : 
@@ -159,6 +160,45 @@ export async function GET(request: NextRequest) {
         .sort({ name: 1 })
         .toArray()
     ])
+    
+    // Enhanced debugging for missing assets
+    console.log(`📊 Query results: ${assets.length} assets found, ${totalAssets} total matching`)
+    
+    if (targetFolderId && totalAssets === 0) {
+      // If we're querying for a specific folder but got no results, let's debug
+      console.log(`🔍 Debug: No assets found for folderId="${targetFolderId}"`)
+      
+      // Check what assets exist in the collection with their folderIds
+      const allAssetsWithFolderIds = await assetsCollection
+        .find({}, { projection: { _id: 1, filename: 1, folderId: 1 } })
+        .limit(50)
+        .toArray()
+      
+      console.log(`📋 Sample of all assets in collection:`)
+      allAssetsWithFolderIds.forEach(asset => {
+        console.log(`  - ${asset.filename}: folderId="${asset.folderId}" (type: ${typeof asset.folderId})`)
+      })
+      
+      // Check for exact matches
+      const exactMatches = allAssetsWithFolderIds.filter(asset => asset.folderId === targetFolderId)
+      console.log(`🎯 Assets with exact folderId match: ${exactMatches.length}`)
+      exactMatches.forEach(asset => {
+        console.log(`  - MATCH: ${asset.filename}`)
+      })
+      
+      // Deep character analysis for the specific file
+      const mwFile = allAssetsWithFolderIds.find(asset => asset.filename?.includes('MW PDP portrait Guarantee'))
+      if (mwFile) {
+        const stored = mwFile.folderId
+        const queried = targetFolderId
+        console.log(`🔬 Character analysis for MW PDP file:`)
+        console.log(`  Stored:  "${stored}" (length: ${stored?.length})`)
+        console.log(`  Queried: "${queried}" (length: ${queried?.length})`)
+        console.log(`  Equal: ${stored === queried}`)
+        console.log(`  Stored bytes:  ${Array.from(String(stored || '')).map(c => c.charCodeAt(0))}`)
+        console.log(`  Queried bytes: ${Array.from(String(queried || '')).map(c => c.charCodeAt(0))}`)
+      }
+    }
     
     const response: MediaAssetListResponse = {
       success: true,

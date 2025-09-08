@@ -59,27 +59,56 @@ export function normalizeFolderPath(path: string | null): string {
 export function resolvePathToFolderId(path: string | null, folders: MediaFolder[]): string | null {
   const normalizedPath = normalizeFolderPath(path)
   
+  console.log(`🔍 Resolving path: "${path}" -> normalized: "${normalizedPath}"`)
+  console.log(`📁 Available folders:`, folders.map(f => ({ id: f._id, name: f.name, path: f.path, normalized: normalizeFolderPath(f.path) })))
+  
   // Root path
   if (normalizedPath === '/') {
+    console.log(`✅ Root path, returning null`)
     return null
   }
   
-  // Try to find folder with exact normalized path match first
-  let folder = folders.find(f => normalizeFolderPath(f.path) === normalizedPath)
+  // Try multiple matching strategies
+  let folder: MediaFolder | undefined
   
-  // If not found, try backward compatibility matches
-  if (!folder) {
-    // Try without leading slash (for legacy paths like "coconut")
-    const pathWithoutSlash = normalizedPath.substring(1)
-    folder = folders.find(f => f.path === pathWithoutSlash)
-    
-    // If still not found, try adding leading slash to stored paths
-    if (!folder) {
-      folder = folders.find(f => `/${f.path}` === normalizedPath)
-    }
+  // Strategy 1: Exact normalized path match
+  folder = folders.find(f => normalizeFolderPath(f.path) === normalizedPath)
+  if (folder) {
+    console.log(`✅ Found by normalized path match: ${folder._id}`)
+    return folder._id
   }
   
-  return folder?._id || null
+  // Strategy 2: Direct path match (as stored in DB)
+  folder = folders.find(f => f.path === path)
+  if (folder) {
+    console.log(`✅ Found by direct path match: ${folder._id}`)
+    return folder._id
+  }
+  
+  // Strategy 3: Path without leading slash (for legacy paths like "coconut/tiptur")
+  const pathWithoutSlash = normalizedPath.substring(1)
+  folder = folders.find(f => f.path === pathWithoutSlash)
+  if (folder) {
+    console.log(`✅ Found by path without slash: ${folder._id}`)
+    return folder._id
+  }
+  
+  // Strategy 4: Add leading slash to stored paths (for paths stored without /)
+  folder = folders.find(f => `/${f.path}` === normalizedPath)
+  if (folder) {
+    console.log(`✅ Found by adding leading slash to stored path: ${folder._id}`)
+    return folder._id
+  }
+  
+  // Strategy 5: Both paths without leading slashes
+  folder = folders.find(f => f.path.replace(/^\/+/, '') === pathWithoutSlash)
+  if (folder) {
+    console.log(`✅ Found by comparing paths without slashes: ${folder._id}`)
+    return folder._id
+  }
+  
+  console.log(`❌ Folder not found for path: "${path}"`)
+  return null
 }
 
 /**

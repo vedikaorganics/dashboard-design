@@ -12,7 +12,7 @@ const mux = new Mux({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { filename, folderId, alt, caption, tags, fileSize } = body
+    const { filename, folderPath, folderId, alt, caption, tags, fileSize } = body
     
 
     if (!filename) {
@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
         // Store metadata that we'll need later
         passthrough: JSON.stringify({
           filename,
-          folderId: folderId || null,
+          folderPath: folderPath || null,
+          folderId: folderId || null, // Keep for backward compatibility
           alt: alt || '',
           caption: caption || '',
           tags: tags || [],

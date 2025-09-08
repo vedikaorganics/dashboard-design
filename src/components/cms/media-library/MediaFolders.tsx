@@ -20,72 +20,38 @@ export function MediaFolders({
   onFolderSelect,
   compact = false
 }: MediaFoldersProps) {
-  // Build folder tree structure
-  const buildFolderTree = (folders: MediaFolder[]): FolderNode[] => {
-    const folderMap = new Map<string, FolderNode>()
-    const rootFolders: FolderNode[] = []
 
-    // Create nodes
-    folders.forEach(folder => {
-      folderMap.set(folder._id, {
-        ...folder,
-        children: [],
-        level: 0
-      })
-    })
-
-    // Build tree
-    folders.forEach(folder => {
-      const node = folderMap.get(folder._id)!
+  // Filter folders to show only direct children of current folder
+  const getDisplayFolders = (): MediaFolder[] => {
+    if (currentFolderPath === '/') {
+      // At root: show only root-level folders
+      return folders.filter(folder => !folder.parentId)
+    } else {
+      // Inside a folder: find current folder and show its direct children only
+      const currentFolder = folders.find(f => normalizeFolderPath(f.path) === currentFolderPath)
+      if (!currentFolder) return []
       
-      if (folder.parentId) {
-        const parent = folderMap.get(folder.parentId)
-        if (parent) {
-          parent.children.push(node)
-          node.level = parent.level + 1
-        }
-      } else {
-        rootFolders.push(node)
-      }
-    })
-
-    return rootFolders.sort((a, b) => a.name.localeCompare(b.name))
+      // Return direct children only
+      return folders.filter(folder => folder.parentId === currentFolder._id)
+    }
   }
 
-  const folderTree = buildFolderTree(folders)
+  const displayFolders = getDisplayFolders()
 
-  const renderFolder = (folder: FolderNode) => {
+  const renderFolder = (folder: MediaFolder) => {
     const folderPath = normalizeFolderPath(folder.path)
     const isSelected = folderPath === currentFolderPath
-    const hasChildren = folder.children.length > 0
 
     return (
-      <div key={folder._id}>
-        <Button
-          variant={isSelected ? "secondary" : "ghost"}
-          className={cn(
-            "w-full justify-start h-auto py-2 px-2",
-            `ml-${folder.level * 4}`
-          )}
-          onClick={() => onFolderSelect(folderPath)}
-        >
-          {isSelected && hasChildren ? (
-            <FolderOpen className="w-4 h-4 mr-2 flex-shrink-0" />
-          ) : (
-            <Folder className="w-4 h-4 mr-2 flex-shrink-0" />
-          )}
-          <span className="truncate text-left">{folder.name}</span>
-        </Button>
-        
-        {hasChildren && (
-          <div className="ml-2">
-            {folder.children
-              .sort((a, b) => a.name.localeCompare(b.name))
-              .map(renderFolder)
-            }
-          </div>
-        )}
-      </div>
+      <Button
+        key={folder._id}
+        variant={isSelected ? "secondary" : "ghost"}
+        className="w-full justify-start h-auto py-2 px-2"
+        onClick={() => onFolderSelect(folderPath)}
+      >
+        <Folder className="w-4 h-4 mr-2 flex-shrink-0" />
+        <span className="truncate text-left">{folder.name}</span>
+      </Button>
     )
   }
 
@@ -119,14 +85,12 @@ export function MediaFolders({
 
         {/* Folder list */}
         <div className="space-y-1">
-          {folderTree.map(renderFolder)}
+          {displayFolders
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map(renderFolder)}
         </div>
       </div>
     </div>
   )
 }
 
-interface FolderNode extends MediaFolder {
-  children: FolderNode[]
-  level: number
-}
