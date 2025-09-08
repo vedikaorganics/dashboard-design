@@ -306,6 +306,7 @@ export interface CreateContentRequest {
 
 export interface UpdateContentRequest {
   title?: string
+  slug?: string
   blocks?: ContentBlock[]
   seo?: SEOMetadata
   status?: "draft" | "published" | "archived"
