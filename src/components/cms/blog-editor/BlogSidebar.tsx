@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect, useCallback } from 'react'
 import { Tag, User, Image, Settings, Lock, ExternalLink } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -27,6 +28,27 @@ export function BlogSidebar({
   onUpdate,
   className
 }: BlogSidebarProps) {
+  // Local state for text inputs to prevent glitching
+  // Initialize once from content, then keep as source of truth
+  const [localAuthor, setLocalAuthor] = useState(content.blogAuthor || '')
+  const [localTags, setLocalTags] = useState(content.blogTags?.join(', ') || '')
+  const [localExcerpt, setLocalExcerpt] = useState(content.blogExcerpt || '')
+  const [localSeoTitle, setLocalSeoTitle] = useState(content.seo?.title || '')
+  const [localSeoDescription, setLocalSeoDescription] = useState(content.seo?.description || '')
+
+  // Debounced update function
+  const debouncedUpdate = useCallback(
+    (() => {
+      let timeoutId: NodeJS.Timeout
+      return (updates: Partial<CMSContent>, delay: number = 500) => {
+        clearTimeout(timeoutId)
+        timeoutId = setTimeout(() => {
+          onUpdate(updates)
+        }, delay)
+      }
+    })(),
+    [onUpdate]
+  )
 
   const generateSlug = (title: string) => {
     return title
@@ -59,9 +81,15 @@ export function BlogSidebar({
     onUpdate({ blogFeaturedImage: value?.url || '' })
   }
 
+  const handleAuthorChange = (newAuthor: string) => {
+    setLocalAuthor(newAuthor)
+    debouncedUpdate({ blogAuthor: newAuthor })
+  }
+
   const handleTagsChange = (tagsString: string) => {
+    setLocalTags(tagsString)
     const tags = tagsString.split(',').map(tag => tag.trim()).filter(Boolean)
-    onUpdate({ 
+    debouncedUpdate({ 
       blogTags: tags,
       seo: {
         ...content.seo,
@@ -71,11 +99,32 @@ export function BlogSidebar({
   }
 
   const handleExcerptChange = (excerpt: string) => {
-    onUpdate({ 
+    setLocalExcerpt(excerpt)
+    debouncedUpdate({ 
       blogExcerpt: excerpt,
       seo: {
         ...content.seo,
         description: excerpt
+      }
+    })
+  }
+
+  const handleSeoTitleChange = (title: string) => {
+    setLocalSeoTitle(title)
+    debouncedUpdate({
+      seo: {
+        ...content.seo,
+        title: title
+      }
+    })
+  }
+
+  const handleSeoDescriptionChange = (description: string) => {
+    setLocalSeoDescription(description)
+    debouncedUpdate({
+      seo: {
+        ...content.seo,
+        description: description
       }
     })
   }
@@ -172,8 +221,8 @@ export function BlogSidebar({
               <Label className="text-xs font-medium">Author</Label>
               <Input
                 placeholder="Author name"
-                value={content.blogAuthor || ''}
-                onChange={(e) => onUpdate({ blogAuthor: e.target.value })}
+                value={localAuthor}
+                onChange={(e) => handleAuthorChange(e.target.value)}
                 className="h-8"
               />
             </div>
@@ -183,7 +232,7 @@ export function BlogSidebar({
               <Label className="text-xs font-medium">Tags</Label>
               <Input
                 placeholder="health, organic, wellness"
-                value={content.blogTags?.join(', ') || ''}
+                value={localTags}
                 onChange={(e) => handleTagsChange(e.target.value)}
                 className="h-8"
               />
@@ -219,7 +268,7 @@ export function BlogSidebar({
             <Textarea
               placeholder="Brief description for preview cards and SEO"
               rows={3}
-              value={content.blogExcerpt || ''}
+              value={localExcerpt}
               onChange={(e) => handleExcerptChange(e.target.value)}
               className="resize-none"
             />
@@ -238,13 +287,8 @@ export function BlogSidebar({
               <Label className="text-xs font-medium">SEO Title</Label>
               <Input
                 placeholder="SEO optimized title"
-                value={content.seo?.title || ''}
-                onChange={(e) => onUpdate({
-                  seo: {
-                    ...content.seo,
-                    title: e.target.value
-                  }
-                })}
+                value={localSeoTitle}
+                onChange={(e) => handleSeoTitleChange(e.target.value)}
                 className="h-8"
               />
             </div>
@@ -254,17 +298,12 @@ export function BlogSidebar({
               <Textarea
                 placeholder="Description for search engines"
                 rows={2}
-                value={content.seo?.description || ''}
-                onChange={(e) => onUpdate({
-                  seo: {
-                    ...content.seo,
-                    description: e.target.value
-                  }
-                })}
+                value={localSeoDescription}
+                onChange={(e) => handleSeoDescriptionChange(e.target.value)}
                 className="resize-none"
               />
               <div className="text-xs text-muted-foreground">
-                {content.seo?.description?.length || 0}/160 characters
+                {localSeoDescription?.length || 0}/160 characters
               </div>
             </div>
         </div>
