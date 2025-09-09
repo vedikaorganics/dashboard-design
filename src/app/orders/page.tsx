@@ -29,7 +29,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { CheckCircle, Clock, Truck, Package, Ban, ChevronRight, RefreshCw, Edit3, Check, X } from "lucide-react"
+import { CheckCircle, Clock, Truck, Package, Ban, ChevronRight, RefreshCw, Edit3, Check, X, AlertTriangle } from "lucide-react"
 import { useOrders } from "@/hooks/use-data"
 import { DataTable } from "@/components/ui/data-table"
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
@@ -48,14 +48,49 @@ interface AlertMetricProps {
 const AlertMetric = ({ title, count, description, icon: Icon, variant, onClick }: AlertMetricProps) => {
   const isActive = count > 0
   
-  const classes = {
-    container: isActive 
-      ? "bg-destructive/5 border-destructive/20 hover:bg-destructive/10" 
-      : "bg-muted/30 border-border",
-    icon: isActive ? "text-destructive" : "text-muted-foreground",
-    count: isActive ? "text-destructive" : "text-muted-foreground",
-    pulse: isActive ? "animate-pulse" : ""
+  const getVariantClasses = () => {
+    if (!isActive) {
+      return {
+        container: "bg-muted/30 border-border",
+        icon: "text-muted-foreground",
+        count: "text-muted-foreground",
+        pulse: ""
+      }
+    }
+
+    switch (variant) {
+      case 'action':
+        return {
+          container: "bg-warning/10 border-warning/30 hover:bg-warning/20",
+          icon: "text-warning",
+          count: "text-warning",
+          pulse: "animate-pulse"
+        }
+      case 'info':
+        return {
+          container: "bg-info/10 border-info/30 hover:bg-info/20",
+          icon: "text-info",
+          count: "text-info",
+          pulse: ""
+        }
+      case 'warning':
+        return {
+          container: "bg-destructive/10 border-destructive/30 hover:bg-destructive/20",
+          icon: "text-destructive",
+          count: "text-destructive",
+          pulse: "animate-pulse"
+        }
+      default:
+        return {
+          container: "bg-muted/30 border-border hover:bg-muted/50",
+          icon: "text-muted-foreground",
+          count: "text-muted-foreground",
+          pulse: ""
+        }
+    }
   }
+
+  const classes = getVariantClasses()
 
   return (
     <div
@@ -656,6 +691,15 @@ function OrdersPageContent() {
             description="Orders on the way"
             icon={Truck}
             variant="info"
+            onClick={() => handleDeliveryStatusChange(['DISPATCHED'])}
+          />
+          
+          <AlertMetric
+            title="In Transit > 7 days"
+            count={summary.inTransitOld || 0}
+            description="Delayed shipments"
+            icon={AlertTriangle}
+            variant="warning"
             onClick={() => handleDeliveryStatusChange(['DISPATCHED'])}
           />
         </div>
