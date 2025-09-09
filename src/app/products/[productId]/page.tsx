@@ -334,12 +334,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem asChild>
-                          <Link href={`/shop/products/${product.id}`}>
-                            <Eye className="w-4 h-4 mr-2" />
-                            Preview Product Page
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
                           <Link href={`/cms/products/${product.id}`}>
                             <Edit3 className="w-4 h-4 mr-2" />
                             Manage Content
