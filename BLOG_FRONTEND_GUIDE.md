@@ -929,6 +929,163 @@ export function calculateReadTime(text) {
 }
 ```
 
+## Cache Revalidation System
+
+The dashboard automatically triggers cache revalidation on your frontend website whenever blog content changes. This ensures your blog always displays the latest content without manual intervention.
+
+### Frontend Revalidation Endpoint
+
+You need to implement a `/api/revalidateBlog` endpoint on your frontend website to handle revalidation requests from the dashboard.
+
+```javascript
+// pages/api/revalidateBlog.js or app/api/revalidateBlog/route.js
+import { revalidatePath, revalidateTag } from 'next/cache'
+
+export async function POST(request) {
+  try {
+    // Verify authorization (use same key as PAYMENT_SERVER_API_KEY in dashboard)
+    const authHeader = request.headers.get('authorization')
+    const expectedAuth = `Bearer ${process.env.DASHBOARD_API_KEY}`
+    
+    if (authHeader !== expectedAuth) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { slug, authorSlug } = await request.json()
+
+    if (!slug) {
+      return Response.json({ error: 'slug is required' }, { status: 400 })
+    }
+
+    // Revalidate specific blog post page
+    revalidatePath(`/blog/${slug}`)
+    
+    // Revalidate blog listing pages
+    revalidatePath('/blog')
+    
+    // Revalidate author-specific pages if author provided
+    if (authorSlug) {
+      revalidatePath(`/blog/author/${authorSlug}`)
+    }
+    
+    // Revalidate home page if it shows recent blog posts
+    revalidatePath('/')
+    
+    // Alternative: Use tags for more granular control
+    // revalidateTag('blog-posts')
+    // revalidateTag(`blog-author-${authorSlug}`)
+    // revalidateTag(`blog-post-${slug}`)
+
+    console.log(`Revalidated blog paths for: ${slug}`)
+
+    return Response.json({ 
+      success: true, 
+      revalidated: {
+        slug,
+        authorSlug,
+        paths: [
+          `/blog/${slug}`,
+          '/blog',
+          authorSlug ? `/blog/author/${authorSlug}` : null
+        ].filter(Boolean)
+      }
+    })
+  } catch (error) {
+    console.error('Blog revalidation error:', error)
+    return Response.json({ 
+      error: 'Revalidation failed',
+      details: error.message 
+    }, { status: 500 })
+  }
+}
+```
+
+### Environment Configuration
+
+Add the dashboard API key to your frontend's environment variables:
+
+```bash
+# .env.local
+DASHBOARD_API_KEY=your_dashboard_api_key_here
+```
+
+This should match the `PAYMENT_SERVER_API_KEY` value in your dashboard's `.env` file.
+
+### Revalidation Triggers
+
+The dashboard automatically triggers revalidation when:
+
+1. **Blog Created**: When a new blog post is created and published
+2. **Blog Updated**: When an existing blog post is modified and is published
+3. **Blog Published**: When a draft blog post is published
+4. **Blog Unpublished**: When a published blog post is unpublished
+
+### Advanced Revalidation with Tags
+
+For more sophisticated caching, use Next.js cache tags:
+
+```javascript
+// In your blog fetching functions
+export const fetchBlogPosts = cache(async (options = {}) => {
+  const response = await fetch('/api/cms/content?type=blog&status=published', {
+    next: { 
+      tags: ['blog-posts', `blog-author-${options.author || 'all'}`],
+      revalidate: 300 // 5 minutes fallback
+    }
+  })
+  // ... rest of implementation
+}, ['blog-posts'])
+
+export const fetchBlogPost = cache(async (slug) => {
+  const response = await fetch(`/api/cms/content/${slug}`, {
+    next: { 
+      tags: ['blog-posts', `blog-post-${slug}`],
+      revalidate: 3600 // 1 hour fallback
+    }
+  })
+  // ... rest of implementation
+}, ['blog-post'])
+```
+
+Then update your revalidation endpoint:
+
+```javascript
+// More granular revalidation using tags
+revalidateTag('blog-posts') // Revalidates all blog listings
+revalidateTag(`blog-post-${slug}`) // Revalidates specific post
+if (authorSlug) {
+  revalidateTag(`blog-author-${authorSlug}`) // Revalidates author listings
+}
+```
+
+### Testing Revalidation
+
+To test the revalidation system:
+
+1. Create or update a blog post in the dashboard
+2. Check the dashboard logs for revalidation success/failure
+3. Verify the frontend shows updated content immediately
+4. Monitor your frontend logs for revalidation requests
+
+### Troubleshooting
+
+**Common Issues:**
+
+1. **401 Unauthorized**: Check that `DASHBOARD_API_KEY` matches `PAYMENT_SERVER_API_KEY`
+2. **Network Errors**: Ensure `NEXT_PUBLIC_PAYMENT_SERVER_URL` points to your frontend URL
+3. **Partial Revalidation**: Add more specific paths based on your blog structure
+
+**Debug Revalidation:**
+
+```javascript
+// Add logging to your revalidation endpoint
+console.log('Revalidation request:', { slug, authorSlug })
+console.log('Revalidating paths:', paths)
+
+// Check revalidation in dashboard logs
+// Look for: "Successfully revalidated blog: {slug}" or error messages
+```
+
 ## Notes and Best Practices
 
 1. **SEO Considerations**:
@@ -938,8 +1095,8 @@ export function calculateReadTime(text) {
 
 2. **Performance**:
    - Use Next.js Image component for optimized images
-   - Implement caching for API calls
-   - Consider static generation for better performance
+   - Implement caching for API calls with revalidation tags
+   - Consider static generation with on-demand revalidation
 
 3. **Content Security**:
    - Sanitize HTML content from the CMS
@@ -955,10 +1112,16 @@ export function calculateReadTime(text) {
    - Handle API failures gracefully
    - Provide fallback content when needed
    - Show user-friendly error messages
+   - Implement revalidation error handling
 
 6. **Analytics**:
    - Track blog post views and engagement
    - Monitor search queries and popular categories
    - Use data to improve content strategy
 
-This guide provides a comprehensive foundation for implementing blog functionality on your frontend website. Adapt the code examples to match your specific framework and styling preferences.
+7. **Cache Strategy**:
+   - Use appropriate cache tags for granular revalidation
+   - Set reasonable fallback revalidation times
+   - Monitor cache hit/miss ratios
+
+This guide provides a comprehensive foundation for implementing blog functionality with automatic cache revalidation on your frontend website. Adapt the code examples to match your specific framework and styling preferences.

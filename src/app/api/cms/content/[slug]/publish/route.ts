@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/mongodb'
 import { PublishContentRequest } from '@/types/cms'
 import { getCurrentUserId } from '@/lib/auth-utils'
-import { revalidateProduct } from '@/lib/revalidate'
+import { revalidateProduct, revalidateBlog } from '@/lib/revalidate'
 
 interface Params {
   slug: string
@@ -70,12 +70,17 @@ export async function POST(
     // Return the updated content
     const updatedContent = await collection.findOne({ slug, version: currentContent.version })
     
-    // Revalidate frontend pages if this is product content
+    // Revalidate frontend pages if this is product or blog content
     let revalidationResult = { success: false }
     if (updatedContent?.type === 'product' && updatedContent?.productId) {
       revalidationResult = await revalidateProduct(updatedContent.productId, updatedContent.slug)
       if (!revalidationResult.success) {
         console.warn('Failed to revalidate product pages after publish:', (revalidationResult as any).error || 'Unknown error')
+      }
+    } else if (updatedContent?.type === 'blog' && updatedContent?.status === 'published') {
+      revalidationResult = await revalidateBlog(updatedContent.slug, updatedContent.blogAuthor)
+      if (!revalidationResult.success) {
+        console.warn('Failed to revalidate blog pages after publish:', (revalidationResult as any).error || 'Unknown error')
       }
     }
     
@@ -142,12 +147,18 @@ export async function DELETE(
     // Return the updated content
     const updatedContent = await collection.findOne({ slug, version: currentContent.version })
     
-    // Revalidate frontend pages if this is product content
+    // Revalidate frontend pages if this is product or blog content
     let revalidationResult = { success: false }
     if (updatedContent?.type === 'product' && updatedContent?.productId) {
       revalidationResult = await revalidateProduct(updatedContent.productId, updatedContent.slug)
       if (!revalidationResult.success) {
         console.warn('Failed to revalidate product pages after unpublish:', (revalidationResult as any).error || 'Unknown error')
+      }
+    } else if (updatedContent?.type === 'blog') {
+      // Always revalidate blog on unpublish to remove from listings
+      revalidationResult = await revalidateBlog(updatedContent.slug, updatedContent.blogAuthor)
+      if (!revalidationResult.success) {
+        console.warn('Failed to revalidate blog pages after unpublish:', (revalidationResult as any).error || 'Unknown error')
       }
     }
     

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/mongodb'
 import { CMSContent, UpdateContentRequest, CMSContentResponse } from '@/types/cms'
 import { getCurrentUserId } from '@/lib/auth-utils'
+import { revalidateBlog } from '@/lib/revalidate'
 
 interface Params {
   slug: string
@@ -136,9 +137,19 @@ export async function PUT(
       // Return the updated content
       const updatedContent = await collection.findOne({ slug, version: currentContent.version })
       
+      // Trigger revalidation for published blog posts
+      let revalidationResult = { success: false }
+      if (updatedContent?.type === 'blog' && updatedContent?.status === 'published') {
+        revalidationResult = await revalidateBlog(updatedContent.slug, updatedContent.blogAuthor)
+        if (!revalidationResult.success) {
+          console.warn('Failed to revalidate blog pages after update:', (revalidationResult as any).error || 'Unknown error')
+        }
+      }
+      
       return NextResponse.json({
         success: true,
-        data: updatedContent
+        data: updatedContent,
+        revalidated: revalidationResult.success
       })
     } else {
       // Current version is published - create new draft version
@@ -194,9 +205,19 @@ export async function PUT(
       // Return the new draft content
       const newContent = await collection.findOne({ _id: result.insertedId })
       
+      // Trigger revalidation for published blog posts
+      let revalidationResult = { success: false }
+      if (newContent?.type === 'blog' && newContent?.status === 'published') {
+        revalidationResult = await revalidateBlog(newContent.slug, newContent.blogAuthor)
+        if (!revalidationResult.success) {
+          console.warn('Failed to revalidate blog pages after update:', (revalidationResult as any).error || 'Unknown error')
+        }
+      }
+      
       return NextResponse.json({
         success: true,
-        data: newContent
+        data: newContent,
+        revalidated: revalidationResult.success
       })
     }
   } catch (error) {
