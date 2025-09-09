@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Settings, ShoppingCart, Users, Star, Target, Package, Gift, UserCheck, FileText, Image as ImageIcon, Layout } from "lucide-react"
+import { Home, Settings, ShoppingCart, Users, Star, Target, Package, Gift, UserCheck, FileText, Image as ImageIcon, Layout, BookOpen } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import {
@@ -82,6 +82,12 @@ const cmsItems = [
     title: "Products",
     url: "/cms/products",
     icon: Package,
+    roles: ["admin", "member"], // Both roles can access
+  },
+  {
+    title: "Blog",
+    url: "/cms/blog",
+    icon: BookOpen,
     roles: ["admin", "member"], // Both roles can access
   },
   {
