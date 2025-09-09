@@ -406,7 +406,7 @@ function OrdersPageContent() {
   const [paymentStatusFilter, setPaymentStatusFilter] = useUrlState<string[]>("paymentStatus", [])
   const [deliveryStatusFilter, setDeliveryStatusFilter] = useUrlState<string[]>("deliveryStatus", [])
   const { page, pageSize, pageIndex, setPagination } = useUrlPagination(10)
-  const { clearAll } = useUrlStateMultiple()
+  const { clearAll, setMultiple } = useUrlStateMultiple()
   
   const { data: ordersData, isLoading, mutate } = useOrders(
     page, 
@@ -682,7 +682,10 @@ function OrdersPageContent() {
             description="Orders ready to ship"
             icon={Package}
             variant="action"
-            onClick={() => handleDeliveryStatusChange(['PENDING'])}
+            onClick={() => setMultiple({
+              paymentStatus: ['PAID', 'CASH_ON_DELIVERY'],
+              deliveryStatus: ['PENDING']
+            })}
           />
           
           <AlertMetric
