@@ -116,3 +116,53 @@ export async function revalidateVariant(productId: string, variantId: string, pr
   // For variants, we still revalidate the product since variants are part of the product page
   return revalidateProduct(productId, productSlug)
 }
+
+/**
+ * Revalidate blog-related pages
+ */
+export async function revalidateBlog(slug: string, authorSlug?: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_PAYMENT_SERVER_URL
+
+  if (!baseUrl) {
+    console.error('NEXT_PUBLIC_PAYMENT_SERVER_URL not configured')
+    return { success: false, error: 'Base URL not configured' }
+  }
+
+  const revalidateSecret = process.env.PAYMENT_SERVER_API_KEY
+
+  try {
+    const revalidateUrl = new URL('/api/revalidateBlog', baseUrl)
+    
+    const response = await fetch(revalidateUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(revalidateSecret && { 'Authorization': `Bearer ${revalidateSecret}` })
+      },
+      body: JSON.stringify({ 
+        slug,
+        authorSlug 
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to revalidate blog ${slug}: ${response.statusText}`)
+    }
+
+    console.log(`Successfully revalidated blog: ${slug}`)
+
+    return {
+      success: true,
+      slug,
+      authorSlug,
+      results: [{ slug, success: true }]
+    }
+  } catch (error) {
+    console.error('Blog revalidation error:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error',
+      slug 
+    }
+  }
+}

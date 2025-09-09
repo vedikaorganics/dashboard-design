@@ -3,6 +3,7 @@ import { getDatabase } from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
 import { CMSContent, CreateContentRequest, CMSContentListResponse } from '@/types/cms'
 import { getCurrentUserId } from '@/lib/auth-utils'
+import { revalidateBlog } from '@/lib/revalidate'
 
 // GET /api/cms/content - List all content with pagination and filtering
 export async function GET(request: NextRequest) {
@@ -185,9 +186,19 @@ export async function POST(request: NextRequest) {
     
     const createdContent = await collection.findOne({ _id: result.insertedId })
     
+    // Trigger revalidation for blog posts
+    let revalidationResult = { success: false }
+    if (createdContent?.type === 'blog' && createdContent?.status === 'published') {
+      revalidationResult = await revalidateBlog(createdContent.slug, createdContent.blogAuthor)
+      if (!revalidationResult.success) {
+        console.warn('Failed to revalidate blog pages after creation:', (revalidationResult as any).error || 'Unknown error')
+      }
+    }
+    
     return NextResponse.json({
       success: true,
-      data: createdContent
+      data: createdContent,
+      revalidated: revalidationResult.success
     })
   } catch (error) {
     console.error('Failed to create CMS content:', error)
