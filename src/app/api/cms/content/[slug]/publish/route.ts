@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/mongodb'
 import { PublishContentRequest } from '@/types/cms'
 import { getCurrentUserId } from '@/lib/auth-utils'
+import { revalidateProduct } from '@/lib/revalidate'
 
 interface Params {
   slug: string
@@ -69,10 +70,20 @@ export async function POST(
     // Return the updated content
     const updatedContent = await collection.findOne({ slug, version: currentContent.version })
     
+    // Revalidate frontend pages if this is product content
+    let revalidationResult = { success: false }
+    if (updatedContent?.type === 'product' && updatedContent?.productId) {
+      revalidationResult = await revalidateProduct(updatedContent.productId, updatedContent.slug)
+      if (!revalidationResult.success) {
+        console.warn('Failed to revalidate product pages after publish:', (revalidationResult as any).error || 'Unknown error')
+      }
+    }
+    
     return NextResponse.json({
       success: true,
       data: updatedContent,
-      message: publishAt > now ? 'Content scheduled for publishing' : 'Content published successfully'
+      message: publishAt > now ? 'Content scheduled for publishing' : 'Content published successfully',
+      revalidated: revalidationResult.success
     })
   } catch (error) {
     console.error('Failed to publish CMS content:', error)
@@ -131,10 +142,20 @@ export async function DELETE(
     // Return the updated content
     const updatedContent = await collection.findOne({ slug, version: currentContent.version })
     
+    // Revalidate frontend pages if this is product content
+    let revalidationResult = { success: false }
+    if (updatedContent?.type === 'product' && updatedContent?.productId) {
+      revalidationResult = await revalidateProduct(updatedContent.productId, updatedContent.slug)
+      if (!revalidationResult.success) {
+        console.warn('Failed to revalidate product pages after unpublish:', (revalidationResult as any).error || 'Unknown error')
+      }
+    }
+    
     return NextResponse.json({
       success: true,
       data: updatedContent,
-      message: 'Content unpublished successfully'
+      message: 'Content unpublished successfully',
+      revalidated: revalidationResult.success
     })
   } catch (error) {
     console.error('Failed to unpublish CMS content:', error)
