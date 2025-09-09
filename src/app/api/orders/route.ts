@@ -121,7 +121,21 @@ export async function GET(request: NextRequest) {
                     }
                   },
                   inTransit: {
-                    $sum: { $cond: [{ $eq: ['$deliveryStatus', 'SHIPPED'] }, 1, 0] }
+                    $sum: { $cond: [{ $eq: ['$deliveryStatus', 'DISPATCHED'] }, 1, 0] }
+                  },
+                  inTransitOld: {
+                    $sum: {
+                      $cond: [
+                        {
+                          $and: [
+                            { $eq: ['$deliveryStatus', 'DISPATCHED'] },
+                            { $lt: ['$createdAt', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)] }
+                          ]
+                        },
+                        1,
+                        0
+                      ]
+                    }
                   }
                 }
               }
@@ -138,7 +152,8 @@ export async function GET(request: NextRequest) {
     const summaryData = result.summary[0] || {
       paymentPending: 0,
       shippingPending: 0,
-      inTransit: 0
+      inTransit: 0,
+      inTransitOld: 0
     }
 
     const finalResult = {
@@ -154,7 +169,8 @@ export async function GET(request: NextRequest) {
       summary: {
         paymentPending: summaryData.paymentPending,
         shippingPending: summaryData.shippingPending,
-        inTransit: summaryData.inTransit
+        inTransit: summaryData.inTransit,
+        inTransitOld: summaryData.inTransitOld
       }
     }
 
