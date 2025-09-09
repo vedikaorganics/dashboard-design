@@ -337,24 +337,28 @@ const EditableUserNotes = ({ order, onNotesUpdate }: {
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <div className="cursor-pointer w-full max-w-[240px] group">
-          <div className="flex items-center gap-1">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className={`text-sm block truncate flex-1 ${originalNotes ? 'text-primary' : 'text-muted-foreground'}`}>
-                    {originalNotes || '-'}
-                  </span>
-                </TooltipTrigger>
-                {originalNotes && (
-                  <TooltipContent side="top" className="max-w-80">
-                    <p className="whitespace-pre-wrap">{originalNotes}</p>
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            </TooltipProvider>
-            <Edit3 className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
+        <div className="cursor-pointer w-full max-w-[320px] group">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="relative">
+                  <div className="text-xs leading-tight pr-6 break-words whitespace-normal">
+                    {originalNotes ? (
+                      originalNotes
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </div>
+                  <Edit3 className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity absolute top-0.5 right-0" />
+                </div>
+              </TooltipTrigger>
+              {originalNotes && (
+                <TooltipContent side="top" className="max-w-80">
+                  <p className="whitespace-pre-wrap text-sm">{originalNotes}</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-80" align="start">
@@ -612,8 +616,8 @@ function OrdersPageContent() {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Notes" />
       ),
-      size: 280, // Double the space for notes
-      minSize: 200,
+      size: 350, // Increased width for better notes readability
+      minSize: 250,
       cell: ({ row }) => {
         const order = row.original
         return (
