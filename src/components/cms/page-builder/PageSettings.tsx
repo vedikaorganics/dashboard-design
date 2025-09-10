@@ -16,9 +16,10 @@ interface PageSettingsProps {
   content: CMSContent
   onUpdate: (updates: Partial<CMSContent>) => void
   onClose: () => void
+  restrictToPageType?: boolean // When true, only show page-related content types
 }
 
-export function PageSettings({ content, onUpdate, onClose }: PageSettingsProps) {
+export function PageSettings({ content, onUpdate, onClose, restrictToPageType = false }: PageSettingsProps) {
   const [activeTab, setActiveTab] = useState('general')
 
   const updateSEO = (updates: any) => {
@@ -74,22 +75,25 @@ export function PageSettings({ content, onUpdate, onClose }: PageSettingsProps) 
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="type">Content Type</Label>
-                <Select
-                  value={content.type}
-                  onValueChange={(value) => onUpdate({ type: value as any })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="page">Static Page</SelectItem>
-                    <SelectItem value="product">Product Page</SelectItem>
-                    <SelectItem value="section">Page Section</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {!restrictToPageType && (
+                <div className="space-y-2">
+                  <Label htmlFor="type">Content Type</Label>
+                  <Select
+                    value={content.type}
+                    onValueChange={(value) => onUpdate({ type: value as any })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="page">Static Page</SelectItem>
+                      <SelectItem value="product">Product Page</SelectItem>
+                      <SelectItem value="blog">Blog Post</SelectItem>
+                      <SelectItem value="section">Page Section</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
 
             <Separator />

@@ -96,6 +96,7 @@ export default function CMSPageEditPage({ params }: CMSPageEditPageProps) {
         onPublish={handlePublish}
         onUnpublish={handleUnpublish}
         isLoading={isLoading}
+        restrictToPageType={true}
       />
     </div>
   )

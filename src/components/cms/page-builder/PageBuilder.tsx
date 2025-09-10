@@ -20,6 +20,7 @@ interface PageBuilderProps {
   onUnpublish?: () => Promise<void>
   isLoading?: boolean
   className?: string
+  restrictToPageType?: boolean // When true, restrict content type options to pages only
 }
 
 export function PageBuilder({
@@ -29,7 +30,8 @@ export function PageBuilder({
   onPublish,
   onUnpublish,
   isLoading = false,
-  className
+  className,
+  restrictToPageType = false
 }: PageBuilderProps) {
   const [showPreview, setShowPreview] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -237,6 +239,7 @@ export function PageBuilder({
               content={content}
               onUpdate={onUpdate}
               onClose={() => setShowSettings(false)}
+              restrictToPageType={restrictToPageType}
             />
           </div>
         )}

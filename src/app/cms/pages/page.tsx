@@ -49,7 +49,7 @@ export default function CMSPagesPage() {
   } = useCMSContent({
     search: search || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter,
-    type: 'page', // Only show pages in this interface
+    type: 'page', // Only show static/general pages (not products or blog)
     pageType: pageTypeFilter === 'all' ? undefined : pageTypeFilter
   })
 
