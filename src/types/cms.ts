@@ -403,9 +403,9 @@ export interface PredefinedPage {
 
 export const PREDEFINED_PAGES: PredefinedPage[] = [
   {
-    slug: 'home',
+    slug: '', // Homepage uses empty slug for root URL
     title: 'Home Page',
-    description: 'Main landing page of the website',
+    description: 'Main landing page of the website (root URL)',
     requiredSEO: {
       title: 'Welcome to Vedika Organics',
       description: 'Premium organic products for a healthier lifestyle'

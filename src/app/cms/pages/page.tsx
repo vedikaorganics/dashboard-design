@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Plus, Search, Filter, Eye, Edit, Trash2, MoreHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -34,6 +35,7 @@ import { CMSContent, PREDEFINED_PAGES } from '@/types/cms'
 import { toast } from 'sonner'
 
 export default function CMSPagesPage() {
+  const router = useRouter()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [pageTypeFilter, setPageTypeFilter] = useState('all')
@@ -45,7 +47,8 @@ export default function CMSPagesPage() {
     error,
     deleteContent,
     publishContent,
-    unpublishContent
+    unpublishContent,
+    createContent
   } = useCMSContent({
     search: search || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter,
@@ -75,6 +78,33 @@ export default function CMSPagesPage() {
     const success = await unpublishContent(slug)
     if (success) {
       toast.success(`"${title}" unpublished successfully`)
+    }
+  }
+
+  const handleCreatePredefinedPage = async (predefinedPage: typeof PREDEFINED_PAGES[0]) => {
+    try {
+      const newPage = await createContent({
+        title: predefinedPage.title,
+        slug: predefinedPage.slug,
+        type: 'page',
+        seo: {
+          title: predefinedPage.requiredSEO?.title || predefinedPage.title,
+          description: predefinedPage.requiredSEO?.description || '',
+          keywords: [],
+          noIndex: predefinedPage.requiredSEO?.noIndex || false
+        },
+        blocks: predefinedPage.defaultBlocks || []
+      })
+
+      if (newPage) {
+        toast.success(`"${predefinedPage.title}" created successfully`)
+        // Navigate to edit the newly created page
+        const routeSlug = newPage.slug || 'home'
+        router.push(`/cms/pages/${routeSlug}`)
+      }
+    } catch (error) {
+      toast.error(`Failed to create "${predefinedPage.title}"`)
+      console.error('Error creating predefined page:', error)
     }
   }
 
@@ -180,11 +210,15 @@ export default function CMSPagesPage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 {missingPredefinedPages.map((predefinedPage) => (
-                  <Link key={predefinedPage.slug} href={`/cms/pages/new?predefined=${predefinedPage.slug}`}>
-                    <Button size="sm" variant="outline" className="text-xs">
-                      {predefinedPage.title}
-                    </Button>
-                  </Link>
+                  <Button 
+                    key={predefinedPage.slug || 'home'} 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-xs"
+                    onClick={() => handleCreatePredefinedPage(predefinedPage)}
+                  >
+                    {predefinedPage.title}
+                  </Button>
                 ))}
               </div>
             </div>
@@ -242,13 +276,13 @@ export default function CMSPagesPage() {
                       <TableCell>
                         <div>
                           <Link 
-                            href={`/cms/pages/${page.slug}`}
+                            href={`/cms/pages/${page.slug || 'home'}`}
                             className="font-medium hover:underline"
                           >
                             {page.title}
                           </Link>
                           <div className="text-xs text-muted-foreground">
-                            /{page.slug}
+                            {page.slug ? `/${page.slug}` : '/ (Homepage)'}
                           </div>
                         </div>
                       </TableCell>
@@ -279,13 +313,13 @@ export default function CMSPagesPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem asChild>
-                              <Link href={`/cms/pages/${page.slug}`}>
+                              <Link href={`/cms/pages/${page.slug || 'home'}`}>
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => window.open(`/preview/${page.slug}`, '_blank')}
+                              onClick={() => window.open(`/preview/${page.slug || ''}`, '_blank')}
                             >
                               <Eye className="w-4 h-4 mr-2" />
                               Preview

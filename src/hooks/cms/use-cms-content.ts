@@ -242,7 +242,9 @@ export function useCMSContentItem(slug: string) {
       setIsLoading(true)
       setError(null)
 
-      const response = await fetch(`/api/cms/content/${slug}`)
+      // Use special placeholder for empty slug (homepage) to avoid routing issues
+      const apiSlug = slug === '' ? '__home__' : slug
+      const response = await fetch(`/api/cms/content/${apiSlug}`)
       const result: CMSContentResponse = await response.json()
 
       if (result.success && result.data) {
@@ -260,7 +262,9 @@ export function useCMSContentItem(slug: string) {
 
   const updateContent = useCallback(async (data: UpdateContentRequest): Promise<CMSContent | null> => {
     try {
-      const response = await fetch(`/api/cms/content/${slug}`, {
+      // Use special placeholder for empty slug (homepage) to avoid routing issues
+      const apiSlug = slug === '' ? '__home__' : slug
+      const response = await fetch(`/api/cms/content/${apiSlug}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -283,7 +287,8 @@ export function useCMSContentItem(slug: string) {
   }, [slug])
 
   useEffect(() => {
-    if (slug) {
+    // Allow empty slug for homepage
+    if (slug !== undefined && slug !== null) {
       fetchContent()
     }
   }, [slug, fetchContent])

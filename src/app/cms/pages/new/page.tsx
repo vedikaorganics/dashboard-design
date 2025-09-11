@@ -26,6 +26,7 @@ export default function NewCMSPagePage() {
     seoDescription: ''
   })
 
+
   // Auto-generate slug from title
   const handleTitleChange = (title: string) => {
     setFormData(prev => ({

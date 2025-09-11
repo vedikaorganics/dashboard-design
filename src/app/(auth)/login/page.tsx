@@ -15,12 +15,18 @@ import { useTheme } from "next-themes"
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const { session } = useAuth()
   const { theme } = useTheme()
   
-  // Determine which logo to use based on theme
-  const logoSrc = theme === "dark" ? "/vedika-logo-dark.png" : "/vedika-logo-light.png"
+  // Determine which logo to use based on theme (only after mounting)
+  const logoSrc = mounted && theme === "dark" ? "/vedika-logo-dark.png" : "/vedika-logo-light.png"
+
+  // Track when component has mounted on client to avoid hydration issues
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Redirect if already authenticated
   useEffect(() => {
