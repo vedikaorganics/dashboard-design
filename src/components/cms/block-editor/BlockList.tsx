@@ -11,7 +11,8 @@ import {
   HelpCircle,
   Megaphone,
   Grid,
-  Minus
+  Minus,
+  Monitor
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ContentBlock } from '@/types/cms'
@@ -33,6 +34,14 @@ interface BlockDefinition {
 
 const blockDefinitions: BlockDefinition[] = [
   // Content blocks
+  {
+    type: 'hero-section',
+    name: 'Hero Section',
+    description: 'Large hero section with image/video background, heading, text, and CTA button',
+    icon: <Monitor className="w-5 h-5" />,
+    category: 'content',
+    popular: true
+  },
   {
     type: 'video-cta',
     name: 'Video CTA Section',

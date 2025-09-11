@@ -6,6 +6,28 @@ export const blockRegistry: Record<string, BlockDefinition> = {}
 // Default content for each block type
 export function getDefaultBlockContent(type: ContentBlock['type']): BlockContent {
   switch (type) {
+    case 'hero-section':
+      return {
+        media: {
+          type: 'image',
+          mobile: { url: '', assetId: undefined, filename: undefined, dimensions: undefined },
+          desktop: { url: '', assetId: undefined, filename: undefined, dimensions: undefined }
+        },
+        heading: 'Your Hero Heading',
+        description: 'Add your compelling hero description here.',
+        cta: {
+          text: 'Get Started',
+          url: '',
+          style: 'primary'
+        },
+        overlay: {
+          enabled: true,
+          opacity: 0.4
+        },
+        alignment: 'center',
+        height: 'large'
+      } as any
+
     case 'video-cta':
       return {
         video: {
@@ -176,6 +198,13 @@ export function validateBlockContent(type: string, content: BlockContent): boole
         return true // No required fields for product grid
       case 'faq':
         return Array.isArray((content as any).faqs) && (content as any).faqs.length > 0
+      case 'hero-section':
+        const heroContent = content as any
+        return Boolean(
+          (heroContent.media?.mobile || heroContent.media) && 
+          heroContent.heading &&
+          heroContent.description
+        )
       case 'custom-html':
         return Boolean((content as any).html)
       default:
