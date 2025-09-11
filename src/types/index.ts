@@ -81,20 +81,6 @@ export interface Order {
   updatedAt: string;
 }
 
-export interface ProductSection {
-  id: string;
-  type: 'image' | 'text';
-  order: number;
-  desktopUrl?: string;
-  mobileUrl?: string;
-  alt?: string;
-  caption?: string;
-  heading?: string;
-  body?: string;
-  images?: any[];
-  items?: any[];
-}
-
 export interface Product {
   _id: string;
   id: string;
@@ -103,7 +89,6 @@ export interface Product {
   colorHex: string;
   bulletPoints: string[];
   mainVariant: string;
-  sections: ProductSection[];
   badges: string[];
   tags: string[];
   stock?: number;
