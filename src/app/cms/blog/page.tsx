@@ -175,12 +175,20 @@ export default function CMSBlogPage() {
               </SelectContent>
             </Select>
           </div>
-          <Link href="/cms/blog/new">
-            <Button className="w-full md:w-auto">
-              <Plus className="w-4 h-4 mr-2" />
-              New Blog Post
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/cms/blog/authors">
+              <Button variant="outline" className="w-full md:w-auto">
+                <User className="w-4 h-4 mr-2" />
+                Manage Authors
+              </Button>
+            </Link>
+            <Link href="/cms/blog/new">
+              <Button className="w-full md:w-auto">
+                <Plus className="w-4 h-4 mr-2" />
+                New Blog Post
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Content */}

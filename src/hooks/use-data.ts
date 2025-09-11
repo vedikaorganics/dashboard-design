@@ -236,6 +236,59 @@ export function useStaff(page = 1, limit = 50) {
   return useData(`/api/staff?${params}`, cacheKey, 900) // 15 minutes refresh
 }
 
+// Authors with pagination and filtering
+export function useAuthors(
+  page = 1, 
+  limit = 50,
+  search?: string,
+  status?: string,
+  featured?: boolean,
+  role?: string,
+  sort = 'createdAt',
+  order = 'desc'
+) {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    sort,
+    order,
+    ...(search && search.trim() && { search: search.trim() }),
+    ...(status && { status }),
+    ...(featured !== undefined && { featured: featured.toString() }),
+    ...(role && { role })
+  })
+  
+  // Create cache key that includes all filter parameters
+  const filterParams = {
+    search: search || '',
+    status: status || 'all',
+    featured: featured !== undefined ? featured.toString() : 'all',
+    role: role || 'all',
+    sort,
+    order
+  }
+  const cacheKey = `authors-${page}-${limit}-${JSON.stringify(filterParams)}`
+  
+  return useData(`/api/cms/authors?${params}`, cacheKey, 300) // 5 minutes refresh
+}
+
+// Individual author details
+export function useAuthor(slug: string) {
+  const cacheKey = `author-${slug}`
+  return useData(`/api/cms/authors/${slug}`, cacheKey, 600) // 10 minutes refresh
+}
+
+// Author's posts
+export function useAuthorPosts(slug: string, page = 1, limit = 10) {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString()
+  })
+  
+  const cacheKey = `author-posts-${slug}-${page}-${limit}`
+  return useData(`/api/cms/authors/${slug}/posts?${params}`, cacheKey, 300) // 5 minutes refresh
+}
+
 // Utility hook for manual cache invalidation
 export function useInvalidateCache() {
   return {

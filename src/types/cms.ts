@@ -9,7 +9,8 @@ export interface CMSContent {
   // Blog-specific fields
   blogCategory?: string // For blogs: category slug
   blogTags?: string[] // For blogs: array of tags
-  blogAuthor?: string // For blogs: author name or ID
+  blogAuthor?: string // For blogs: author name or ID (deprecated - use authorSlug)
+  authorSlug?: string // For blogs: reference to author by slug
   blogFeaturedImage?: string // For blogs: featured image URL
   blogExcerpt?: string // For blogs: short description/summary
   blogReadTime?: number // For blogs: estimated read time in minutes
@@ -316,7 +317,8 @@ export interface CreateContentRequest {
   // Blog-specific fields
   blogCategory?: string
   blogTags?: string[]
-  blogAuthor?: string
+  blogAuthor?: string // Deprecated - use authorSlug
+  authorSlug?: string
   blogFeaturedImage?: string
   blogExcerpt?: string
   title: string
@@ -337,7 +339,8 @@ export interface UpdateContentRequest {
   // Blog-specific fields
   blogCategory?: string
   blogTags?: string[]
-  blogAuthor?: string
+  blogAuthor?: string // Deprecated - use authorSlug
+  authorSlug?: string
   blogFeaturedImage?: string
   blogExcerpt?: string
 }
