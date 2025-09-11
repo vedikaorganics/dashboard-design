@@ -58,8 +58,6 @@ export async function GET(
         acc[variant.type] = (acc[variant.type] || 0) + 1
         return acc
       }, {} as Record<string, number>),
-      // Add content section count
-      totalSections: product.sections?.length || 0,
     }
 
 
