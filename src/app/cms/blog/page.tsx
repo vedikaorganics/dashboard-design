@@ -120,6 +120,11 @@ export default function CMSBlogPage() {
     }).format(new Date(date))
   }
 
+  const getAuthorDisplayName = (post: CMSContent) => {
+    // Prefer authorSlug (new system) over blogAuthor (legacy)
+    return post.authorSlug || post.blogAuthor || 'Unknown'
+  }
+
   if (error) {
     return (
       <DashboardLayout title="Blog Posts">
@@ -264,7 +269,7 @@ export default function CMSBlogPage() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <User className="w-3 h-3 text-muted-foreground" />
-                          <span className="text-sm">{post.blogAuthor || 'Unknown'}</span>
+                          <span className="text-sm">{getAuthorDisplayName(post)}</span>
                         </div>
                       </TableCell>
                       <TableCell>

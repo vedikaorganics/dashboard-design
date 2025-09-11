@@ -65,7 +65,8 @@ export default function BlogEditorPage({ params }: BlogEditorPageProps) {
         blocks: updatedBlocks, // Use the latest editor content
         blogCategory: localContent.blogCategory,
         blogTags: localContent.blogTags,
-        blogAuthor: localContent.blogAuthor,
+        blogAuthor: localContent.blogAuthor, // Keep for backward compatibility
+        authorSlug: localContent.authorSlug, // New field for author references
         blogFeaturedImage: localContent.blogFeaturedImage,
         blogExcerpt: localContent.blogExcerpt,
         seo: localContent.seo,
@@ -110,6 +111,13 @@ export default function BlogEditorPage({ params }: BlogEditorPageProps) {
       default:
         return <Badge variant="outline">Unknown</Badge>
     }
+  }
+
+  const getAuthorDisplayName = () => {
+    if (!localContent) return 'Unknown'
+    // Prefer authorSlug (new system) over blogAuthor (legacy)
+    // For now, we'll show the slug if available, otherwise fall back to blogAuthor
+    return localContent.authorSlug || localContent.blogAuthor || 'Unknown'
   }
 
   if (isLoading) {
@@ -169,7 +177,7 @@ export default function BlogEditorPage({ params }: BlogEditorPageProps) {
                 {getStatusBadge()}
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                <span>By {localContent?.blogAuthor || 'Unknown'}</span>
+                <span>By {getAuthorDisplayName()}</span>
                 {localContent?.blogCategory && (
                   <>
                     <span>•</span>
