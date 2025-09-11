@@ -95,8 +95,8 @@ export async function POST(request: NextRequest) {
   try {
     const body: CreateContentRequest = await request.json()
     
-    // Basic validation
-    if (!body.slug || !body.title || !body.type) {
+    // Basic validation - allow empty string for slug (homepage), but require the field to exist
+    if (body.slug === undefined || !body.title || !body.type) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields: slug, title, type' },
         { status: 400 }

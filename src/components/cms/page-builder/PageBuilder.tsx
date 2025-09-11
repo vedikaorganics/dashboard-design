@@ -1,15 +1,14 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { Save, Eye, EyeOff, Settings, Monitor, Tablet, Smartphone } from 'lucide-react'
+import { useState, useCallback, useRef } from 'react'
+import { Save, Settings, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { CMSContent, ContentBlock } from '@/types/cms'
-import { BlockEditor } from '../block-editor/BlockEditor'
-import { PagePreview } from './PagePreview'
+import { createBlock } from '@/lib/cms/blocks'
+import { BlockEditor, BlockEditorRef } from '../block-editor/BlockEditor'
 import { PageSettings } from './PageSettings'
-import { PublishControls } from '../common/PublishControls'
 import { toast } from 'sonner'
 
 interface PageBuilderProps {
@@ -20,6 +19,7 @@ interface PageBuilderProps {
   onUnpublish?: () => Promise<void>
   isLoading?: boolean
   className?: string
+  restrictToPageType?: boolean // When true, restrict content type options to pages only
 }
 
 export function PageBuilder({
@@ -29,18 +29,19 @@ export function PageBuilder({
   onPublish,
   onUnpublish,
   isLoading = false,
-  className
+  className,
+  restrictToPageType = false
 }: PageBuilderProps) {
-  const [showPreview, setShowPreview] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop')
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const blockEditorRef = useRef<BlockEditorRef>(null)
 
   // Handle block changes
   const handleBlocksChange = useCallback((blocks: ContentBlock[]) => {
     onUpdate({ blocks })
     setHasUnsavedChanges(true)
   }, [onUpdate])
+
 
   // Handle save
   const handleSave = useCallback(async () => {
@@ -107,128 +108,92 @@ export function PageBuilder({
 
   return (
     <div className={`flex flex-col h-full ${className || ''}`}>
-      {/* Top toolbar */}
-      <div className="flex items-center justify-between p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        {/* Left side - Content info */}
-        <div className="flex items-center space-x-4">
-          <div>
-            <h1 className="text-lg font-semibold truncate max-w-64">
-              {content.title}
-            </h1>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <Badge variant={getStatusBadgeVariant()} className="text-xs capitalize">
-                {content.status}
-              </Badge>
+      {/* Clean unified toolbar */}
+      <div className="flex items-center justify-between px-6 py-3 border-b bg-background">
+        {/* Left side - Status info */}
+        <div className="flex items-center space-x-3 text-sm text-muted-foreground">
+          <Badge variant={getStatusBadgeVariant()} className="text-xs capitalize">
+            {content.status}
+          </Badge>
+          <span>•</span>
+          <span>{content.blocks.length} {content.blocks.length === 1 ? 'block' : 'blocks'}</span>
+          {hasUnsavedChanges && (
+            <>
               <span>•</span>
-              <span>{content.blocks.length} blocks</span>
-              {hasUnsavedChanges && (
-                <>
-                  <span>•</span>
-                  <span className="text-amber-600">Unsaved changes</span>
-                </>
-              )}
-            </div>
-          </div>
+              <span className="text-amber-600 font-medium">Unsaved changes</span>
+            </>
+          )}
         </div>
 
         {/* Right side - Actions */}
         <div className="flex items-center space-x-2">
-          {/* Preview toggle */}
+          {/* Add Block */}
           <Button
-            variant={showPreview ? "default" : "outline"}
+            onClick={() => blockEditorRef.current?.openAddBlockDialog()}
             size="sm"
-            onClick={() => setShowPreview(!showPreview)}
           >
-            {showPreview ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-            Preview
+            <Plus className="w-4 h-4 mr-2" />
+            Add Block
           </Button>
 
-          {/* Device selector (only show when preview is active) */}
-          {showPreview && (
-            <div className="flex items-center border rounded-md">
-              <Button
-                variant={previewDevice === 'desktop' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setPreviewDevice('desktop')}
-                className="rounded-r-none"
-              >
-                <Monitor className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={previewDevice === 'tablet' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setPreviewDevice('tablet')}
-                className="rounded-none border-x"
-              >
-                <Tablet className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={previewDevice === 'mobile' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setPreviewDevice('mobile')}
-                className="rounded-l-none"
-              >
-                <Smartphone className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-
-          <Separator orientation="vertical" className="h-8" />
+          <Separator orientation="vertical" className="h-6" />
 
           {/* Settings */}
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => setShowSettings(!showSettings)}
+            className="px-3"
           >
-            <Settings className="w-4 h-4 mr-2" />
-            Settings
+            <Settings className="w-4 h-4" />
           </Button>
+
+          <Separator orientation="vertical" className="h-6" />
 
           {/* Save */}
           <Button
             onClick={handleSave}
             disabled={isLoading || !hasUnsavedChanges}
             size="sm"
+            variant="outline"
           >
             <Save className="w-4 h-4 mr-2" />
             Save
           </Button>
 
-          {/* Publish controls */}
-          <PublishControls
-            status={content.status}
-            publishedAt={content.publishedAt}
-            scheduledPublishAt={content.scheduledPublishAt}
-            onPublish={handlePublish}
-            onUnpublish={handleUnpublish}
-            disabled={isLoading || hasUnsavedChanges}
-          />
+          {/* Publish/Unpublish */}
+          {content.status === 'published' ? (
+            <Button
+              onClick={handleUnpublish}
+              disabled={isLoading || hasUnsavedChanges}
+              size="sm"
+              variant="outline"
+            >
+              Unpublish
+            </Button>
+          ) : (
+            <Button
+              onClick={() => handlePublish()}
+              disabled={isLoading || hasUnsavedChanges}
+              size="sm"
+            >
+              Publish
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Main content area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Editor */}
-        <div className={showPreview ? 'w-1/2 border-r' : 'flex-1'}>
+        <div className="flex-1">
           <BlockEditor
+            ref={blockEditorRef}
             blocks={content.blocks}
             onChange={handleBlocksChange}
-            onPreview={() => setShowPreview(true)}
+            showToolbar={false}
           />
         </div>
-
-        {/* Preview */}
-        {showPreview && (
-          <div className="w-1/2 bg-muted/20">
-            <PagePreview
-              content={content}
-              device={previewDevice}
-              onDeviceChange={setPreviewDevice}
-              onClose={() => setShowPreview(false)}
-            />
-          </div>
-        )}
 
         {/* Settings sidebar */}
         {showSettings && (
@@ -237,6 +202,7 @@ export function PageBuilder({
               content={content}
               onUpdate={onUpdate}
               onClose={() => setShowSettings(false)}
+              restrictToPageType={restrictToPageType}
             />
           </div>
         )}
@@ -258,6 +224,7 @@ export function PageBuilder({
           <span>Type: {content.type}</span>
         </div>
       </div>
+
     </div>
   )
 }

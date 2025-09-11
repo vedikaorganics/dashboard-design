@@ -19,7 +19,9 @@ export default function CMSPageEditPage({ params }: CMSPageEditPageProps) {
   const { slug } = resolvedParams
   const router = useRouter()
 
-  const { content, isLoading, error, updateContent } = useCMSContentItem(slug)
+  // Convert 'home' route slug to empty string for homepage
+  const actualSlug = slug === 'home' ? '' : slug
+  const { content, isLoading, error, updateContent } = useCMSContentItem(actualSlug)
 
   const handleUpdate = async (updates: any) => {
     if (content) {
@@ -88,15 +90,18 @@ export default function CMSPageEditPage({ params }: CMSPageEditPageProps) {
   }
 
   return (
-    <div className="h-screen flex flex-col">
-      <PageBuilder
-        content={content}
-        onUpdate={handleUpdate}
-        onSave={handleSave}
-        onPublish={handlePublish}
-        onUnpublish={handleUnpublish}
-        isLoading={isLoading}
-      />
-    </div>
+    <DashboardLayout title={content.title}>
+      <div className="h-full flex flex-col">
+        <PageBuilder
+          content={content}
+          onUpdate={handleUpdate}
+          onSave={handleSave}
+          onPublish={handlePublish}
+          onUnpublish={handleUnpublish}
+          isLoading={isLoading}
+          restrictToPageType={true}
+        />
+      </div>
+    </DashboardLayout>
   )
 }

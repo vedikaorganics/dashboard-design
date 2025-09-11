@@ -17,11 +17,14 @@ export async function POST(
     const { slug } = await params
     const body: PublishContentRequest = await request.json()
     
+    // Convert special homepage placeholder back to empty string
+    const actualSlug = slug === '__home__' ? '' : slug
+    
     const db = await getDatabase()
     const collection = db.collection('cms_content')
     
     // Get latest version of content
-    const currentContent = await collection.findOne({ slug }, { sort: { version: -1 } })
+    const currentContent = await collection.findOne({ slug: actualSlug }, { sort: { version: -1 } })
     
     if (!currentContent) {
       return NextResponse.json(
@@ -56,7 +59,7 @@ export async function POST(
     
     // Update current version in-place (publishing a draft doesn't create new version)
     const result = await collection.updateOne(
-      { slug, version: currentContent.version },
+      { slug: actualSlug, version: currentContent.version },
       { $set: updateData }
     )
     
@@ -68,7 +71,7 @@ export async function POST(
     }
     
     // Return the updated content
-    const updatedContent = await collection.findOne({ slug, version: currentContent.version })
+    const updatedContent = await collection.findOne({ slug: actualSlug, version: currentContent.version })
     
     // Revalidate frontend pages if this is product or blog content
     let revalidationResult = { success: false }
@@ -107,11 +110,14 @@ export async function DELETE(
   try {
     const { slug } = await params
     
+    // Convert special homepage placeholder back to empty string
+    const actualSlug = slug === '__home__' ? '' : slug
+    
     const db = await getDatabase()
     const collection = db.collection('cms_content')
     
     // Get latest version of content
-    const currentContent = await collection.findOne({ slug }, { sort: { version: -1 } })
+    const currentContent = await collection.findOne({ slug: actualSlug }, { sort: { version: -1 } })
     
     if (!currentContent) {
       return NextResponse.json(
@@ -133,7 +139,7 @@ export async function DELETE(
     }
     
     const result = await collection.updateOne(
-      { slug, version: currentContent.version },
+      { slug: actualSlug, version: currentContent.version },
       { $set: updateData, $unset: { publishedAt: 1, scheduledPublishAt: 1 } }
     )
     
@@ -145,7 +151,7 @@ export async function DELETE(
     }
     
     // Return the updated content
-    const updatedContent = await collection.findOne({ slug, version: currentContent.version })
+    const updatedContent = await collection.findOne({ slug: actualSlug, version: currentContent.version })
     
     // Revalidate frontend pages if this is product or blog content
     let revalidationResult = { success: false }

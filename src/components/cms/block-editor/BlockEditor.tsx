@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useImperativeHandle, forwardRef } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -37,19 +37,30 @@ import { BlockSettings } from './BlockSettings'
 interface BlockEditorProps {
   blocks: ContentBlock[]
   onChange: (blocks: ContentBlock[]) => void
-  onPreview?: () => void
+  onAddBlock?: () => void
   className?: string
+  showToolbar?: boolean
 }
 
-export function BlockEditor({
+export interface BlockEditorRef {
+  openAddBlockDialog: () => void
+}
+
+export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(({
   blocks,
   onChange,
-  onPreview,
-  className
-}: BlockEditorProps) {
+  onAddBlock,
+  className,
+  showToolbar = true
+}, ref) => {
   const [selectedBlock, setSelectedBlock] = useState<ContentBlock | null>(null)
   const [showBlockList, setShowBlockList] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+
+  // Expose methods to parent component
+  useImperativeHandle(ref, () => ({
+    openAddBlockDialog: () => setShowBlockList(true)
+  }), [])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -143,36 +154,28 @@ export function BlockEditor({
       <div className={`flex h-full ${className || ''}`}>
       {/* Main editor area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Toolbar */}
-        <div className="flex items-center justify-end">
-          <div className="flex items-center space-x-2">
-            <Button
-              onClick={() => setShowBlockList(true)}
-              size="sm"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Block
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowSettings(!showSettings)}
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Settings
-            </Button>
-            {onPreview && (
+        {/* Conditional Toolbar */}
+        {showToolbar && (
+          <div className="flex items-center justify-end p-4">
+            <div className="flex items-center space-x-2">
+              <Button
+                onClick={() => setShowBlockList(true)}
+                size="sm"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Block
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onPreview}
+                onClick={() => setShowSettings(!showSettings)}
               >
-                <Eye className="w-4 h-4 mr-2" />
-                Preview
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
               </Button>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Content area */}
         <div className="flex-1 overflow-auto">
@@ -187,7 +190,7 @@ export function BlockEditor({
                 <p className="text-muted-foreground mb-4">
                   Add blocks to create engaging pages with text, images, videos, and more.
                 </p>
-                <Button onClick={() => setShowBlockList(true)}>
+                <Button onClick={onAddBlock || (() => setShowBlockList(true))}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Your First Block
                 </Button>
@@ -276,4 +279,6 @@ export function BlockEditor({
       </Dialog>
     </>
   )
-}
+})
+
+BlockEditor.displayName = 'BlockEditor'

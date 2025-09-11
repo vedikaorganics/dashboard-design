@@ -21,10 +21,11 @@ export default function NewCMSPagePage() {
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
-    type: 'page' as const,
+    type: 'page' as const, // Always create page type content
     seoTitle: '',
     seoDescription: ''
   })
+
 
   // Auto-generate slug from title
   const handleTitleChange = (title: string) => {
@@ -131,23 +132,6 @@ export default function NewCMSPagePage() {
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="type">Content Type</Label>
-                <Select 
-                  value={formData.type} 
-                  onValueChange={(value: any) => setFormData(prev => ({ ...prev, type: value }))}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="page">Static Page</SelectItem>
-                    <SelectItem value="product">Product Page</SelectItem>
-                    <SelectItem value="section">Page Section</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </CardContent>
           </Card>
 
