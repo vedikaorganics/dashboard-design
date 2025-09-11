@@ -106,6 +106,7 @@ export interface Product {
   sections: ProductSection[];
   badges: string[];
   tags: string[];
+  stock?: number;
   createdAt: string;
   updatedAt: string;
 }
