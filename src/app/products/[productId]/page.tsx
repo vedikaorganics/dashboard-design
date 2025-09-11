@@ -416,14 +416,14 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           
           <TabsContent value="overview">
             <div className="space-y-4">
-              <div className="grid gap-3 md:grid-cols-3">
-                <div className="text-sm">
-                  <div className="text-muted-foreground mb-1">Product ID</div>
-                  <div className="font-mono">{product.id}</div>
+              <div className="grid gap-6 md:grid-cols-3">
+                <div>
+                  <div className="text-sm text-muted-foreground mb-2">Product ID</div>
+                  <div className="font-mono text-base">{product.id}</div>
                 </div>
                 
-                <div className="text-sm">
-                  <div className="text-muted-foreground mb-1">Stock</div>
+                <div>
+                  <div className="text-sm text-muted-foreground mb-2">Stock</div>
                   {editingStock ? (
                     <Input
                       type="number"
@@ -450,13 +450,13 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                           setStockInput('')
                         }
                       }}
-                      className="h-6 text-sm w-24"
+                      className="h-8 text-base w-28"
                       placeholder="0"
                       autoFocus
                     />
                   ) : (
                     <div 
-                      className="cursor-pointer hover:bg-muted/50 px-1 rounded" 
+                      className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded text-base" 
                       onClick={() => {
                         setEditingStock(true)
                         setStockInput(product.stock?.toString() || '')
@@ -467,8 +467,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   )}
                 </div>
                 
-                <div className="text-sm">
-                  <div className="text-muted-foreground mb-1">Color</div>
+                <div>
+                  <div className="text-sm text-muted-foreground mb-2">Color</div>
                   {editingColor ? (
                     <div className="flex items-center gap-2">
                       <Input
@@ -495,30 +495,30 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                             setColorInput('')
                           }
                         }}
-                        className="h-6 text-xs w-20 font-mono"
+                        className="h-8 text-sm w-24 font-mono"
                         placeholder="#000000"
                         autoFocus
                       />
                     </div>
                   ) : (
                     <div 
-                      className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1 rounded"
+                      className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded"
                       onClick={() => {
                         setEditingColor(true)
                         setColorInput(product.colorHex || '#000000')
                       }}
                     >
-                      <div className="w-3 h-3 rounded border" style={{ backgroundColor: product.colorHex || '#000000' }} />
-                      <span className="font-mono text-xs">{product.colorHex || '#000000'}</span>
+                      <div className="w-4 h-4 rounded border" style={{ backgroundColor: product.colorHex || '#000000' }} />
+                      <span className="font-mono text-sm">{product.colorHex || '#000000'}</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-6">
                 <div>
-                  <div className="text-sm text-muted-foreground mb-2">Badges</div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="text-sm text-muted-foreground mb-3">Badges</div>
+                  <div className="flex flex-wrap gap-3">
                     {product.badges?.map((badge: string, index: number) => (
                       <div key={index} className="group relative">
                         {editingBadgeIndex === index ? (
@@ -556,14 +556,14 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                                 setEditValues({})
                               }
                             }}
-                            className="h-6 px-2 text-xs w-20 min-w-fit"
+                            className="h-7 px-3 text-sm w-24 min-w-fit"
                             autoFocus
                           />
                         ) : (
                           <>
                             <Badge 
                               variant="secondary" 
-                              className="cursor-pointer hover:bg-secondary/80 pr-1"
+                              className="cursor-pointer hover:bg-secondary/80 px-3 py-1 text-sm"
                               onClick={() => {
                                 setEditingBadgeIndex(index)
                                 setEditValues({ [`badge-${index}`]: badge })
@@ -616,14 +616,14 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                             setNewBadgeInput('')
                           }
                         }}
-                        className="h-6 px-2 text-xs w-20 min-w-fit"
+                        className="h-7 px-3 text-sm w-24 min-w-fit"
                         placeholder="Badge name"
                         autoFocus
                       />
                     ) : (
                       <Badge 
                         variant="outline" 
-                        className="cursor-pointer hover:bg-muted"
+                        className="cursor-pointer hover:bg-muted px-3 py-1"
                         onClick={() => {
                           setEditingBadgeIndex(-1)
                           setNewBadgeInput('')
@@ -636,8 +636,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 </div>
                 
                 <div>
-                  <div className="text-sm text-muted-foreground mb-2">Tags</div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="text-sm text-muted-foreground mb-3">Tags</div>
+                  <div className="flex flex-wrap gap-3">
                     {product.tags?.map((tag: string, index: number) => (
                       <div key={index} className="group relative">
                         {editingTagIndex === index ? (
@@ -675,14 +675,14 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                                 setEditValues({})
                               }
                             }}
-                            className="h-6 px-2 text-xs w-20 min-w-fit"
+                            className="h-7 px-3 text-sm w-24 min-w-fit"
                             autoFocus
                           />
                         ) : (
                           <>
                             <Badge 
                               variant="outline" 
-                              className="cursor-pointer hover:bg-muted pr-1"
+                              className="cursor-pointer hover:bg-muted px-3 py-1 text-sm"
                               onClick={() => {
                                 setEditingTagIndex(index)
                                 setEditValues({ [`tag-${index}`]: tag })
@@ -735,14 +735,14 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                             setNewTagInput('')
                           }
                         }}
-                        className="h-6 px-2 text-xs w-20 min-w-fit"
+                        className="h-7 px-3 text-sm w-24 min-w-fit"
                         placeholder="Tag name"
                         autoFocus
                       />
                     ) : (
                       <Badge 
                         variant="outline" 
-                        className="cursor-pointer hover:bg-muted"
+                        className="cursor-pointer hover:bg-muted px-3 py-1"
                         onClick={() => {
                           setEditingTagIndex(-1)
                           setNewTagInput('')
@@ -757,11 +757,11 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               
 
               <div>
-                <div className="text-sm text-muted-foreground mb-2">Benefits</div>
-                <div className="space-y-1">
+                <div className="text-sm text-muted-foreground mb-3">Benefits</div>
+                <div className="space-y-3">
                   {product.bulletPoints?.map((point: string, index: number) => (
-                    <div key={index} className="flex items-start gap-2 text-sm group">
-                      <div className="w-1 h-1 rounded-full bg-foreground mt-2 flex-shrink-0" />
+                    <div key={index} className="flex items-start gap-3 group">
+                      <div className="w-1.5 h-1.5 rounded-full bg-foreground mt-2 flex-shrink-0" />
                       {editingBenefitIndex === index ? (
                         <Input
                           value={editValues[`benefit-${index}`] || point}
@@ -797,13 +797,13 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                               setEditValues({})
                             }
                           }}
-                          className="text-sm flex-1"
+                          className="text-base flex-1 h-9"
                           autoFocus
                         />
                       ) : (
                         <>
                           <span 
-                            className="flex-1 cursor-pointer hover:bg-muted/50 px-1 rounded"
+                            className="flex-1 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded text-base leading-relaxed"
                             onClick={() => {
                               setEditingBenefitIndex(index)
                               setEditValues({ [`benefit-${index}`]: point })
@@ -812,7 +812,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                             {point}
                           </span>
                           <button
-                            className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive/80 p-1"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive/80 p-1 mt-0.5"
                             onClick={async (e) => {
                               e.stopPropagation()
                               const newBenefits = product.bulletPoints.filter((_: any, i: number) => i !== index)
@@ -824,15 +824,15 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                               mutate()
                             }}
                           >
-                            <X className="w-3 h-3" />
+                            <X className="w-4 h-4" />
                           </button>
                         </>
                       )}
                     </div>
                   ))}
                   
-                  <div className="flex items-start gap-2 text-sm">
-                    <div className="w-1 h-1 rounded-full bg-foreground mt-2 flex-shrink-0" />
+                  <div className="flex items-start gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-foreground mt-2 flex-shrink-0" />
                     {editingBenefitIndex === -1 ? (
                       <Input
                         value={newBenefitInput}
@@ -858,13 +858,13 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                             setNewBenefitInput('')
                           }
                         }}
-                        className="text-sm flex-1"
+                        className="text-base flex-1 h-9"
                         placeholder="Enter new benefit..."
                         autoFocus
                       />
                     ) : (
                       <span 
-                        className="flex-1 cursor-pointer hover:bg-muted/50 px-1 rounded text-muted-foreground"
+                        className="flex-1 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded text-base text-muted-foreground leading-relaxed"
                         onClick={() => {
                           setEditingBenefitIndex(-1)
                           setNewBenefitInput('')
