@@ -144,10 +144,9 @@ function ProductsPageContent() {
             
             {selectedProduct && (
               <Tabs defaultValue="details" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="details">Product Details</TabsTrigger>
                   <TabsTrigger value="variants">Variants & Pricing</TabsTrigger>
-                  <TabsTrigger value="content">Content & Images</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="details" className="space-y-4">
@@ -260,57 +259,6 @@ function ProductsPageContent() {
                   </div>
                 </TabsContent>
                 
-                <TabsContent value="content" className="space-y-4">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Product Content Sections</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {selectedProduct.sections
-                          .sort((a, b) => a.order - b.order)
-                          .map((section) => (
-                            <div key={section.id} className="border rounded-lg p-4">
-                              <div className="flex items-center space-x-2 mb-2">
-                                {section.type === 'image' ? (
-                                  <ImageIcon className="w-4 h-4" />
-                                ) : (
-                                  <Package className="w-4 h-4" />
-                                )}
-                                <Badge variant="outline">{section.type}</Badge>
-                                <span className="text-sm text-muted-foreground">Order: {section.order}</span>
-                              </div>
-                              
-                              {section.type === 'text' && (
-                                <div>
-                                  {section.heading && (
-                                    <h4 className="font-semibold mb-1">{section.heading}</h4>
-                                  )}
-                                  {section.body && (
-                                    <p className="text-sm text-muted-foreground">{section.body}</p>
-                                  )}
-                                </div>
-                              )}
-                              
-                              {section.type === 'image' && (
-                                <div>
-                                  {section.alt && (
-                                    <p className="text-sm font-medium">{section.alt}</p>
-                                  )}
-                                  {section.caption && (
-                                    <p className="text-xs text-muted-foreground mt-1">{section.caption}</p>
-                                  )}
-                                  <div className="text-xs text-blue-600 mt-1">
-                                    Desktop: {section.desktopUrl?.substring(0, 50)}...
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
               </Tabs>
             )}
           </DialogContent>
