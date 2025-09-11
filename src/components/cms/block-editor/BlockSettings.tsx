@@ -767,6 +767,205 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
         )
 
 
+      case 'hero-section':
+        const heroContent = block.content as any
+        return (
+          <TooltipProvider>
+            <div className="space-y-4">
+              {/* Media Type Selection */}
+              <div className="space-y-2">
+                <Label>Media Type</Label>
+                <Select 
+                  value={heroContent.media?.type || 'image'} 
+                  onValueChange={(value) => updateBlockContent({ 
+                    media: { ...heroContent.media, type: value }
+                  })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select media type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="image">Image</SelectItem>
+                    <SelectItem value="video">Video</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Media Selection */}
+              <MediaInput
+                label="Mobile Media"
+                value={heroContent.media?.mobile}
+                onChange={(value) => updateBlockContent({ 
+                  media: { 
+                    ...heroContent.media, 
+                    mobile: value 
+                  }
+                })}
+                accept={heroContent.media?.type || 'image'}
+                placeholder={`Select ${heroContent.media?.type || 'image'} from library...`}
+                required={true}
+              />
+              <MediaInput
+                label="Desktop Media (Optional)"
+                value={heroContent.media?.desktop}
+                onChange={(value) => updateBlockContent({ 
+                  media: { 
+                    ...heroContent.media, 
+                    desktop: value 
+                  }
+                })}
+                accept={heroContent.media?.type || 'image'}
+                placeholder={`Select ${heroContent.media?.type || 'image'} from library...`}
+                required={false}
+                allowClear={true}
+              />
+
+              <Separator />
+
+              {/* Text Content */}
+              <div className="space-y-2">
+                <Label htmlFor="hero-heading">Heading</Label>
+                <Input
+                  id="hero-heading"
+                  value={heroContent.heading || ''}
+                  onChange={(e) => updateBlockContent({ heading: e.target.value })}
+                  placeholder="Your Hero Heading"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <SimpleRichTextEditor
+                  id="hero-description"
+                  label="Description"
+                  value={heroContent.description || ''}
+                  onChange={(value) => updateBlockContent({ description: value })}
+                  placeholder="Add your compelling hero description here..."
+                  rows={3}
+                />
+              </div>
+
+              <Separator />
+
+              {/* CTA Settings */}
+              <div className="space-y-2">
+                <Label htmlFor="hero-cta-text">CTA Button Text</Label>
+                <Input
+                  id="hero-cta-text"
+                  value={heroContent.cta?.text || ''}
+                  onChange={(e) => updateBlockContent({ 
+                    cta: { ...heroContent.cta, text: e.target.value }
+                  })}
+                  placeholder="Get Started"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="hero-cta-url">CTA Button URL</Label>
+                <Input
+                  id="hero-cta-url"
+                  value={heroContent.cta?.url || ''}
+                  onChange={(e) => updateBlockContent({ 
+                    cta: { ...heroContent.cta, url: e.target.value }
+                  })}
+                  placeholder="https://..."
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>CTA Button Style</Label>
+                <Select 
+                  value={heroContent.cta?.style || 'primary'} 
+                  onValueChange={(value) => updateBlockContent({ 
+                    cta: { ...heroContent.cta, style: value }
+                  })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select button style" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="primary">Primary</SelectItem>
+                    <SelectItem value="secondary">Secondary</SelectItem>
+                    <SelectItem value="outline">Outline</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Separator />
+
+              {/* Layout Settings */}
+              <div className="space-y-2">
+                <Label>Text Alignment</Label>
+                <Select 
+                  value={heroContent.alignment || 'center'} 
+                  onValueChange={(value) => updateBlockContent({ alignment: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select text alignment" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="left">Left</SelectItem>
+                    <SelectItem value="center">Center</SelectItem>
+                    <SelectItem value="right">Right</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Height</Label>
+                <Select 
+                  value={heroContent.height || 'large'} 
+                  onValueChange={(value) => updateBlockContent({ height: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select height" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="small">Small (400px)</SelectItem>
+                    <SelectItem value="medium">Medium (600px)</SelectItem>
+                    <SelectItem value="large">Large (800px)</SelectItem>
+                    <SelectItem value="fullscreen">Full Screen</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Overlay Settings */}
+              <div className="space-y-2">
+                <Label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={heroContent.overlay?.enabled || false}
+                    onChange={(e) => updateBlockContent({ 
+                      overlay: { ...heroContent.overlay, enabled: e.target.checked }
+                    })}
+                    className="rounded border-gray-300"
+                  />
+                  <span>Enable Overlay</span>
+                </Label>
+                {heroContent.overlay?.enabled && (
+                  <div className="space-y-2 pl-6">
+                    <Label htmlFor="overlay-opacity">Overlay Opacity</Label>
+                    <input
+                      id="overlay-opacity"
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={heroContent.overlay?.opacity || 0.4}
+                      onChange={(e) => updateBlockContent({ 
+                        overlay: { ...heroContent.overlay, opacity: parseFloat(e.target.value) }
+                      })}
+                      className="w-full"
+                    />
+                    <div className="text-xs text-muted-foreground">
+                      {Math.round((heroContent.overlay?.opacity || 0.4) * 100)}%
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </TooltipProvider>
+        )
+
       default:
         return (
           <div className="text-center py-8 text-muted-foreground">

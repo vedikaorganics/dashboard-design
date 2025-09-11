@@ -28,7 +28,7 @@ export interface CMSContent {
 
 export interface ContentBlock {
   id: string
-  type: "video-cta" | "sliding-images-cta" | "text" | "image" | "gallery" | "video" | "product-grid" | 
+  type: "hero-section" | "video-cta" | "sliding-images-cta" | "text" | "image" | "gallery" | "video" | "product-grid" | 
         "faq" | "custom-html"
   order: number
   content: BlockContent
@@ -93,6 +93,7 @@ export interface MediaFolder {
 
 // Block-specific content interfaces
 export type BlockContent = 
+  | HeroSectionBlockContent
   | VideoCTABlockContent
   | SlidingImagesCTABlockContent
   | TextBlockContent
@@ -102,6 +103,27 @@ export type BlockContent =
   | ProductGridBlockContent
   | FAQBlockContent
   | CustomHTMLBlockContent
+
+export interface HeroSectionBlockContent {
+  media: {
+    type: "image" | "video"
+    mobile: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
+    desktop?: { url: string; assetId?: string; filename?: string; dimensions?: { width: number; height: number } }
+  }
+  heading: string
+  description: string
+  cta: {
+    text: string
+    url: string
+    style?: "primary" | "secondary" | "outline"
+  }
+  overlay: {
+    enabled: boolean
+    opacity: number
+  }
+  alignment: "left" | "center" | "right"
+  height: "small" | "medium" | "large" | "fullscreen"
+}
 
 export interface VideoCTABlockContent {
   video: {

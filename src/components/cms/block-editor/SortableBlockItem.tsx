@@ -13,7 +13,8 @@ import {
   Video,
   Layout,
   ShoppingCart,
-  MousePointer
+  MousePointer,
+  Monitor
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -56,7 +57,8 @@ export function SortableBlockItem({
 
   const getBlockIcon = (type: string) => {
     switch (type) {
-      case 'hero':
+      case 'hero-section':
+        return <Monitor className="w-4 h-4" />
       case 'text':
         return <Type className="w-4 h-4" />
       case 'image':
@@ -73,6 +75,8 @@ export function SortableBlockItem({
 
   const getBlockTitle = (block: ContentBlock): string => {
     switch (block.type) {
+      case 'hero-section':
+        return (block.content as any)?.heading || 'Hero Section Block'
       case 'video-cta':
         return (block.content as any)?.heading || 'Video CTA Block'
       case 'sliding-images-cta':
@@ -107,6 +111,10 @@ export function SortableBlockItem({
 
   const getBlockDescription = (block: ContentBlock): string => {
     switch (block.type) {
+      case 'hero-section':
+        const heroHeight = (block.content as any)?.height || 'large'
+        const heroMediaType = (block.content as any)?.media?.type || 'image'
+        return `${heroHeight} ${heroMediaType} hero section`
       case 'video-cta':
         const heading = (block.content as any)?.heading
         return heading || 'Video with call-to-action'
@@ -139,6 +147,8 @@ export function SortableBlockItem({
     const content = block.content as any
     
     switch (block.type) {
+      case 'hero-section':
+        return content?.media?.mobile ? getMediaUrl(content.media.mobile) : null
       case 'video-cta':
         return content?.video?.mobile ? getMediaUrl(content.video.mobile) : null
       case 'sliding-images-cta':
