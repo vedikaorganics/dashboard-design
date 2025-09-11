@@ -21,6 +21,7 @@ import type { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { Author } from "@/types/authors"
 import { AuthorCreateDialog } from "@/components/cms/authors/AuthorCreateDialog"
+import { AuthorEditDialog } from "@/components/cms/authors/AuthorEditDialog"
 import Link from "next/link"
 
 const getStatusBadge = (status: string) => {
@@ -37,6 +38,8 @@ const getStatusBadge = (status: string) => {
 function AuthorsPageContent() {
   const { page, pageSize, pageIndex, setPagination } = useUrlPagination(10)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingAuthorSlug, setEditingAuthorSlug] = useState<string | undefined>()
   
   const { data: authorsData, isLoading, mutate } = useAuthors(page, pageSize)
   
@@ -48,6 +51,16 @@ function AuthorsPageContent() {
   const handleAuthorCreated = (newAuthor: Author) => {
     // Refresh the authors list
     mutate()
+  }
+
+  const handleAuthorUpdated = (updatedAuthor: Author) => {
+    // Refresh the authors list
+    mutate()
+  }
+
+  const handleEditAuthor = (authorSlug: string) => {
+    setEditingAuthorSlug(authorSlug)
+    setIsEditDialogOpen(true)
   }
 
 
@@ -166,11 +179,11 @@ function AuthorsPageContent() {
                   View profile
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={`/cms/blog/authors/${author.slug}`}>
-                  <UserCog className="mr-2 h-4 w-4" />
-                  Edit author
-                </Link>
+              <DropdownMenuItem
+                onClick={() => handleEditAuthor(author.slug)}
+              >
+                <UserCog className="mr-2 h-4 w-4" />
+                Edit author
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href={`/cms/blog/authors/${author.slug}/posts`}>
@@ -227,6 +240,14 @@ function AuthorsPageContent() {
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
         onAuthorCreated={handleAuthorCreated}
+      />
+
+      {/* Edit Author Dialog */}
+      <AuthorEditDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        authorSlug={editingAuthorSlug}
+        onAuthorUpdated={handleAuthorUpdated}
       />
     </DashboardLayout>
   )
