@@ -415,15 +415,18 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           </TabsList>
           
           <TabsContent value="overview">
-            <div className="space-y-4">
-              <div className="grid gap-6 md:grid-cols-3">
-                <div>
-                  <div className="text-sm text-muted-foreground mb-2">Product ID</div>
-                  <div className="font-mono text-base">{product.id}</div>
-                </div>
-                
-                <div>
-                  <div className="text-sm text-muted-foreground mb-2">Stock</div>
+            <div className="space-y-6">
+              
+              {/* Product ID */}
+              <div className="flex items-center justify-between py-3">
+                <div className="text-sm text-muted-foreground w-24">Product ID</div>
+                <div className="font-mono text-base flex-1">{product.id}</div>
+              </div>
+
+              {/* Stock */}
+              <div className="flex items-center justify-between py-3">
+                <div className="text-sm text-muted-foreground w-24">Stock</div>
+                <div className="flex-1">
                   {editingStock ? (
                     <Input
                       type="number"
@@ -456,7 +459,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     />
                   ) : (
                     <div 
-                      className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded text-base" 
+                      className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded text-base inline-block" 
                       onClick={() => {
                         setEditingStock(true)
                         setStockInput(product.stock?.toString() || '')
@@ -466,43 +469,44 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     </div>
                   )}
                 </div>
-                
-                <div>
-                  <div className="text-sm text-muted-foreground mb-2">Color</div>
+              </div>
+
+              {/* Color */}
+              <div className="flex items-center justify-between py-3">
+                <div className="text-sm text-muted-foreground w-24">Color</div>
+                <div className="flex-1">
                   {editingColor ? (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={colorInput}
-                        onChange={(e) => setColorInput(e.target.value)}
-                        onBlur={async () => {
-                          if (colorInput.match(/^#[0-9A-Fa-f]{6}$/)) {
-                            if (colorInput !== product.colorHex) {
-                              await fetch(`/api/products/${productId}`, {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ colorHex: colorInput })
-                              })
-                              mutate()
-                            }
+                    <Input
+                      value={colorInput}
+                      onChange={(e) => setColorInput(e.target.value)}
+                      onBlur={async () => {
+                        if (colorInput.match(/^#[0-9A-Fa-f]{6}$/)) {
+                          if (colorInput !== product.colorHex) {
+                            await fetch(`/api/products/${productId}`, {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ colorHex: colorInput })
+                            })
+                            mutate()
                           }
+                        }
+                        setEditingColor(false)
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.currentTarget.blur()
+                        } else if (e.key === 'Escape') {
                           setEditingColor(false)
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.currentTarget.blur()
-                          } else if (e.key === 'Escape') {
-                            setEditingColor(false)
-                            setColorInput('')
-                          }
-                        }}
-                        className="h-8 text-sm w-24 font-mono"
-                        placeholder="#000000"
-                        autoFocus
-                      />
-                    </div>
+                          setColorInput('')
+                        }
+                      }}
+                      className="h-8 text-sm w-24 font-mono"
+                      placeholder="#000000"
+                      autoFocus
+                    />
                   ) : (
                     <div 
-                      className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded"
+                      className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded inline-flex"
                       onClick={() => {
                         setEditingColor(true)
                         setColorInput(product.colorHex || '#000000')
@@ -515,9 +519,10 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <div>
-                  <div className="text-sm text-muted-foreground mb-3">Badges</div>
+              {/* Badges */}
+              <div className="flex justify-between py-3">
+                <div className="text-sm text-muted-foreground w-24">Badges</div>
+                <div className="flex-1">
                   <div className="flex flex-wrap gap-3">
                     {product.badges?.map((badge: string, index: number) => (
                       <div key={index} className="group relative">
@@ -634,9 +639,12 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     )}
                   </div>
                 </div>
-                
-                <div>
-                  <div className="text-sm text-muted-foreground mb-3">Tags</div>
+              </div>
+
+              {/* Tags */}
+              <div className="flex justify-between py-3">
+                <div className="text-sm text-muted-foreground w-24">Tags</div>
+                <div className="flex-1">
                   <div className="flex flex-wrap gap-3">
                     {product.tags?.map((tag: string, index: number) => (
                       <div key={index} className="group relative">
@@ -754,31 +762,93 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   </div>
                 </div>
               </div>
-              
 
-              <div>
-                <div className="text-sm text-muted-foreground mb-3">Benefits</div>
-                <div className="space-y-3">
-                  {product.bulletPoints?.map((point: string, index: number) => (
-                    <div key={index} className="flex items-start gap-3 group">
+              {/* Benefits */}
+              <div className="flex justify-between py-3">
+                <div className="text-sm text-muted-foreground w-24">Benefits</div>
+                <div className="flex-1">
+                  <div className="space-y-3">
+                    {product.bulletPoints?.map((point: string, index: number) => (
+                      <div key={index} className="flex items-start gap-3 group">
+                        <div className="w-1.5 h-1.5 rounded-full bg-foreground mt-2 flex-shrink-0" />
+                        {editingBenefitIndex === index ? (
+                          <Input
+                            value={editValues[`benefit-${index}`] || point}
+                            onChange={(e) => setEditValues({ ...editValues, [`benefit-${index}`]: e.target.value })}
+                            onBlur={async () => {
+                              const newValue = editValues[`benefit-${index}`] || point
+                              if (newValue.trim() && newValue !== point) {
+                                const newBenefits = [...(product.bulletPoints || [])]
+                                newBenefits[index] = newValue.trim()
+                                await fetch(`/api/products/${productId}`, {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ bulletPoints: newBenefits })
+                                })
+                                mutate()
+                              } else if (!newValue.trim()) {
+                                const newBenefits = product.bulletPoints.filter((_: any, i: number) => i !== index)
+                                await fetch(`/api/products/${productId}`, {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ bulletPoints: newBenefits })
+                                })
+                                mutate()
+                              }
+                              setEditingBenefitIndex(null)
+                              setEditValues({})
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.currentTarget.blur()
+                              } else if (e.key === 'Escape') {
+                                setEditingBenefitIndex(null)
+                                setEditValues({})
+                              }
+                            }}
+                            className="text-base flex-1 h-9"
+                            autoFocus
+                          />
+                        ) : (
+                          <>
+                            <span 
+                              className="flex-1 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded text-base leading-relaxed"
+                              onClick={() => {
+                                setEditingBenefitIndex(index)
+                                setEditValues({ [`benefit-${index}`]: point })
+                              }}
+                            >
+                              {point}
+                            </span>
+                            <button
+                              className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive/80 p-1 mt-0.5"
+                              onClick={async (e) => {
+                                e.stopPropagation()
+                                const newBenefits = product.bulletPoints.filter((_: any, i: number) => i !== index)
+                                await fetch(`/api/products/${productId}`, {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ bulletPoints: newBenefits })
+                                })
+                                mutate()
+                              }}
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                    
+                    <div className="flex items-start gap-3">
                       <div className="w-1.5 h-1.5 rounded-full bg-foreground mt-2 flex-shrink-0" />
-                      {editingBenefitIndex === index ? (
+                      {editingBenefitIndex === -1 ? (
                         <Input
-                          value={editValues[`benefit-${index}`] || point}
-                          onChange={(e) => setEditValues({ ...editValues, [`benefit-${index}`]: e.target.value })}
+                          value={newBenefitInput}
+                          onChange={(e) => setNewBenefitInput(e.target.value)}
                           onBlur={async () => {
-                            const newValue = editValues[`benefit-${index}`] || point
-                            if (newValue.trim() && newValue !== point) {
-                              const newBenefits = [...(product.bulletPoints || [])]
-                              newBenefits[index] = newValue.trim()
-                              await fetch(`/api/products/${productId}`, {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ bulletPoints: newBenefits })
-                              })
-                              mutate()
-                            } else if (!newValue.trim()) {
-                              const newBenefits = product.bulletPoints.filter((_: any, i: number) => i !== index)
+                            if (newBenefitInput.trim()) {
+                              const newBenefits = [...(product.bulletPoints || []), newBenefitInput.trim()]
                               await fetch(`/api/products/${productId}`, {
                                 method: 'PATCH',
                                 headers: { 'Content-Type': 'application/json' },
@@ -787,96 +857,37 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                               mutate()
                             }
                             setEditingBenefitIndex(null)
-                            setEditValues({})
+                            setNewBenefitInput('')
                           }}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.currentTarget.blur()
                             } else if (e.key === 'Escape') {
                               setEditingBenefitIndex(null)
-                              setEditValues({})
+                              setNewBenefitInput('')
                             }
                           }}
                           className="text-base flex-1 h-9"
+                          placeholder="Enter new benefit..."
                           autoFocus
                         />
                       ) : (
-                        <>
-                          <span 
-                            className="flex-1 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded text-base leading-relaxed"
-                            onClick={() => {
-                              setEditingBenefitIndex(index)
-                              setEditValues({ [`benefit-${index}`]: point })
-                            }}
-                          >
-                            {point}
-                          </span>
-                          <button
-                            className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive/80 p-1 mt-0.5"
-                            onClick={async (e) => {
-                              e.stopPropagation()
-                              const newBenefits = product.bulletPoints.filter((_: any, i: number) => i !== index)
-                              await fetch(`/api/products/${productId}`, {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ bulletPoints: newBenefits })
-                              })
-                              mutate()
-                            }}
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </>
+                        <span 
+                          className="flex-1 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded text-base text-muted-foreground leading-relaxed"
+                          onClick={() => {
+                            setEditingBenefitIndex(-1)
+                            setNewBenefitInput('')
+                          }}
+                        >
+                          Add benefit...
+                        </span>
                       )}
                     </div>
-                  ))}
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-foreground mt-2 flex-shrink-0" />
-                    {editingBenefitIndex === -1 ? (
-                      <Input
-                        value={newBenefitInput}
-                        onChange={(e) => setNewBenefitInput(e.target.value)}
-                        onBlur={async () => {
-                          if (newBenefitInput.trim()) {
-                            const newBenefits = [...(product.bulletPoints || []), newBenefitInput.trim()]
-                            await fetch(`/api/products/${productId}`, {
-                              method: 'PATCH',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ bulletPoints: newBenefits })
-                            })
-                            mutate()
-                          }
-                          setEditingBenefitIndex(null)
-                          setNewBenefitInput('')
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.currentTarget.blur()
-                          } else if (e.key === 'Escape') {
-                            setEditingBenefitIndex(null)
-                            setNewBenefitInput('')
-                          }
-                        }}
-                        className="text-base flex-1 h-9"
-                        placeholder="Enter new benefit..."
-                        autoFocus
-                      />
-                    ) : (
-                      <span 
-                        className="flex-1 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded text-base text-muted-foreground leading-relaxed"
-                        onClick={() => {
-                          setEditingBenefitIndex(-1)
-                          setNewBenefitInput('')
-                        }}
-                      >
-                        Add benefit...
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
-              </div>
+
+            </div>
           </TabsContent>
 
           <TabsContent value="variants">
