@@ -12,6 +12,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { ContentBlock, getMediaUrl, createMediaRef } from '@/types/cms'
 import { MediaInput } from '@/components/cms/media-library/MediaInput'
 import { SimpleRichTextEditor } from '@/components/ui/simple-rich-text-editor'
+import { TiptapRichTextEditor } from '@/components/ui/tiptap-rich-text-editor'
 
 interface BlockSettingsProps {
   block: ContentBlock
@@ -629,7 +630,7 @@ export function BlockSettings({ block, onUpdate, onClose }: BlockSettingsProps) 
         return (
           <div className="space-y-4">
             <div className="space-y-2">
-              <SimpleRichTextEditor
+              <TiptapRichTextEditor
                 id="text"
                 value={textContent.text || ''}
                 onChange={(value) => updateBlockContent({ text: value })}
