@@ -45,7 +45,6 @@ export default function CMSBlogPage() {
     error,
     deleteContent,
     publishContent,
-    unpublishContent
   } = useCMSContent({
     search: search || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter,
@@ -71,12 +70,6 @@ export default function CMSBlogPage() {
     }
   }
 
-  const handleUnpublish = async (slug: string, title: string) => {
-    const success = await unpublishContent(slug)
-    if (success) {
-      toast.success(`"${title}" unpublished successfully`)
-    }
-  }
 
   const getStatusBadge = (post: CMSContent) => {
     const variant = post.status === 'published' ? 'default' : 
@@ -118,6 +111,11 @@ export default function CMSBlogPage() {
       hour: '2-digit',
       minute: '2-digit'
     }).format(new Date(date))
+  }
+
+  const getAuthorDisplayName = (post: CMSContent) => {
+    // Prefer authorSlug (new system) over blogAuthor (legacy)
+    return post.authorSlug || post.blogAuthor || 'Unknown'
   }
 
   if (error) {
@@ -175,12 +173,20 @@ export default function CMSBlogPage() {
               </SelectContent>
             </Select>
           </div>
-          <Link href="/cms/blog/new">
-            <Button className="w-full md:w-auto">
-              <Plus className="w-4 h-4 mr-2" />
-              New Blog Post
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/cms/blog/authors">
+              <Button variant="outline" className="w-full md:w-auto">
+                <User className="w-4 h-4 mr-2" />
+                Manage Authors
+              </Button>
+            </Link>
+            <Link href="/cms/blog/new">
+              <Button className="w-full md:w-auto">
+                <Plus className="w-4 h-4 mr-2" />
+                New Blog Post
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Content */}
@@ -256,7 +262,7 @@ export default function CMSBlogPage() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <User className="w-3 h-3 text-muted-foreground" />
-                          <span className="text-sm">{post.blogAuthor || 'Unknown'}</span>
+                          <span className="text-sm">{getAuthorDisplayName(post)}</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -295,17 +301,11 @@ export default function CMSBlogPage() {
                               <Eye className="w-4 h-4 mr-2" />
                               Preview
                             </DropdownMenuItem>
-                            {post.status !== 'published' ? (
+                            {post.status !== 'published' && (
                               <DropdownMenuItem
                                 onClick={() => handlePublish(post.slug, post.title)}
                               >
                                 Publish
-                              </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem
-                                onClick={() => handleUnpublish(post.slug, post.title)}
-                              >
-                                Unpublish
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem

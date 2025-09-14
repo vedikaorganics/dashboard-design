@@ -201,6 +201,7 @@ export function MediaInput({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
+                type="button"
                 size="sm"
                 variant="secondary"
                 className={cn(
@@ -218,6 +219,7 @@ export function MediaInput({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
+                type="button"
                 size="sm"
                 variant="secondary"
                 className={cn(
@@ -236,6 +238,7 @@ export function MediaInput({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
+                  type="button"
                   size="sm"
                   variant="destructive"
                   className={cn(
@@ -280,6 +283,7 @@ export function MediaInput({
             <p className="text-sm font-medium truncate">{currentFilename || currentUrl}</p>
             <div className="flex items-center space-x-2 mt-1">
               <Button
+                type="button"
                 size="sm"
                 variant="outline"
                 onClick={() => setShowPicker(true)}
@@ -290,6 +294,7 @@ export function MediaInput({
               </Button>
               {allowClear && (
                 <Button
+                  type="button"
                   size="sm"
                   variant="ghost"
                   onClick={handleClear}
@@ -316,6 +321,7 @@ export function MediaInput({
                 </div>
                 <div className="flex space-x-2 justify-center">
                   <Button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation()
                       setShowPicker(true)
@@ -332,6 +338,7 @@ export function MediaInput({
           ) : (
             <div className="flex space-x-2">
               <Button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation()
                   setShowPicker(true)

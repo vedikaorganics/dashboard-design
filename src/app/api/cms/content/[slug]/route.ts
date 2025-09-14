@@ -103,7 +103,8 @@ export async function PUT(
       if (currentContent.type === 'blog') {
         if (body.blogCategory !== undefined) updateData.blogCategory = body.blogCategory
         if (body.blogTags !== undefined) updateData.blogTags = body.blogTags
-        if (body.blogAuthor !== undefined) updateData.blogAuthor = body.blogAuthor
+        if (body.blogAuthor !== undefined) updateData.blogAuthor = body.blogAuthor // Keep for backward compatibility
+        if (body.authorSlug !== undefined) updateData.authorSlug = body.authorSlug // New field for author references
         if (body.blogFeaturedImage !== undefined) updateData.blogFeaturedImage = body.blogFeaturedImage
         if (body.blogExcerpt !== undefined) updateData.blogExcerpt = body.blogExcerpt
         
@@ -177,7 +178,8 @@ export async function PUT(
         ...(currentContent.type === 'blog' && {
           ...(body.blogCategory !== undefined && { blogCategory: body.blogCategory }),
           ...(body.blogTags !== undefined && { blogTags: body.blogTags }),
-          ...(body.blogAuthor !== undefined && { blogAuthor: body.blogAuthor }),
+          ...(body.blogAuthor !== undefined && { blogAuthor: body.blogAuthor }), // Keep for backward compatibility
+          ...(body.authorSlug !== undefined && { authorSlug: body.authorSlug }), // New field for author references
           ...(body.blogFeaturedImage !== undefined && { blogFeaturedImage: body.blogFeaturedImage }),
           ...(body.blogExcerpt !== undefined && { blogExcerpt: body.blogExcerpt })
         }),

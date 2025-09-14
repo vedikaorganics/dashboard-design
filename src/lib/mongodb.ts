@@ -86,5 +86,16 @@ export async function getCollection(collectionName: string) {
   }
 }
 
+// Legacy compatibility function for existing code
+export async function connectToDatabase(): Promise<{ db: Db; client: MongoClient }> {
+  try {
+    const client = await clientPromise
+    const db = client.db()
+    return { db, client }
+  } catch (error) {
+    throw new Error(`Database connection failed: ${error}`)
+  }
+}
+
 // Export the client promise for auth.ts to use
 export { clientPromise }

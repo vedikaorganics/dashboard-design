@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select'
 import { CMSContent, BLOG_CATEGORIES } from '@/types/cms'
 import { MediaInput } from '@/components/cms/media-library/MediaInput'
+import { AuthorSelector } from '@/components/cms/authors/AuthorSelector'
 import { cn } from '@/lib/utils'
 
 interface BlogSidebarProps {
@@ -30,7 +31,6 @@ export function BlogSidebar({
 }: BlogSidebarProps) {
   // Local state for text inputs to prevent glitching
   // Initialize once from content, then keep as source of truth
-  const [localAuthor, setLocalAuthor] = useState(content.blogAuthor || '')
   const [localTags, setLocalTags] = useState(content.blogTags?.join(', ') || '')
   const [localExcerpt, setLocalExcerpt] = useState(content.blogExcerpt || '')
   const [localSeoTitle, setLocalSeoTitle] = useState(content.seo?.title || '')
@@ -81,9 +81,8 @@ export function BlogSidebar({
     onUpdate({ blogFeaturedImage: value?.url || '' })
   }
 
-  const handleAuthorChange = (newAuthor: string) => {
-    setLocalAuthor(newAuthor)
-    debouncedUpdate({ blogAuthor: newAuthor })
+  const handleAuthorChange = (authorSlug: string | undefined) => {
+    onUpdate({ authorSlug })
   }
 
   const handleTagsChange = (tagsString: string) => {
@@ -217,15 +216,11 @@ export function BlogSidebar({
             </div>
 
             {/* Author */}
-            <div className="space-y-2">
-              <Label className="text-xs font-medium">Author</Label>
-              <Input
-                placeholder="Author name"
-                value={localAuthor}
-                onChange={(e) => handleAuthorChange(e.target.value)}
-                className="h-8"
-              />
-            </div>
+            <AuthorSelector
+              value={content.authorSlug}
+              onChange={handleAuthorChange}
+              placeholder="Select author..."
+            />
 
             {/* Tags */}
             <div className="space-y-2">

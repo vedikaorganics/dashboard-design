@@ -26,7 +26,7 @@ export default function ProductContentPage() {
   const product = products.find((p: any) => p.id === productId)
 
   // Get existing CMS content for this product
-  const { content: allContent, isLoading: contentLoading, createContent, updateContent, publishContent, unpublishContent, refresh } = useCMSContent({
+  const { content: allContent, isLoading: contentLoading, createContent, updateContent, publishContent, refresh } = useCMSContent({
     type: 'product'
   })
   

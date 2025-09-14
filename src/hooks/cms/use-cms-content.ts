@@ -35,7 +35,6 @@ interface UseCMSContentReturn {
   updateContent: (slug: string, data: UpdateContentRequest) => Promise<CMSContent | null>
   deleteContent: (slug: string) => Promise<boolean>
   publishContent: (slug: string, publishAt?: Date) => Promise<CMSContent | null>
-  unpublishContent: (slug: string) => Promise<CMSContent | null>
 }
 
 export function useCMSContent(params: UseCMSContentParams = {}): UseCMSContentReturn {
@@ -103,7 +102,9 @@ export function useCMSContent(params: UseCMSContentParams = {}): UseCMSContentRe
 
   const updateContent = useCallback(async (slug: string, data: UpdateContentRequest): Promise<CMSContent | null> => {
     try {
-      const response = await fetch(`/api/cms/content/${slug}`, {
+      // Convert empty slug to __home__ placeholder for API routing
+      const encodedSlug = slug === '' ? '__home__' : slug
+      const response = await fetch(`/api/cms/content/${encodedSlug}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -132,7 +133,9 @@ export function useCMSContent(params: UseCMSContentParams = {}): UseCMSContentRe
 
   const deleteContent = useCallback(async (slug: string): Promise<boolean> => {
     try {
-      const response = await fetch(`/api/cms/content/${slug}`, {
+      // Convert empty slug to __home__ placeholder for API routing
+      const encodedSlug = slug === '' ? '__home__' : slug
+      const response = await fetch(`/api/cms/content/${encodedSlug}`, {
         method: 'DELETE'
       })
 
@@ -155,7 +158,9 @@ export function useCMSContent(params: UseCMSContentParams = {}): UseCMSContentRe
 
   const publishContent = useCallback(async (slug: string, publishAt?: Date): Promise<CMSContent | null> => {
     try {
-      const response = await fetch(`/api/cms/content/${slug}/publish`, {
+      // Convert empty slug to __home__ placeholder for API routing
+      const encodedSlug = slug === '' ? '__home__' : slug
+      const response = await fetch(`/api/cms/content/${encodedSlug}/publish`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ publishAt })
@@ -182,32 +187,6 @@ export function useCMSContent(params: UseCMSContentParams = {}): UseCMSContentRe
     }
   }, [])
 
-  const unpublishContent = useCallback(async (slug: string): Promise<CMSContent | null> => {
-    try {
-      const response = await fetch(`/api/cms/content/${slug}/publish`, {
-        method: 'DELETE'
-      })
-
-      const result: CMSContentResponse = await response.json()
-
-      if (result.success && result.data) {
-        // Update the content in local state
-        setContent(prevContent => 
-          prevContent.map(item => 
-            item.slug === slug ? result.data! : item
-          )
-        )
-        return result.data
-      } else {
-        setError(result.error || 'Failed to unpublish content')
-        return null
-      }
-    } catch (err) {
-      setError('Failed to unpublish content')
-      console.error('Error unpublishing content:', err)
-      return null
-    }
-  }, [])
 
   const refresh = useCallback(() => {
     fetchContent()
@@ -227,7 +206,6 @@ export function useCMSContent(params: UseCMSContentParams = {}): UseCMSContentRe
     updateContent,
     deleteContent,
     publishContent,
-    unpublishContent
   }
 }
 

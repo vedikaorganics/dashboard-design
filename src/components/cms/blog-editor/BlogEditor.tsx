@@ -86,7 +86,6 @@ interface BlogEditorProps {
   onUpdate: (updates: Partial<CMSContent>) => void
   onSave: () => Promise<void>
   onPublish?: (publishAt?: Date) => Promise<void>
-  onUnpublish?: () => Promise<void>
   isLoading?: boolean
 }
 
@@ -99,7 +98,6 @@ export const BlogEditor = forwardRef<BlogEditorRef, BlogEditorProps>(({
   onUpdate,
   onSave,
   onPublish,
-  onUnpublish,
   isLoading = false
 }, ref) => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
@@ -174,11 +172,6 @@ export const BlogEditor = forwardRef<BlogEditorRef, BlogEditorProps>(({
     }
   }, [onPublish])
 
-  const handleUnpublish = useCallback(async () => {
-    if (onUnpublish) {
-      await onUnpublish()
-    }
-  }, [onUnpublish])
 
   // Word count using the existing hook
   const [wordCount, setWordCount] = useState(0)

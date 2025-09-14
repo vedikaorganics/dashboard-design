@@ -65,7 +65,8 @@ export default function BlogEditorPage({ params }: BlogEditorPageProps) {
         blocks: updatedBlocks, // Use the latest editor content
         blogCategory: localContent.blogCategory,
         blogTags: localContent.blogTags,
-        blogAuthor: localContent.blogAuthor,
+        blogAuthor: localContent.blogAuthor, // Keep for backward compatibility
+        authorSlug: localContent.authorSlug, // New field for author references
         blogFeaturedImage: localContent.blogFeaturedImage,
         blogExcerpt: localContent.blogExcerpt,
         seo: localContent.seo,
@@ -82,20 +83,6 @@ export default function BlogEditorPage({ params }: BlogEditorPageProps) {
     }
   }
 
-  const handleUnpublish = async () => {
-    if (!blogPost) return
-
-    try {
-      await updateContent({
-        status: 'draft',
-        publishedAt: undefined,
-        scheduledPublishAt: undefined
-      })
-      toast.success('Blog post unpublished successfully')
-    } catch (error) {
-      toast.error('Failed to unpublish blog post')
-    }
-  }
 
   const getStatusBadge = () => {
     if (!localContent) return null
@@ -110,6 +97,13 @@ export default function BlogEditorPage({ params }: BlogEditorPageProps) {
       default:
         return <Badge variant="outline">Unknown</Badge>
     }
+  }
+
+  const getAuthorDisplayName = () => {
+    if (!localContent) return 'Unknown'
+    // Prefer authorSlug (new system) over blogAuthor (legacy)
+    // For now, we'll show the slug if available, otherwise fall back to blogAuthor
+    return localContent.authorSlug || localContent.blogAuthor || 'Unknown'
   }
 
   if (isLoading) {
@@ -169,7 +163,7 @@ export default function BlogEditorPage({ params }: BlogEditorPageProps) {
                 {getStatusBadge()}
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                <span>By {localContent?.blogAuthor || 'Unknown'}</span>
+                <span>By {getAuthorDisplayName()}</span>
                 {localContent?.blogCategory && (
                   <>
                     <span>•</span>
@@ -203,17 +197,8 @@ export default function BlogEditorPage({ params }: BlogEditorPageProps) {
               <Save className="w-3 h-3 mr-1" />
               Save Draft
             </Button>
-            {blogPost.status === 'published' ? (
-              <Button 
-                variant="outline"
-                size="sm"
-                className="text-xs px-3 py-2"
-                onClick={handleUnpublish}
-              >
-                Unpublish
-              </Button>
-            ) : (
-              <Button 
+            {blogPost.status !== 'published' && (
+              <Button
                 size="sm"
                 className="text-xs px-3 py-2"
                 onClick={() => handleSave('published')}
@@ -237,7 +222,6 @@ export default function BlogEditorPage({ params }: BlogEditorPageProps) {
             onPublish={async (publishAt) => {
               await handleSave('published')
             }}
-            onUnpublish={handleUnpublish}
             isLoading={isLoading}
           />
         )}
