@@ -17,3 +17,14 @@ export const getLimeChatAccessToken = () => process.env.LIMECHAT_ACCESS_TOKEN!
 export const getLimeChatAccountId = () => process.env.LIMECHAT_ACCOUNT_ID!
 export const getMuxTokenId = () => process.env.MUX_TOKEN_ID!
 export const getMuxTokenSecret = () => process.env.MUX_TOKEN_SECRET!
+
+/**
+ * Generate preview URL for CMS content
+ * @param slug - The content slug (empty string for homepage)
+ * @returns Preview URL pointing to the draft version
+ */
+export const getPreviewUrl = (slug: string): string => {
+  const baseUrl = getPaymentServerUrl()
+  const previewSlug = slug || '' // Handle empty slug for homepage
+  return `${baseUrl}/draft/${previewSlug}`
+}

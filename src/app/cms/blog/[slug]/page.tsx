@@ -83,20 +83,6 @@ export default function BlogEditorPage({ params }: BlogEditorPageProps) {
     }
   }
 
-  const handleUnpublish = async () => {
-    if (!blogPost) return
-
-    try {
-      await updateContent({
-        status: 'draft',
-        publishedAt: undefined,
-        scheduledPublishAt: undefined
-      })
-      toast.success('Blog post unpublished successfully')
-    } catch (error) {
-      toast.error('Failed to unpublish blog post')
-    }
-  }
 
   const getStatusBadge = () => {
     if (!localContent) return null
@@ -211,17 +197,8 @@ export default function BlogEditorPage({ params }: BlogEditorPageProps) {
               <Save className="w-3 h-3 mr-1" />
               Save Draft
             </Button>
-            {blogPost.status === 'published' ? (
-              <Button 
-                variant="outline"
-                size="sm"
-                className="text-xs px-3 py-2"
-                onClick={handleUnpublish}
-              >
-                Unpublish
-              </Button>
-            ) : (
-              <Button 
+            {blogPost.status !== 'published' && (
+              <Button
                 size="sm"
                 className="text-xs px-3 py-2"
                 onClick={() => handleSave('published')}
@@ -245,7 +222,6 @@ export default function BlogEditorPage({ params }: BlogEditorPageProps) {
             onPublish={async (publishAt) => {
               await handleSave('published')
             }}
-            onUnpublish={handleUnpublish}
             isLoading={isLoading}
           />
         )}

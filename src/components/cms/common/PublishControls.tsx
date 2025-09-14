@@ -24,7 +24,6 @@ interface PublishControlsProps {
   publishedAt?: Date
   scheduledPublishAt?: Date
   onPublish: (publishAt?: Date) => Promise<void>
-  onUnpublish: () => Promise<void>
   disabled?: boolean
 }
 
@@ -33,7 +32,6 @@ export function PublishControls({
   publishedAt,
   scheduledPublishAt,
   onPublish,
-  onUnpublish,
   disabled = false
 }: PublishControlsProps) {
   const [showScheduleDialog, setShowScheduleDialog] = useState(false)
@@ -66,16 +64,6 @@ export function PublishControls({
     }
   }
 
-  const handleUnpublish = async () => {
-    if (!confirm('Are you sure you want to unpublish this content?')) return
-
-    setIsLoading(true)
-    try {
-      await onUnpublish()
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const getButtonContent = () => {
     if (status === 'published') {
@@ -131,15 +119,6 @@ export function PublishControls({
             Schedule publish
           </DropdownMenuItem>
 
-          {(status === 'published' || scheduledPublishAt) && (
-            <DropdownMenuItem 
-              onClick={handleUnpublish}
-              disabled={disabled}
-              className="text-destructive"
-            >
-              Unpublish
-            </DropdownMenuItem>
-          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

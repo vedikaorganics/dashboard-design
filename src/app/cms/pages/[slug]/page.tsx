@@ -45,15 +45,6 @@ export default function CMSPageEditPage({ params }: CMSPageEditPageProps) {
     }
   }
 
-  const handleUnpublish = async () => {
-    if (content) {
-      await updateContent({
-        status: 'draft',
-        publishedAt: undefined,
-        scheduledPublishAt: undefined
-      })
-    }
-  }
 
   if (isLoading) {
     return (
@@ -97,7 +88,6 @@ export default function CMSPageEditPage({ params }: CMSPageEditPageProps) {
           onUpdate={handleUpdate}
           onSave={handleSave}
           onPublish={handlePublish}
-          onUnpublish={handleUnpublish}
           isLoading={isLoading}
           restrictToPageType={true}
         />

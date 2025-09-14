@@ -45,7 +45,6 @@ export default function CMSBlogPage() {
     error,
     deleteContent,
     publishContent,
-    unpublishContent
   } = useCMSContent({
     search: search || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter,
@@ -71,12 +70,6 @@ export default function CMSBlogPage() {
     }
   }
 
-  const handleUnpublish = async (slug: string, title: string) => {
-    const success = await unpublishContent(slug)
-    if (success) {
-      toast.success(`"${title}" unpublished successfully`)
-    }
-  }
 
   const getStatusBadge = (post: CMSContent) => {
     const variant = post.status === 'published' ? 'default' : 
@@ -308,17 +301,11 @@ export default function CMSBlogPage() {
                               <Eye className="w-4 h-4 mr-2" />
                               Preview
                             </DropdownMenuItem>
-                            {post.status !== 'published' ? (
+                            {post.status !== 'published' && (
                               <DropdownMenuItem
                                 onClick={() => handlePublish(post.slug, post.title)}
                               >
                                 Publish
-                              </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem
-                                onClick={() => handleUnpublish(post.slug, post.title)}
-                              >
-                                Unpublish
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem

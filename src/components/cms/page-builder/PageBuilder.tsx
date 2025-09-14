@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
-import { Save, Settings, Plus } from 'lucide-react'
+import { Save, Settings, Plus, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
@@ -9,6 +9,7 @@ import { CMSContent, ContentBlock } from '@/types/cms'
 import { createBlock } from '@/lib/cms/blocks'
 import { BlockEditor, BlockEditorRef } from '../block-editor/BlockEditor'
 import { PageSettings } from './PageSettings'
+import { getPreviewUrl } from '@/lib/env'
 import { toast } from 'sonner'
 
 interface PageBuilderProps {
@@ -16,7 +17,6 @@ interface PageBuilderProps {
   onUpdate: (updates: Partial<CMSContent>) => void
   onSave: () => Promise<void>
   onPublish?: (publishAt?: Date) => Promise<void>
-  onUnpublish?: () => Promise<void>
   isLoading?: boolean
   className?: string
   restrictToPageType?: boolean // When true, restrict content type options to pages only
@@ -27,7 +27,6 @@ export function PageBuilder({
   onUpdate,
   onSave,
   onPublish,
-  onUnpublish,
   isLoading = false,
   className,
   restrictToPageType = false
@@ -80,18 +79,6 @@ export function PageBuilder({
     }
   }, [onPublish])
 
-  // Handle unpublish
-  const handleUnpublish = useCallback(async () => {
-    if (onUnpublish) {
-      try {
-        await onUnpublish()
-        toast.success('Content unpublished successfully')
-      } catch (error) {
-        toast.error('Failed to unpublish content')
-        console.error('Unpublish error:', error)
-      }
-    }
-  }, [onUnpublish])
 
   const getStatusBadgeVariant = () => {
     switch (content.status) {
@@ -150,6 +137,17 @@ export function PageBuilder({
 
           <Separator orientation="vertical" className="h-6" />
 
+          {/* Preview */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(getPreviewUrl(content.slug), '_blank')}
+            className="px-3"
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            Preview
+          </Button>
+
           {/* Save */}
           <Button
             onClick={handleSave}
@@ -161,17 +159,8 @@ export function PageBuilder({
             Save
           </Button>
 
-          {/* Publish/Unpublish */}
-          {content.status === 'published' ? (
-            <Button
-              onClick={handleUnpublish}
-              disabled={isLoading || hasUnsavedChanges}
-              size="sm"
-              variant="outline"
-            >
-              Unpublish
-            </Button>
-          ) : (
+          {/* Publish */}
+          {content.status !== 'published' && (
             <Button
               onClick={() => handlePublish()}
               disabled={isLoading || hasUnsavedChanges}

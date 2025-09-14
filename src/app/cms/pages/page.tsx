@@ -32,6 +32,7 @@ import {
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { useCMSContent } from '@/hooks/cms/use-cms-content'
 import { CMSContent, PREDEFINED_PAGES } from '@/types/cms'
+import { getPreviewUrl } from '@/lib/env'
 import { toast } from 'sonner'
 
 export default function CMSPagesPage() {
@@ -47,7 +48,6 @@ export default function CMSPagesPage() {
     error,
     deleteContent,
     publishContent,
-    unpublishContent,
     createContent
   } = useCMSContent({
     search: search || undefined,
@@ -74,12 +74,6 @@ export default function CMSPagesPage() {
     }
   }
 
-  const handleUnpublish = async (slug: string, title: string) => {
-    const success = await unpublishContent(slug)
-    if (success) {
-      toast.success(`"${title}" unpublished successfully`)
-    }
-  }
 
   const handleCreatePredefinedPage = async (predefinedPage: typeof PREDEFINED_PAGES[0]) => {
     try {
@@ -319,22 +313,16 @@ export default function CMSPagesPage() {
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => window.open(`/preview/${page.slug || ''}`, '_blank')}
+                              onClick={() => window.open(getPreviewUrl(page.slug), '_blank')}
                             >
                               <Eye className="w-4 h-4 mr-2" />
                               Preview
                             </DropdownMenuItem>
-                            {page.status !== 'published' ? (
+                            {page.status !== 'published' && (
                               <DropdownMenuItem
                                 onClick={() => handlePublish(page.slug, page.title)}
                               >
                                 Publish
-                              </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem
-                                onClick={() => handleUnpublish(page.slug, page.title)}
-                              >
-                                Unpublish
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem
